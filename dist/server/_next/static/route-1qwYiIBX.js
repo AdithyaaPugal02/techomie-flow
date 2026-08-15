@@ -1,0 +1,1 @@
+import{l as e,n as t,s as n}from"./auth-Cp9UNEQb.js";import{t as r}from"./aggregate-B6LsbNan.js";async function i(){let[{value:i}]=await n().select({value:r()}).from(e);return Response.json({setupRequired:i===0,user:await t()})}export{i as GET};

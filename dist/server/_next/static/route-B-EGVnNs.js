@@ -1,0 +1,1 @@
+import{t as e}from"./auth-Cp9UNEQb.js";async function t(){return await e(),Response.json({ok:!0})}export{t as POST};

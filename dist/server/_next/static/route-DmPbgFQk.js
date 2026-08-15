@@ -1,0 +1,1 @@
+import{n as e}from"./auth-Cp9UNEQb.js";async function t(){let t=await e();return t?Response.json({user:t}):Response.json({error:`Unauthorized`},{status:401})}export{t as GET};

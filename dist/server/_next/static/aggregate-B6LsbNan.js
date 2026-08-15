@@ -1,0 +1,1 @@
+import{d as e}from"./auth-Cp9UNEQb.js";function t(t){return e`count(${t||e.raw(`*`)})`.mapWith(Number)}export{t};
