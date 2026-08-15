@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Techomie Flow | NOVIQ Operations",
+  title: "Techomie Flow | Noviq Operations",
   description: "Secure quotations and operations workspace for Techomie Smart Devices.",
   icons: {
     icon: "/favicon.svg",

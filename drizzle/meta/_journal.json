@@ -8,6 +8,76 @@
       "when": 1786655622943,
       "tag": "0000_safe_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786657736795,
+      "tag": "0001_superb_crystal",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786726616396,
+      "tag": "0002_oval_juggernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786727333944,
+      "tag": "0003_tiresome_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786728457752,
+      "tag": "0004_pink_nitro",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786729107837,
+      "tag": "0005_chief_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786729868210,
+      "tag": "0006_overjoyed_loki",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786730706512,
+      "tag": "0007_flawless_blue_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786731225984,
+      "tag": "0008_yielding_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1786735999471,
+      "tag": "0009_dear_princess_powerful",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1786780667481,
+      "tag": "0010_tiny_calypso",
+      "breakpoints": true
     }
   ]
 }
