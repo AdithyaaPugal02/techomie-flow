@@ -1,0 +1,390 @@
+$ vinext dev
+4:34:00 am [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected a semicolon or an implicit semicolon after a statement, but found none
+ -  in app/page.tsx at 31395..31395
+ [38;5;240m │[0m 
+ [38;5;240m │[0m [38;5;115mHelp[0m: Try inserting a semicolon here
+
+  Plugin: vite:oxc
+  File: D:/Techomie-Flow/app/page.tsx
+      at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+      at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+      at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+      at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+      at async viteTransformMiddleware (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24326:20)
+4:34:00 am [vite] (client) [console.error] [vite] Failed to reload /app/page.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+4:34:00 am [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected a semicolon or an implicit semicolon after a statement, but found none
+ -  in app/page.tsx at 31395..31395
+  │ 
+  │ Help: Try inserting a semicolon here
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async viteTransformMiddleware (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24326:20)
+4:35:36 am [vite] Internal server error: Transform failed with 1 error:
+
+[31m[PARSE_ERROR] [0mExpected a semicolon or an implicit semicolon after a statement, but found none
+ -  in app/page.tsx at 31395..31395
+ [38;5;240m │[0m 
+ [38;5;240m │[0m [38;5;115mHelp[0m: Try inserting a semicolon here
+
+      at [object Object]
+      at runInRunnerObject (workers/runner-worker/index.js:107:3)
+      at [object Object]
+      at handleAppRscRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:514:33)
+      at route (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:660:16)
+      at handleRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-router-entry.js?v=6c25e21a:43:17)
+      at maybeCaptureError (workers/runner-worker/index.js:51:10)
+4:35:36 am [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected a semicolon or an implicit semicolon after a statement, but found none
+ -  in app/page.tsx at 31395..31395
+  │ 
+  │ Help: Try inserting a semicolon here
+
+    at [object Object]
+    at runInRunnerObject (workers/runner-worker/index.js:107:3)
+    at [object Object]
+    at handleAppRscRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:514:33)
+    at route (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:660:16)
+    at handleRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-router-entry.js?v=6c25e21a:43:17)
+    at maybeCaptureError (workers/runner-worker/index.js:51:10)
+4:35:36 am [vite] (client) [console.error] [vinext] RSC HMR error: Error: Connection closed.
+    at close (http://localhost:3000/node_modules/.vite/deps/react-server-dom-webpack_client__browser.js?v=519b7744:2364:36)
+    at progress (http://localhost:3000/node_modules/.vite/deps/react-server-dom-webpack_client__browser.js?v=519b7744:2437:28)
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+9:47:28 pm [vite] (client) [console.error] ReferenceError: QuotesList is not defined
+    at Home (http://localhost:3000/app/page.tsx?t=1786724247922:500:89)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:12868:12)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:4213:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:5569:16)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:6140:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:851:66)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8429:92)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8325:37)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8309:6)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:7994:27)
+9:47:28 pm [vite] (client) [console.error] The above error occurred in a React component:
+
+    at Home (http://localhost:3000/app/page.tsx?t=1786724247922:71:26)
+    at AwaitAppRenderDependencies [Server] (<anonymous>)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterScrollTargetInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:83:34)
+    at AppRouterScrollTarget (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:135:34)
+    at Children (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:221:17)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at ErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:159:26)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at NavigationCommitSignal (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-navigation-controller.js?v=0344ee11:232:36)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterRedirectBridge (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:475:36)
+    at DevRecoveryBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:313:3)
+    at AppRouterScrollCommitProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:129:42)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BrowserRoot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:501:24)
+9:47:28 pm [vite] (client) [console.error] ReferenceError: QuotesList is not defined
+    at Home (http://localhost:3000/app/page.tsx?t=1786724247922:500:89)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:12868:12)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:4213:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:5569:16)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:6140:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:851:66)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8429:92)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8325:37)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8309:6)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:7994:27)
+9:47:28 pm [vite] (client) [console.error] The above error occurred in a React component:
+
+    at Home (http://localhost:3000/app/page.tsx?t=1786724247922:71:26)
+    at AwaitAppRenderDependencies [Server] (<anonymous>)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterScrollTargetInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:83:34)
+    at AppRouterScrollTarget (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:135:34)
+    at Children (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:221:17)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at ErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:159:26)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at NavigationCommitSignal (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-navigation-controller.js?v=0344ee11:232:36)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterRedirectBridge (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:475:36)
+    at DevRecoveryBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:313:3)
+    at AppRouterScrollCommitProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:129:42)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BrowserRoot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:501:24)
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+11:05:55 pm [vite] (client) [console.error] TypeError: (l.requirement_categories || []).slice(...).join is not a function
+    at LeadRow (http://localhost:3000/app/leads-module.tsx:879:104)
+    at Object.react_stack_bottom_frame (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:12868:12)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:4213:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:5569:16)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:6140:20)
+    at runWithFiberInDEV (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:851:66)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8429:92)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8325:37)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:8309:6)
+    at performWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=0344ee11:7994:27)
+11:05:55 pm [vite] (client) [console.error] The above error occurred in a React component:
+
+    at LeadRow (http://localhost:3000/app/leads-module.tsx:831:20)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at LeadsModule (http://localhost:3000/app/leads-module.tsx:82:39)
+    at section (<anonymous>)
+    at main (<anonymous>)
+    at Home (http://localhost:3000/app/page.tsx?t=1786728722104:74:26)
+    at AwaitAppRenderDependencies [Server] (<anonymous>)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterScrollTargetInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:83:34)
+    at AppRouterScrollTarget (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:135:34)
+    at Children (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:221:17)
+    at body (<anonymous>)
+    at html (<anonymous>)
+    at RootLayout [Server] (<anonymous>)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at default (about://React/Server/D:/Techomie-Flow/app/layout.tsx?1:68:26)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at LayoutSegmentProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/layout-segment-context.js?v=0344ee11:41:34)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at ErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:159:26)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BfcacheSlotBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:140:32)
+    at Slot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/slot.js?v=0344ee11:190:17)
+    at NavigationCommitSignal (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-navigation-controller.js?v=0344ee11:232:36)
+    at RedirectErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:63:3)
+    at RedirectBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:97:29)
+    at AppRouterRedirectBridge (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:475:36)
+    at DevRecoveryBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:313:3)
+    at AppRouterScrollCommitProvider (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/app-router-scroll.js?v=0344ee11:129:42)
+    at ErrorBoundaryInner (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:107:3)
+    at GlobalErrorBoundary (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/shims/error-boundary.js?v=0344ee11:167:32)
+    at BrowserRoot (http://localhost:3000/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-browser-entry.js?v=0344ee11:501:24)
+11:07:49 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `)`
+ - `,` or `}` expected in db/schema.ts at 6389..6390
+ - Opened here in db/schema.ts at 6377..6378
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async MinimalPluginContext.hotUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/@vitejs+plugin-rsc@0.5.26_r_6c87a6b7b89df1a092d9b3275796ca07/node_modules/@vitejs/plugin-rsc/dist/plugin-BhzHKRFo.js:850:8)
+    at async handleHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26768:29)
+    at async onHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26273:35)
+    at async onFileChange (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26298:3)
+11:07:49 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `)`
+ - `,` or `}` expected in db/schema.ts at 6389..6390
+ - Opened here in db/schema.ts at 6377..6378
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async MinimalPluginContext.hotUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/@vitejs+plugin-rsc@0.5.26_r_6c87a6b7b89df1a092d9b3275796ca07/node_modules/@vitejs/plugin-rsc/dist/plugin-BhzHKRFo.js:850:8)
+    at async handleHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26768:29)
+    at async onHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26273:35)
+    at async onFileChange (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26298:3)
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+11:20:10 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `)`
+    ╭─[ db/schema.ts:13:1313 ]
+    │
+ 13 │ export const projects=sqliteTable("projects",{id:text("id").primaryKey(),customerId:integer("customer_id").notNull().references(()=>customers.id),siteId:text("site_id").notNull().references(()=>customerSites.id),quotationId:integer("quotation_id").references(()=>quotations.id),quotationRevision:integer("quotation_revision").default(0),leadId:text("lead_id").references(()=>leads.id),siteVisitId:text("site_visit_id").references(()=>siteVisits.id),title:text("title").notNull(),category:text("category").default("Smart Home Automation"),scope:text("scope"),scopeSnapshot:text("scope_snapshot",{mode:"json"}),directReason:text("direct_reason"),primaryContact:text("primary_contact"),managerId:text("manager_id").references(()=>users.id),salesId:text("sales_id").references(()=>users.id),status:text("status").notNull(),health:text("health").default("On Track"),value:real("value").notNull(),paymentPlan:text("payment_plan",{mode:"json"}),plannedStart:text("planned_start"),plannedEnd:text("planned_end"),actualStart:text("actual_start"),actualEnd:text("actual_end"),installationAt:text("installation_at"),testingAt:text("testing_at"),handoverAt:text("handover_at"),customerNotes:text("customer_notes"),notes:text("notes"),checklist:text("checklist",{mode:"json"}),siteReadiness:text("site_readiness",{mode:"json"),testingChecklist:text("testing_checklist",{mode:"json"),handover:text("handover",{mode:"json"),archived:integer("archived",{mode:"boolean"}).notNull().default(false),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull()});
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ┬           ┬  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ╰────────────── Opened here
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 │  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ╰── `,` or `}` expected
+────╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async MinimalPluginContext.hotUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/@vitejs+plugin-rsc@0.5.26_r_6c87a6b7b89df1a092d9b3275796ca07/node_modules/@vitejs/plugin-rsc/dist/plugin-BhzHKRFo.js:850:8)
+    at async handleHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26768:29)
+    at async onHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26273:35)
+    at async onFileChange (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26298:3)
+11:20:10 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `)`
+    ╭─[ db/schema.ts:13:1313 ]
+    │
+ 13 │ export const projects=sqliteTable("projects",{id:text("id").primaryKey(),customerId:integer("customer_id").notNull().references(()=>customers.id),siteId:text("site_id").notNull().references(()=>customerSites.id),quotationId:integer("quotation_id").references(()=>quotations.id),quotationRevision:integer("quotation_revision").default(0),leadId:text("lead_id").references(()=>leads.id),siteVisitId:text("site_visit_id").references(()=>siteVisits.id),title:text("title").notNull(),category:text("category").default("Smart Home Automation"),scope:text("scope"),scopeSnapshot:text("scope_snapshot",{mode:"json"}),directReason:text("direct_reason"),primaryContact:text("primary_contact"),managerId:text("manager_id").references(()=>users.id),salesId:text("sales_id").references(()=>users.id),status:text("status").notNull(),health:text("health").default("On Track"),value:real("value").notNull(),paymentPlan:text("payment_plan",{mode:"json"}),plannedStart:text("planned_start"),plannedEnd:text("planned_end"),actualStart:text("actual_start"),actualEnd:text("actual_end"),installationAt:text("installation_at"),testingAt:text("testing_at"),handoverAt:text("handover_at"),customerNotes:text("customer_notes"),notes:text("notes"),checklist:text("checklist",{mode:"json"}),siteReadiness:text("site_readiness",{mode:"json"),testingChecklist:text("testing_checklist",{mode:"json"),handover:text("handover",{mode:"json"),archived:integer("archived",{mode:"boolean"}).notNull().default(false),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull()});
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ┬           ┬  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ╰────────────── Opened here
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 │  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ╰── `,` or `}` expected
+────╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async MinimalPluginContext.hotUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/@vitejs+plugin-rsc@0.5.26_r_6c87a6b7b89df1a092d9b3275796ca07/node_modules/@vitejs/plugin-rsc/dist/plugin-BhzHKRFo.js:850:8)
+    at async handleHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26768:29)
+    at async onHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26273:35)
+    at async onFileChange (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26298:3)
+11:20:10 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `)`
+    ╭─[ db/schema.ts:13:1313 ]
+    │
+ 13 │ export const projects=sqliteTable("projects",{id:text("id").primaryKey(),customerId:integer("customer_id").notNull().references(()=>customers.id),siteId:text("site_id").notNull().references(()=>customerSites.id),quotationId:integer("quotation_id").references(()=>quotations.id),quotationRevision:integer("quotation_revision").default(0),leadId:text("lead_id").references(()=>leads.id),siteVisitId:text("site_visit_id").references(()=>siteVisits.id),title:text("title").notNull(),category:text("category").default("Smart Home Automation"),scope:text("scope"),scopeSnapshot:text("scope_snapshot",{mode:"json"}),directReason:text("direct_reason"),primaryContact:text("primary_contact"),managerId:text("manager_id").references(()=>users.id),salesId:text("sales_id").references(()=>users.id),status:text("status").notNull(),health:text("health").default("On Track"),value:real("value").notNull(),paymentPlan:text("payment_plan",{mode:"json"}),plannedStart:text("planned_start"),plannedEnd:text("planned_end"),actualStart:text("actual_start"),actualEnd:text("actual_end"),installationAt:text("installation_at"),testingAt:text("testing_at"),handoverAt:text("handover_at"),customerNotes:text("customer_notes"),notes:text("notes"),checklist:text("checklist",{mode:"json"}),siteReadiness:text("site_readiness",{mode:"json"),testingChecklist:text("testing_checklist",{mode:"json"),handover:text("handover",{mode:"json"),archived:integer("archived",{mode:"boolean"}).notNull().default(false),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull()});
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ┬           ┬  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ╰────────────── Opened here
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 │  
+    │                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ╰── `,` or `}` expected
+────╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+    at async MinimalPluginContext.hotUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/@vitejs+plugin-rsc@0.5.26_r_6c87a6b7b89df1a092d9b3275796ca07/node_modules/@vitejs/plugin-rsc/dist/plugin-BhzHKRFo.js:850:8)
+    at async handleHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26768:29)
+    at async onHMRUpdate (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26273:35)
+    at async onFileChange (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:26298:3)
+Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
+11:26:37 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `)` but found `await`
+ - Opened here in app/api/projects/route.ts at 9879..9880
+   ╭─[ app/api/projects/route.ts:7:62 ]
+   │
+ 7 │ for(const[m,i]of(plan.map((m:R,i:number)=>[m,i]as[R,number]))await env.DB.prepare("INSERT INTO project_milestones(id,project_id,name,due_condition,amount,received,status,sort_order)VALUES(?,?,?,?,?,0,'Pending',?)").bind(crypto.randomUUID(),id,m.name,m.condition||null,value*Number(m.percent||0)/100,i).run();
+   │                                                              ──┬──  
+   │                                                                ╰──── `)` expected
+───╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+11:26:37 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `)` but found `await`
+ - Opened here in app/api/projects/route.ts at 9879..9880
+   ╭─[ app/api/projects/route.ts:7:62 ]
+   │
+ 7 │ for(const[m,i]of(plan.map((m:R,i:number)=>[m,i]as[R,number]))await env.DB.prepare("INSERT INTO project_milestones(id,project_id,name,due_condition,amount,received,status,sort_order)VALUES(?,?,?,?,?,0,'Pending',?)").bind(crypto.randomUUID(),id,m.name,m.condition||null,value*Number(m.percent||0)/100,i).run();
+   │                                                              ──┬──  
+   │                                                                ╰──── `)` expected
+───╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+11:26:37 pm [vite] (client) [console.error] [vite] Internal Server Error
+Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `)` but found `await`
+ - Opened here in app/api/projects/route.ts at 9879..9880
+   ╭─[ app/api/projects/route.ts:7:62 ]
+   │
+ 7 │ for(const[m,i]of(plan.map((m:R,i:number)=>[m,i]as[R,number]))await env.DB.prepare("INSERT INTO project_milestones(id,project_id,name,due_condition,amount,received,status,sort_order)VALUES(?,?,?,?,?,0,'Pending',?)").bind(crypto.randomUUID(),id,m.name,m.condition||null,value*Number(m.percent||0)/100,i).run();
+   │                                                              ──┬──  
+   │                                                                ╰──── `)` expected
+───╯
+
+    at transformWithOxc (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3339:19)
+    at TransformPluginContext.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:3410:26)
+    at EnvironmentPluginContainer.transform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:30271:51)
+    at async loadAndTransform (file:///D:/Techomie-Flow/node_modules/.pnpm/vite@8.0.13_@types+node@22._07258a7d7c78e70ec0825361700f702c/node_modules/vite/dist/node/chunks/node.js:24532:26)
+[vinext] Route handler error: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at Object.POST [as handlerFn] (D:/Techomie-Flow/app/api/auth/login/route.ts:2:49)
+    at runAppRouteHandler (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-route-handler-execution.js?v=6c25e21a:49:19)
+    at executeAppRouteHandler (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-route-handler-execution.js?v=6c25e21a:63:20)
+    at route (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:660:16)
+    at handleRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-router-entry.js?v=6c25e21a:43:17)
+    at maybeCaptureError (workers/runner-worker/index.js:51:10)
+[vinext] Route handler error: SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at Object.POST [as handlerFn] (D:/Techomie-Flow/app/api/auth/login/route.ts:2:49)
+    at runAppRouteHandler (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-route-handler-execution.js?v=6c25e21a:49:19)
+    at executeAppRouteHandler (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-route-handler-execution.js?v=6c25e21a:63:20)
+    at route (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-rsc-handler.js:660:16)
+    at handleRequest (D:/Techomie-Flow/node_modules/.pnpm/vinext@1.0.0-beta.2_@vitejs_93f6fd6c708956198cb05a5cfe3fd3ab/node_modules/vinext/dist/server/app-router-entry.js?v=6c25e21a:43:17)
+    at maybeCaptureError (workers/runner-worker/index.js:51:10)
