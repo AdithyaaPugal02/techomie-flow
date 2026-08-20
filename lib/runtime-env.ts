@@ -18,7 +18,11 @@ function translate(source: string) {
     .replace(/datetime\('now'\)/gi, "CURRENT_TIMESTAMP")
     .replace(/json_extract\(([^,]+),\s*'\$\.([^']+)'\)/gi, "($1::jsonb #>> '{$2}')")
     .replace(/group_concat\(([^,)]+)\)/gi, "string_agg(($1)::text, ',')")
-    .replace(/\bIFNULL\s*\(/gi, "COALESCE(");
+    .replace(/\bIFNULL\s*\(/gi, "COALESCE(")
+    .replace(
+      /(insert\s+into\s+"(?:activities|audit_log|customers|products|quotations|sites|variants)"\s*\(\s*"id"[^)]*\)\s*values\s*)\(\s*null\s*,/i,
+      "$1(DEFAULT,",
+    );
   if (/^\s*INSERT\s+/i.test(source) && /OR\s+IGNORE/i.test(source) && !/ON\s+CONFLICT/i.test(query)) {
     const returning = query.match(/\s+RETURNING\s+/i);
     query = returning

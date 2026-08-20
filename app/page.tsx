@@ -2865,18 +2865,23 @@ function AuthScreen({
     e.preventDefault();
     setBusy(true);
     setError("");
-    const res = await fetch(setup ? "/api/auth/setup" : "/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(v),
-    });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error || "Unable to continue");
-      return;
+    try {
+      const res = await fetch(setup ? "/api/auth/setup" : "/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(v),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Unable to continue");
+        return;
+      }
+      onSuccess();
+    } catch {
+      setError("The server could not complete sign in. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    onSuccess();
   };
   return (
     <div className="authpage">
