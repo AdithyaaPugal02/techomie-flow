@@ -42,3 +42,4 @@ yarn-error.log*
 # Local database exports may contain customer and employee data.
 /supabase/local-*.sql
 /supabase/data-*.sql
+/supabase/.temp/
