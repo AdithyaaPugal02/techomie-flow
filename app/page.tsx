@@ -11,6 +11,7 @@ import ProjectsModule from "./projects-module";
 import SettingsModule from "./settings-module";
 import QuotationsModule from "./quotations-module";
 import ExpensesModule from "./expenses-module";
+import SiteVisitsModule from "./site-visits-module";
 
 const products = catalog.map((p) => ({
   ...p,
@@ -111,6 +112,10 @@ export default function Home() {
   const [moduleSize, setModuleSize] = useState("All module sizes");
   const [notice, setNotice] = useState("All changes saved");
   const [mobileNav, setMobileNav] = useState(false);
+  const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
+  const [globalSearch,setGlobalSearch]=useState("");
+  const [searchResults,setSearchResults]=useState<{module:string;title:string;detail:string;id:string}[]>([]);
+  const [quickOpen,setQuickOpen]=useState(false);
   const [leadCount, setLeadCount] = useState<number | null>(null);
   const [quoteSetup, setQuoteSetup] = useState(false);
   const [configure, setConfigure] = useState<ProductGroup | null>(null);
@@ -310,6 +315,11 @@ export default function Home() {
       )
       .catch(() => setAuth((a) => ({ ...a, loading: false })));
   }, []);
+  useEffect(()=>{const saved=window.localStorage.getItem("techomie-sidebar-collapsed");setSidebarCollapsed(saved==="1")},[]);
+  useEffect(()=>{window.localStorage.setItem("techomie-sidebar-collapsed",sidebarCollapsed?"1":"0")},[sidebarCollapsed]);
+  useEffect(()=>{if(globalSearch.trim().length<2){setSearchResults([]);return}const timer=window.setTimeout(async()=>{const q=encodeURIComponent(globalSearch.trim()),sources=[
+    ["Leads",`/api/leads?q=${q}`],["Customers",`/api/customers?q=${q}`],["Quotations",`/api/quotations?q=${q}`],["Projects",`/api/projects?q=${q}`],["Invoices",`/api/invoices?q=${q}`],["Items",`/api/products?q=${q}`]
+  ] as const;const found=(await Promise.all(sources.map(async([module,url])=>{try{const r=await fetch(url);if(!r.ok)return[];const d=await r.json(),rows=d.leads||d.customers||d.quotations||d.projects||d.invoices||d.items||[];return rows.slice(0,4).map((x:Record<string,unknown>)=>({module,title:String(x.customerName||x.customer_name||x.name||x.title||x.number||x.invoice_number||x.sku||"Record"),detail:String(x.phone||x.site_name||x.number||x.sku||x.status||""),id:String(x.id||x.variant_id||"")}))}catch{return[]}}))).flat().slice(0,12);setSearchResults(found)},220);return()=>window.clearTimeout(timer)},[globalSearch]);
   useEffect(() => {
     if (!auth.user) {
       setLeadCount(null);
@@ -356,8 +366,30 @@ export default function Home() {
         }
       />
     );
+  const role=auth.user.role;
+  const allNavigation=[
+    {icon:"⌂",name:"Overview",roles:["admin","crm","sales"]},
+    {icon:"◎",name:"Leads",label:role==="sales"?"My leads":"Leads",roles:["admin","crm","sales"]},
+    {icon:"⌖",name:"Site Visits",roles:["admin","crm","sales","technician"]},
+    {icon:"♙",name:"Customers",roles:["admin","crm","sales","technician"]},
+    {icon:"✦",name:"Quotations",roles:["admin","crm","sales"]},
+    {icon:"◇",name:"Projects",label:role==="technician"?"Assigned projects":"Projects",roles:["admin","crm","sales","technician"]},
+    {icon:"✓",name:"Tasks",label:role==="technician"?"My tasks":"Tasks",roles:["admin","crm","sales","technician"]},
+    {icon:"₹",name:"Invoices",roles:["admin"]},
+    {icon:"₹",name:"Payments",roles:["admin"]},
+    {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",roles:["admin","sales","technician"]},
+    {icon:"◫",name:"Items",roles:["admin","crm","sales","technician"]},
+    {icon:"⌑",name:"Procurement",roles:["admin"]},
+    {icon:"⚒",name:"Service",label:"Service & warranty",roles:["admin","sales","technician"]},
+    {icon:"▤",name:"Reports",roles:["admin"]},
+    {icon:"⚙",name:"Settings",roles:["admin","crm","sales","technician"]},
+  ].filter(x=>x.roles.includes(role));
+  const navigate=(target:string,filter:Record<string,string>={})=>{setModuleFilter(filter);setModule(target);if(target==="Quotations")setQuoteScreen("list");setMobileNav(false);setGlobalSearch("");setSearchResults([])};
+  const quickActions=[
+    {label:"New lead",module:"Leads",roles:["admin","crm","sales"]},{label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales"]},{label:"New customer",module:"Customers",roles:["admin","crm","sales"]},{label:"New quotation",module:"Quotations",roles:["admin","crm","sales"]},{label:"New project",module:"Projects",roles:["admin","sales"]},{label:"New invoice",module:"Invoices",roles:["admin"]},{label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},{label:"Add item",module:"Items",roles:["admin"]},{label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]}
+  ].filter(x=>x.roles.includes(role));
   return (
-    <main className="shell">
+    <main className={`shell ${sidebarCollapsed?"navcollapsed":""}`}>
       <aside className={mobileNav ? "sidebar open" : "sidebar"}>
         <div className="brand">
           <img src="/techomie-logo.jpg" alt="Techomie" />
@@ -367,31 +399,15 @@ export default function Home() {
           </span>
         </div>
         <nav>
-          {[
-            ["⌂", "Overview"],
-            ["◎", "Leads"],
-            ["♙", "Customers"],
-            ["◫", "Items"],
-            ["✦", "Quotations"],
-            ["₹", "Invoices"],
-            ["◇", "Projects"],
-            ["⌑", "Procurement"],
-            ["₹", "Payments"],
-            ["₹", "Expenses"],
-            ["⚒", "Service"],
-            ["⚙", "Settings"],
-          ].map(([i, n]) => (
+          {allNavigation.map(({icon:i,name:n,label}) => (
             <button
               key={n}
-              onClick={() => {
-                setModule(n);
-                if (n === "Quotations") setQuoteScreen("list");
-                setMobileNav(false);
-              }}
+              title={sidebarCollapsed?(label||n):undefined}
+              onClick={() => navigate(n)}
               className={n === module ? "selected" : ""}
             >
               <span>{i}</span>
-              {n}
+              <label>{label||n}</label>
               {n === "Leads" && leadCount !== null && leadCount > 0 && (
                 <em title={`${leadCount} lead${leadCount === 1 ? "" : "s"}`}>{leadCount}</em>
               )}
@@ -421,15 +437,22 @@ export default function Home() {
           <button className="hamb" onClick={() => setMobileNav(!mobileNav)}>
             ☰
           </button>
+          <button className="navcollapse" onClick={()=>setSidebarCollapsed(v=>!v)} title={sidebarCollapsed?"Expand navigation":"Collapse navigation"}>{sidebarCollapsed?"→":"←"}</button>
           <div className="crumb">
             <span>Techomie Flow</span>
             <i>/</i>
             <b>{module}</b>
           </div>
+          <div className="globalsearch">
+            <span>⌕</span><input value={globalSearch} onChange={e=>setGlobalSearch(e.target.value)} placeholder="Search customers, leads, quotes, projects, invoices or items" />
+            {searchResults.length>0&&<div className="searchresults">{searchResults.map((x,i)=><button key={`${x.module}-${x.id}-${i}`} onClick={()=>navigate(x.module,{id:x.id,q:globalSearch})}><span>{x.module}</span><b>{x.title}</b><small>{x.detail}</small></button>)}</div>}
+          </div>
           <div className="save">
             <span>●</span>
             {notice}
           </div>
+          <div className="quickcreate"><button className="primary" onClick={()=>setQuickOpen(v=>!v)}>＋ Quick create</button>{quickOpen&&<div>{quickActions.map(x=><button key={x.label} onClick={()=>{navigate(x.module,{create:"1"});setQuickOpen(false)}}>{x.label}</button>)}</div>}</div>
+          <button className="notification" title="Notifications">♢</button>
           {false && module === "Quotations" && quoteScreen === "detail" && (
             <>
               <button className="preview" onClick={() => setQuoteSetup(true)}>
@@ -764,12 +787,17 @@ export default function Home() {
           <ItemsModule isAdmin={auth.user.role === "admin"} />
         ) : module === "Expenses" ? (
           <ExpensesModule role={auth.user.role} initialFilter={moduleFilter} />
+        ) : module === "Site Visits" ? (
+          <SiteVisitsModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : module === "Settings" ? (
           <SettingsModule role={auth.user.role} currentEmail={auth.user.email} />
+        ) : module === "Reports" ? (
+          <OverviewModule role={auth.user.role} onNavigate={(target,filter)=>navigate(target,filter||{})} />
         ) : (
           <OperationsModule name={module} role={auth.user.role} initialFilter={moduleFilter} />
         )}
       </section>
+      <nav className="mobilebottom">{[{i:"⌂",n:role==="technician"?"Tasks":"Overview"},{i:role==="technician"?"◇":"◎",n:role==="technician"?"Projects":"Leads"},{i:"＋",n:"Create"},{i:role==="technician"?"⚒":"◇",n:role==="technician"?"Service":"Projects"},{i:"•••",n:"More"}].map(x=><button key={x.n} className={module===x.n?"active":""} onClick={()=>x.n==="Create"?setQuickOpen(true):x.n==="More"?setMobileNav(true):navigate(x.n)}><b>{x.i}</b><span>{x.n}</span></button>)}</nav>
     </main>
   );
 }
@@ -2116,15 +2144,33 @@ const moduleData: Record<string, { stats: string[]; rows: string[][] }> = {
   },
 };
 function OperationsModule({ name,role,initialFilter={} }: { name: string;role:string;initialFilter?:Record<string,string> }) {
-  const endpoint:Record<string,string>={Leads:"/api/leads",Customers:"/api/customers",Projects:"/api/records/projects",Payments:"/api/records/payments",Procurement:"/api/records/materials",Expenses:"/api/records/expenses",Service:"/api/records/service"};
+  const endpoint:Record<string,string>={Leads:"/api/leads",Customers:"/api/customers",Projects:"/api/records/projects",Tasks:"/api/records/tasks",Payments:"/api/records/payments",Procurement:"/api/records/materials",Expenses:"/api/records/expenses",Service:"/api/records/service"};
   const [rows,setRows]=useState<Record<string,unknown>[]>([]),[search,setSearch]=useState(Object.values(initialFilter).join(" ")),[open,setOpen]=useState(false),[editing,setEditing]=useState<Record<string,unknown>|null>(null),[toast,setToast]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+  const [paymentLookups,setPaymentLookups]=useState<{customers:Record<string,unknown>[];projects:Record<string,unknown>[];quotations:Record<string,unknown>[]}>({customers:[],projects:[],quotations:[]});
+  const [taskLookups,setTaskLookups]=useState<{projects:Record<string,unknown>[];users:Record<string,unknown>[]}>({projects:[],users:[]});
   const singular=name==="Customers"?"customer":name==="Leads"?"lead":name==="Procurement"?"material":name==="Service"?"service ticket":name.endsWith("s")?name.slice(0,-1).toLowerCase():name.toLowerCase();
-  const allowed=!(role!=="admin"&&["Expenses","Procurement"].includes(name))&&!(role==="technician"&&!["Projects","Service","Overview"].includes(name));
+  const allowed=!(role!=="admin"&&["Expenses","Procurement"].includes(name))&&!(role==="technician"&&!["Projects","Tasks","Service","Overview"].includes(name));
   const load=async()=>{setLoading(true);setError("");try{if(name==="Overview"){const urls=role==="technician"?["/api/records/projects","/api/records/tasks","/api/records/service"]:["/api/leads","/api/customers","/api/quotations","/api/records/projects","/api/records/payments","/api/records/service"];const results=await Promise.all(urls.map(async url=>{const r=await fetch(url);if(!r.ok)return[];const d=await r.json();return d.records||d.leads||d.customers||d.quotations||[]}));setRows(results.flat());return}const r=await fetch(`${endpoint[name]}?q=${encodeURIComponent(search)}`),d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to load records");setRows(d.records||d.leads||d.customers||[])}catch(e){setError(e instanceof Error?e.message:"Unable to load records")}finally{setLoading(false)}};
-  useEffect(()=>{setSearch(Object.values(initialFilter).join(" "));if(allowed)load()},[name,JSON.stringify(initialFilter)]);
+  useEffect(()=>{setSearch(Object.values(initialFilter).join(" "));if(allowed)load();if(name==="Payments")Promise.all([fetch("/api/projects").then(r=>r.json()),fetch("/api/quotations?limit=100").then(r=>r.json())]).then(([p,q])=>{const customerMap=new Map<string,Record<string,unknown>>();[...(p.filters?.customers||[]),...(q.filters?.customers||[])].forEach((c:Record<string,unknown>)=>customerMap.set(String(c.id),c));setPaymentLookups({customers:[...customerMap.values()],projects:p.projects||[],quotations:q.quotations||[]})}).catch(()=>setToast("Unable to load customer payment choices"));if(name==="Tasks")fetch("/api/projects").then(r=>r.json()).then(p=>setTaskLookups({projects:p.projects||[],users:p.filters?.users||[]})).catch(()=>setToast("Unable to load project task choices"))},[name,JSON.stringify(initialFilter)]);
   const save=async(v:Record<string,string>)=>{try{let payload:Record<string,unknown>={...v};if(name==="Leads")payload={...v,customerName:v.name};const url=endpoint[name],method=editing?"PATCH":"POST";if(editing)payload.id=editing.id;const r=await fetch(url,{method,headers:{"content-type":"application/json"},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to save record");setOpen(false);setEditing(null);setToast(`${singular} saved`);load()}catch(e){setToast(e instanceof Error?e.message:"Unable to save record")}};
   const archive=async(row:Record<string,unknown>)=>{if(!confirm(`Archive this ${singular}?`))return;const r=await fetch(`${endpoint[name]}?id=${row.id}`,{method:"DELETE"});if(r.ok){setToast(`${singular} archived`);load()}else setToast("Unable to archive record")};
-  const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>[r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
+  const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>[name==="Tasks"?taskLookups.projects.find(p=>String(p.id)===String(r.project_id))?.title:null,r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
+  const paymentFields:Field[]=name==="Payments"?[
+    {key:"customer_selector",label:"Customer name",required:true,options:paymentLookups.customers.map(c=>({value:String(c.id),label:String(c.name)}))},
+    {key:"project_id",label:"Project / site",dependsOn:"customer_selector",options:paymentLookups.projects.map(p=>({value:String(p.id),label:`${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`,parent:String(p.customer_id)}))},
+    {key:"quotation_id",label:"Quotation",dependsOn:"customer_selector",options:paymentLookups.quotations.map(q=>({value:String(q.id),label:`${String(q.number)} · ${String(q.title||"Quotation")}`,parent:String(q.customer_id)}))},
+    ...formFields.Payments.slice(2)
+  ]:name==="Tasks"?[
+    {key:"project_id",label:"Project / customer",required:true,options:taskLookups.projects.map(p=>({value:String(p.id),label:`${String(p.customer_name)} · ${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`}))},
+    {key:"title",label:"Task",required:true},
+    {key:"assigned_to",label:"Assign to",required:true,options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
+    {key:"due_at",label:"Due date and time",type:"datetime-local",required:true},
+    {key:"status",label:"Status",required:true,options:["To Do","In Progress","Waiting","Completed"]},
+    {key:"mandatory",label:"Priority",options:[{value:"0",label:"Normal"},{value:"1",label:"Priority / mandatory"}]},
+    {key:"notes",label:"Instructions / completion notes",type:"textarea"}
+  ]:formFields[name]||formFields.Overview;
+  const modalInitial=editing?Object.fromEntries(Object.entries(editing).map(([k,v])=>[k,String(v??"")])):undefined;
+  if(modalInitial&&name==="Payments"){const linked=paymentLookups.projects.find(p=>String(p.id)===modalInitial.project_id)||paymentLookups.quotations.find(q=>String(q.id)===modalInitial.quotation_id);if(linked)modalInitial.customer_selector=String(linked.customer_id)}
   if(!allowed)return <div className="modulepage"><div className="modulehero"><div><small>RESTRICTED</small><h1>{name}</h1><p>Your role does not have permission to access this financial area.</p></div></div></div>;
   return (
     <div className="modulepage">
@@ -2137,7 +2183,7 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
         {name!=="Overview"&&<button className="primary" onClick={() => {setEditing(null);setOpen(true)}}>＋ Add {singular}</button>}
       </div>
       {toast && <div className="toast">✓ {toast}</div>}
-      <div className="statgrid"><article><small>LIVE RECORDS</small><b>{rows.length}</b></article><article><small>ACTIVE / OPEN</small><b>{rows.filter(r=>!["closed","completed","lost","inactive"].includes(String(r.status||"").toLowerCase())).length}</b></article><article><small>UPDATED</small><b>{loading?"Loading…":"Now"}</b></article><article><small>DATA SOURCE</small><b>Secure database</b></article></div>
+      <div className="statgrid"><article><small>{name==="Tasks"?"TOTAL TASKS":"LIVE RECORDS"}</small><b>{rows.length}</b></article><article><small>{name==="Tasks"?"DUE TODAY":"ACTIVE / OPEN"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"").slice(0,10)===new Date().toISOString().slice(0,10)&&String(r.status).toLowerCase()!=="completed").length:rows.filter(r=>!["closed","completed","lost","inactive"].includes(String(r.status||"").toLowerCase())).length}</b></article><article><small>{name==="Tasks"?"OVERDUE":"UPDATED"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"9999")<new Date().toISOString()&&String(r.status).toLowerCase()!=="completed").length:loading?"Loading…":"Now"}</b></article><article><small>{name==="Tasks"?"COMPLETED":"DATA SOURCE"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.status).toLowerCase()==="completed").length:"Secure database"}</b></article></div>
       <div className="records">
         <div className="recordtools">
           <h2>
@@ -2151,13 +2197,13 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
             placeholder="Search records"
           />
         </div>
-        {error&&<p className="formerror">{error}</p>}{!loading&&!error&&rows.length===0&&<p className="emptyrow">No records yet. Add the first {singular}.</p>}{rows.filter(r=>JSON.stringify(r).toLowerCase().includes(search.toLowerCase())).map((r,i)=><div className="record" key={String(r.id||i)}><span>{String(r.id||r.number||"—")}</span><b>{titleOf(r)}</b><small>{detailOf(r)||"Saved record"}</small><span className="rowactions"><button onClick={()=>{setEditing(r);setOpen(true)}}>Edit</button>{name!=="Overview"&&<button className="danger" onClick={()=>archive(r)}>Archive</button>}</span></div>)}
+        {error&&<p className="formerror">{error}</p>}{!loading&&!error&&rows.length===0&&<p className="emptyrow">No records yet. Add the first {singular}.</p>}{rows.filter(r=>JSON.stringify(r).toLowerCase().includes(search.toLowerCase())).map((r,i)=><div className="record" key={String(r.id||i)}><span>{String(r.id||r.number||"—")}</span><b>{titleOf(r)}</b><small>{detailOf(r)||"Saved record"}</small><span className="rowactions"><button onClick={()=>{setEditing(r);setOpen(true)}}>{name==="Tasks"?"Update":"Edit"}</button>{name!=="Overview"&&name!=="Tasks"&&<button className="danger" onClick={()=>archive(r)}>Archive</button>}</span></div>)}
       </div>
       {open && (
         <RecordModal
           title={`Add ${singular}`}
-          fields={formFields[name] || formFields.Overview}
-          initial={editing?Object.fromEntries(Object.entries(editing).map(([k,v])=>[k,String(v??"")])):undefined}
+          fields={paymentFields}
+          initial={modalInitial}
           onClose={() => setOpen(false)}
           onSave={save}
         />
@@ -2489,7 +2535,8 @@ type Field = {
   label: string;
   type?: string;
   required?: boolean;
-  options?: string[];
+  options?: (string | {value:string;label:string;parent?:string})[];
+  dependsOn?: string;
   placeholder?: string;
 };
 const formFields: Record<string, Field[]> = {
@@ -2698,14 +2745,16 @@ function RecordModal({
               {f.options ? (
                 <select
                   value={values[f.key] || ""}
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, [f.key]: e.target.value }))
-                  }
+                  onChange={(e) => setValues((v) => {
+                    const next={...v,[f.key]:e.target.value};
+                    fields.filter(field=>field.dependsOn===f.key).forEach(field=>{next[field.key]=""});
+                    return next;
+                  })}
                 >
                   <option value="">Select</option>
-                  {f.options.map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
+                  {f.options.filter(o=>typeof o==="string"||!f.dependsOn||!o.parent||o.parent===values[f.dependsOn]).map((o) => typeof o==="string"?(
+                    <option key={o} value={o}>{o}</option>
+                  ):(<option key={o.value} value={o.value}>{o.label}</option>))}
                 </select>
               ) : f.type === "textarea" ? (
                 <textarea

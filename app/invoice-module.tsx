@@ -249,13 +249,15 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
     const html2pdf = (await import("html2pdf.js")).default;
     const worker = html2pdf()
       .set({
-        margin: [7, 7, 7, 7],
+        // The invoice element is already exactly A4 and has its own safe-area padding.
+        // Additional PDF margins made the 210 mm sheet wider than the output page.
+        margin: 0,
         filename: `${selected.number || "Draft-Invoice"}.pdf`.replaceAll(
           "/",
           "-",
         ),
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#fff" },
+        image: { type: "png", quality: 1 },
+        html2canvas: { scale: 3, useCORS: true, backgroundColor: "#fff", imageTimeout: 20000 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       })
       .from(el);
@@ -467,12 +469,6 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
             <>
               <div className="invoiceactionbar">
                 <div>
-                  <label className="documenttemplateselect">
-                    <span>PDF design</span>
-                    <select disabled={selected.status !== "Draft"} value={invoiceTemplate(selected, branding)} onChange={e => selectTemplate(e.target.value)}>
-                      {(branding.invoiceTemplates || [{id:"executive",name:"Executive Tax Invoice"},{id:"technical",name:"Technical Blue"},{id:"classic",name:"Classic GST"}]).filter((x:Record<string,any>) => x.active !== false).map((x:Record<string,any>) => <option key={x.id} value={x.id}>{x.name}</option>)}
-                    </select>
-                  </label>
                   <b>{selected.number || "Draft invoice"}</b>
                   <span>
                     {selected.status}
@@ -480,6 +476,12 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
                   </span>
                 </div>
                 <div>
+                  <label className="documenttemplateselect">
+                    <span>PDF design</span>
+                    <select disabled={selected.status !== "Draft"} value={invoiceTemplate(selected, branding)} onChange={e => selectTemplate(e.target.value)}>
+                      {(branding.invoiceTemplates || [{id:"executive",name:"Executive Tax Invoice"},{id:"technical",name:"Technical Blue"},{id:"classic",name:"Classic GST"}]).filter((x:Record<string,any>) => x.active !== false).map((x:Record<string,any>) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                    </select>
+                  </label>
                   {selected.status === "Draft" && (
                     <button
                       className="primary"

@@ -1,28 +1,447 @@
 import { env } from "cloudflare:workers";
 import { requireUser } from "../../../../lib/auth";
 
-type Config={table:string;roles:string[];adminOnly?:boolean;ownerField?:string;columns:string[];sensitive?:string[];archive?:boolean};
-const configs:Record<string,Config>={
- sites:{table:"customer_sites",roles:["admin","crm","sales"],columns:["customer_id","name","address","city","pincode","maps_url","contact_name","contact_phone","property_type","floors","survey_notes","electrical_readiness","network_details"],archive:true},
- activities:{table:"activities",roles:["admin","crm","sales","technician"],columns:["entity_type","entity_id","type","content","due_at","completed_at"]},
- quotations:{table:"quotations",roles:["admin","crm","sales"],columns:["number","revision","customer_id","site_id","status","snapshot","total"]},
- projects:{table:"projects",roles:["admin","sales","technician"],ownerField:"manager_id",columns:["customer_id","site_id","quotation_id","title","manager_id","status","value","planned_start","planned_end","notes","checklist"],archive:true},
- tasks:{table:"project_tasks",roles:["admin","sales","technician"],ownerField:"assigned_to",columns:["project_id","title","assigned_to","status","due_at","mandatory","completed_at","notes","sort_order"]},
- materials:{table:"project_materials",roles:["admin","technician"],columns:["project_id","quotation_item_id","name","sku","required_qty","ordered_qty","received_qty","status","vendor_id","buying_price","freight","purchase_reference","expected_delivery"],sensitive:["buying_price","freight"]},
- payments:{table:"payments",roles:["admin","crm","sales"],columns:["project_id","quotation_id","date","amount","mode","reference","received_by","notes"],archive:true},
- expenses:{table:"expenses",roles:["admin"],adminOnly:true,columns:["project_id","date","category","vendor","amount","tax","mode","notes"],archive:true},
- vendors:{table:"vendors",roles:["admin"],adminOnly:true,columns:["name","phone","email","gstin","address"],archive:true},
- zoho:{table:"zoho_invoices",roles:["admin"],adminOnly:true,columns:["project_id","quotation_id","zoho_invoice_id","invoice_number","invoice_date","pdf_key","external_url","status","balance_due"]},
- warranties:{table:"warranties",roles:["admin","crm","sales","technician"],columns:["project_id","customer_id","site_id","product_snapshot","serial_number","installation_date","start_date","replacement_end","service_end","status"]},
- service:{table:"service_tickets",roles:["admin","crm","sales","technician"],ownerField:"assigned_to",columns:["customer_id","site_id","project_id","warranty_id","problem","priority","assigned_to","scheduled_at","resolution","parts_replaced","status"],archive:true},
- amc:{table:"amc_contracts",roles:["admin","crm"],columns:["customer_id","site_id","type","start_date","end_date","renewal_at","status","notes"]},
- notifications:{table:"notifications",roles:["admin","crm","sales","technician"],ownerField:"user_id",columns:["user_id","type","title","entity_type","entity_id","due_at","read_at"]},
+type Config = {
+  table: string;
+  roles: string[];
+  adminOnly?: boolean;
+  ownerField?: string;
+  columns: string[];
+  sensitive?: string[];
+  archive?: boolean;
 };
-const entityName=(req:Request)=>decodeURIComponent(new URL(req.url).pathname.split("/").pop()||"");
-const jsonColumns=new Set(["floors","snapshot","checklist","product_snapshot"]);
-const writeAudit=async(userId:string,action:string,entity:string,id:string)=>env.DB.prepare("INSERT INTO audit_log (user_id,action,entity_type,entity_id,created_at) VALUES (?,?,?,?,?)").bind(userId,action,entity,id,new Date().toISOString()).run();
-const clean=(config:Config,p:Record<string,unknown>)=>Object.fromEntries(config.columns.filter(k=>p[k]!==undefined).map(k=>[k,jsonColumns.has(k)&&typeof p[k]!=="string"?JSON.stringify(p[k]):p[k]]));
-export async function GET(req:Request){try{const entity=entityName(req),config=configs[entity];if(!config)return Response.json({error:"Unknown record type"},{status:404});const user=await requireUser(config.roles),url=new URL(req.url),id=url.searchParams.get("id"),q=url.searchParams.get("q")?.trim();let sql=`SELECT * FROM ${config.table} WHERE 1=1`,bindings:unknown[]=[];if(config.archive){sql+=" AND archived=0"}if(id){sql+=" AND id=?";bindings.push(id)}if(config.ownerField&&user.role!=="admin"){sql+=` AND (${config.ownerField}=? OR ${config.ownerField} IS NULL)`;bindings.push(user.id)}if(q){const searchCols=config.columns.filter(c=>/name|title|number|status|phone|problem|sku|reference/.test(c));if(searchCols.length){sql+=` AND (${searchCols.map(c=>`${c} LIKE ?`).join(" OR ")})`;bindings.push(...searchCols.map(()=>`%${q}%`))}}sql+=" ORDER BY rowid DESC LIMIT 250";const result=await env.DB.prepare(sql).bind(...bindings).all<Record<string,unknown>>();const rows=result.results.map(row=>{const copy={...row};if(user.role!=="admin")for(const key of config.sensitive||[])delete copy[key];for(const key of jsonColumns)if(typeof copy[key]==="string")try{copy[key]=JSON.parse(copy[key] as string)}catch{}return copy});return Response.json({records:rows})}catch(e){return e instanceof Response?e:Response.json({error:"Unable to load records"},{status:500})}}
-export async function POST(req:Request){try{const entity=entityName(req),config=configs[entity];if(!config)return Response.json({error:"Unknown record type"},{status:404});const user=await requireUser(config.roles),p=await req.json() as Record<string,unknown>,values=clean(config,p),id=String(p.id||`${entity.toUpperCase().slice(0,3)}-${Date.now().toString().slice(-8)}`),now=new Date().toISOString();if(!Object.keys(values).length)return Response.json({error:"No valid fields"},{status:400});const extra:Record<string,unknown>={};if(["activities","tasks","warranties","amc"].includes(entity))extra.created_at=now;if(entity==="activities")extra.created_by=user.id;if(entity==="service"){extra.created_by=user.id;extra.created_at=now;extra.updated_at=now}if(entity==="projects")Object.assign(extra,{created_at:now,updated_at:now});if(entity==="materials")extra.updated_at=now;if(entity==="payments")Object.assign(extra,{created_at:now,received_by:values.received_by||user.id});if(entity==="expenses")extra.created_at=now;if(entity==="vendors")extra.created_at=now;if(entity==="zoho")Object.assign(extra,{created_by:user.id,created_at:now,updated_at:now});if(entity==="notifications")extra.created_at=now;const all={id,...values,...extra},keys=Object.keys(all);await env.DB.prepare(`INSERT INTO ${config.table} (${keys.join(",")}) VALUES (${keys.map(()=>"?").join(",")})`).bind(...keys.map(k=>all[k])).run();await writeAudit(user.id,`${entity}_created`,entity,id);return Response.json({record:all},{status:201})}catch(e){return e instanceof Response?e:Response.json({error:e instanceof Error?e.message:"Unable to create record"},{status:500})}}
-export async function PATCH(req:Request){try{const entity=entityName(req),config=configs[entity];if(!config)return Response.json({error:"Unknown record type"},{status:404});const user=await requireUser(config.roles),p=await req.json() as Record<string,unknown>,id=String(p.id||"");if(!id)return Response.json({error:"Record id is required"},{status:400});const values=clean(config,p);if(["projects","materials","zoho","service"].includes(entity))values.updated_at=new Date().toISOString();const keys=Object.keys(values);if(!keys.length)return Response.json({error:"No valid changes"},{status:400});await env.DB.prepare(`UPDATE ${config.table} SET ${keys.map(k=>`${k}=?`).join(",")} WHERE id=?`).bind(...keys.map(k=>values[k]),id).run();await writeAudit(user.id,`${entity}_updated`,entity,id);return Response.json({ok:true})}catch(e){return e instanceof Response?e:Response.json({error:"Unable to update record"},{status:500})}}
-export async function DELETE(req:Request){try{const entity=entityName(req),config=configs[entity];if(!config||!config.archive)return Response.json({error:"Archiving is not supported"},{status:400});const user=await requireUser(config.roles),id=new URL(req.url).searchParams.get("id");if(!id)return Response.json({error:"Record id is required"},{status:400});await env.DB.prepare(`UPDATE ${config.table} SET archived=1 WHERE id=?`).bind(id).run();await writeAudit(user.id,`${entity}_archived`,entity,id);return Response.json({ok:true})}catch(e){return e instanceof Response?e:Response.json({error:"Unable to archive record"},{status:500})}}
+const configs: Record<string, Config> = {
+  sites: {
+    table: "customer_sites",
+    roles: ["admin", "crm", "sales"],
+    columns: [
+      "customer_id",
+      "name",
+      "address",
+      "city",
+      "pincode",
+      "maps_url",
+      "contact_name",
+      "contact_phone",
+      "property_type",
+      "floors",
+      "survey_notes",
+      "electrical_readiness",
+      "network_details",
+    ],
+    archive: true,
+  },
+  activities: {
+    table: "activities",
+    roles: ["admin", "crm", "sales", "technician"],
+    columns: [
+      "entity_type",
+      "entity_id",
+      "type",
+      "content",
+      "due_at",
+      "completed_at",
+    ],
+  },
+  quotations: {
+    table: "quotations",
+    roles: ["admin", "crm", "sales"],
+    columns: [
+      "number",
+      "revision",
+      "customer_id",
+      "site_id",
+      "status",
+      "snapshot",
+      "total",
+    ],
+  },
+  projects: {
+    table: "projects",
+    roles: ["admin", "sales", "technician"],
+    ownerField: "manager_id",
+    columns: [
+      "customer_id",
+      "site_id",
+      "quotation_id",
+      "title",
+      "manager_id",
+      "status",
+      "value",
+      "planned_start",
+      "planned_end",
+      "notes",
+      "checklist",
+    ],
+    archive: true,
+  },
+  tasks: {
+    table: "project_tasks",
+    roles: ["admin", "crm", "sales", "technician"],
+    ownerField: "assigned_to",
+    columns: [
+      "project_id",
+      "title",
+      "assigned_to",
+      "status",
+      "due_at",
+      "mandatory",
+      "completed_at",
+      "notes",
+      "sort_order",
+    ],
+  },
+  materials: {
+    table: "project_materials",
+    roles: ["admin", "technician"],
+    columns: [
+      "project_id",
+      "quotation_item_id",
+      "name",
+      "sku",
+      "required_qty",
+      "ordered_qty",
+      "received_qty",
+      "status",
+      "vendor_id",
+      "buying_price",
+      "freight",
+      "purchase_reference",
+      "expected_delivery",
+    ],
+    sensitive: ["buying_price", "freight"],
+  },
+  payments: {
+    table: "payments",
+    roles: ["admin", "crm", "sales"],
+    columns: [
+      "project_id",
+      "quotation_id",
+      "date",
+      "amount",
+      "mode",
+      "reference",
+      "received_by",
+      "notes",
+    ],
+    archive: true,
+  },
+  expenses: {
+    table: "expenses",
+    roles: ["admin"],
+    adminOnly: true,
+    columns: [
+      "project_id",
+      "date",
+      "category",
+      "vendor",
+      "amount",
+      "tax",
+      "mode",
+      "notes",
+    ],
+    archive: true,
+  },
+  vendors: {
+    table: "vendors",
+    roles: ["admin"],
+    adminOnly: true,
+    columns: ["name", "phone", "email", "gstin", "address"],
+    archive: true,
+  },
+  zoho: {
+    table: "zoho_invoices",
+    roles: ["admin"],
+    adminOnly: true,
+    columns: [
+      "project_id",
+      "quotation_id",
+      "zoho_invoice_id",
+      "invoice_number",
+      "invoice_date",
+      "pdf_key",
+      "external_url",
+      "status",
+      "balance_due",
+    ],
+  },
+  warranties: {
+    table: "warranties",
+    roles: ["admin", "crm", "sales", "technician"],
+    columns: [
+      "project_id",
+      "customer_id",
+      "site_id",
+      "product_snapshot",
+      "serial_number",
+      "installation_date",
+      "start_date",
+      "replacement_end",
+      "service_end",
+      "status",
+    ],
+  },
+  service: {
+    table: "service_tickets",
+    roles: ["admin", "crm", "sales", "technician"],
+    ownerField: "assigned_to",
+    columns: [
+      "customer_id",
+      "site_id",
+      "project_id",
+      "warranty_id",
+      "problem",
+      "priority",
+      "assigned_to",
+      "scheduled_at",
+      "resolution",
+      "parts_replaced",
+      "status",
+    ],
+    archive: true,
+  },
+  amc: {
+    table: "amc_contracts",
+    roles: ["admin", "crm"],
+    columns: [
+      "customer_id",
+      "site_id",
+      "type",
+      "start_date",
+      "end_date",
+      "renewal_at",
+      "status",
+      "notes",
+    ],
+  },
+  notifications: {
+    table: "notifications",
+    roles: ["admin", "crm", "sales", "technician"],
+    ownerField: "user_id",
+    columns: [
+      "user_id",
+      "type",
+      "title",
+      "entity_type",
+      "entity_id",
+      "due_at",
+      "read_at",
+    ],
+  },
+};
+const entityName = (req: Request) =>
+  decodeURIComponent(new URL(req.url).pathname.split("/").pop() || "");
+const jsonColumns = new Set([
+  "floors",
+  "snapshot",
+  "checklist",
+  "product_snapshot",
+]);
+const writeAudit = async (
+  userId: string,
+  action: string,
+  entity: string,
+  id: string,
+) =>
+  env.DB.prepare(
+    "INSERT INTO audit_log (user_id,action,entity_type,entity_id,created_at) VALUES (?,?,?,?,?)",
+  )
+    .bind(userId, action, entity, id, new Date().toISOString())
+    .run();
+const optionalForeignKeys = new Set([
+  "vendor_id", "quotation_item_id", "quotation_id", "customer_id",
+  "site_id", "project_id", "warranty_id", "assigned_to",
+]);
+const clean = (config: Config, p: Record<string, unknown>) =>
+  Object.fromEntries(
+    config.columns
+      .filter((k) => p[k] !== undefined)
+      .map((k) => [
+        k,
+        p[k] === "" && optionalForeignKeys.has(k)
+          ? null
+          : jsonColumns.has(k) && typeof p[k] !== "string"
+          ? JSON.stringify(p[k])
+          : p[k],
+      ]),
+  );
+export async function GET(req: Request) {
+  try {
+    const entity = entityName(req),
+      config = configs[entity];
+    if (!config)
+      return Response.json({ error: "Unknown record type" }, { status: 404 });
+    const user = await requireUser(config.roles),
+      url = new URL(req.url),
+      id = url.searchParams.get("id"),
+      q = url.searchParams.get("q")?.trim();
+    let sql = `SELECT * FROM ${config.table} WHERE 1=1`,
+      bindings: unknown[] = [];
+    if (config.archive) {
+      sql += " AND archived=0";
+    }
+    if (id) {
+      sql += " AND id=?";
+      bindings.push(id);
+    }
+    if (config.ownerField && user.role !== "admin") {
+      sql += ` AND (${config.ownerField}=? OR ${config.ownerField} IS NULL)`;
+      bindings.push(user.id);
+    }
+    if (q) {
+      const searchCols = config.columns.filter((c) =>
+        /name|title|number|status|phone|problem|sku|reference/.test(c),
+      );
+      if (searchCols.length) {
+        sql += ` AND (${searchCols.map((c) => `${c} LIKE ?`).join(" OR ")})`;
+        bindings.push(...searchCols.map(() => `%${q}%`));
+      }
+    }
+    sql += " ORDER BY rowid DESC LIMIT 250";
+    const result = await env.DB.prepare(sql)
+      .bind(...bindings)
+      .all<Record<string, unknown>>();
+    const rows = result.results.map((row) => {
+      const copy = { ...row };
+      if (user.role !== "admin")
+        for (const key of config.sensitive || []) delete copy[key];
+      for (const key of jsonColumns)
+        if (typeof copy[key] === "string")
+          try {
+            copy[key] = JSON.parse(copy[key] as string);
+          } catch {}
+      return copy;
+    });
+    return Response.json({ records: rows });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json({ error: "Unable to load records" }, { status: 500 });
+  }
+}
+export async function POST(req: Request) {
+  try {
+    const entity = entityName(req),
+      config = configs[entity];
+    if (!config)
+      return Response.json({ error: "Unknown record type" }, { status: 404 });
+    const user = await requireUser(config.roles),
+      p = (await req.json()) as Record<string, unknown>,
+      values = clean(config, p),
+      id = String(
+        p.id ||
+          `${entity.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-8)}`,
+      ),
+      now = new Date().toISOString();
+    if (!Object.keys(values).length)
+      return Response.json({ error: "No valid fields" }, { status: 400 });
+    if (entity === "materials") {
+      if (!values.project_id)
+        return Response.json({ error: "Select a project before adding material" }, { status: 400 });
+      const project = await env.DB.prepare("SELECT id FROM projects WHERE id=? AND archived=0").bind(values.project_id).first();
+      if (!project)
+        return Response.json({ error: "The selected project no longer exists. Refresh and choose another project." }, { status: 400 });
+      if (values.vendor_id) {
+        const vendor = await env.DB.prepare("SELECT id FROM vendors WHERE id=? AND archived=0").bind(values.vendor_id).first();
+        if (!vendor)
+          return Response.json({ error: "The selected supplier no longer exists. Refresh and choose another supplier." }, { status: 400 });
+      }
+    }
+    const extra: Record<string, unknown> = {};
+    if (["activities", "tasks", "warranties", "amc"].includes(entity))
+      extra.created_at = now;
+    if (entity === "activities") extra.created_by = user.id;
+    if (entity === "service") {
+      extra.created_by = user.id;
+      extra.created_at = now;
+      extra.updated_at = now;
+    }
+    if (entity === "projects")
+      Object.assign(extra, { created_at: now, updated_at: now });
+    if (entity === "materials") extra.updated_at = now;
+    if (entity === "payments")
+      Object.assign(extra, {
+        created_at: now,
+        received_by: values.received_by || user.id,
+      });
+    if (entity === "expenses") extra.created_at = now;
+    if (entity === "vendors") extra.created_at = now;
+    if (entity === "zoho")
+      Object.assign(extra, {
+        created_by: user.id,
+        created_at: now,
+        updated_at: now,
+      });
+    if (entity === "notifications") extra.created_at = now;
+    const all = { id, ...values, ...extra },
+      keys = Object.keys(all);
+    await env.DB.prepare(
+      `INSERT INTO ${config.table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`,
+    )
+      .bind(...keys.map((k) => all[k]))
+      .run();
+    await writeAudit(user.id, `${entity}_created`, entity, id);
+    return Response.json({ record: all }, { status: 201 });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json(
+          { error: e instanceof Error ? e.message : "Unable to create record" },
+          { status: 500 },
+        );
+  }
+}
+export async function PATCH(req: Request) {
+  try {
+    const entity = entityName(req),
+      config = configs[entity];
+    if (!config)
+      return Response.json({ error: "Unknown record type" }, { status: 404 });
+    const user = await requireUser(config.roles),
+      p = (await req.json()) as Record<string, unknown>,
+      id = String(p.id || "");
+    if (!id)
+      return Response.json({ error: "Record id is required" }, { status: 400 });
+    const values = clean(config, p);
+    if (["projects", "materials", "zoho", "service"].includes(entity))
+      values.updated_at = new Date().toISOString();
+    const keys = Object.keys(values);
+    if (!keys.length)
+      return Response.json({ error: "No valid changes" }, { status: 400 });
+    await env.DB.prepare(
+      `UPDATE ${config.table} SET ${keys.map((k) => `${k}=?`).join(",")} WHERE id=?`,
+    )
+      .bind(...keys.map((k) => values[k]), id)
+      .run();
+    await writeAudit(user.id, `${entity}_updated`, entity, id);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json({ error: "Unable to update record" }, { status: 500 });
+  }
+}
+export async function DELETE(req: Request) {
+  try {
+    const entity = entityName(req),
+      config = configs[entity];
+    if (!config || !config.archive)
+      return Response.json(
+        { error: "Archiving is not supported" },
+        { status: 400 },
+      );
+    const user = await requireUser(config.roles),
+      id = new URL(req.url).searchParams.get("id");
+    if (!id)
+      return Response.json({ error: "Record id is required" }, { status: 400 });
+    await env.DB.prepare(`UPDATE ${config.table} SET archived=1 WHERE id=?`)
+      .bind(id)
+      .run();
+    await writeAudit(user.id, `${entity}_archived`, entity, id);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json({ error: "Unable to archive record" }, { status: 500 });
+  }
+}

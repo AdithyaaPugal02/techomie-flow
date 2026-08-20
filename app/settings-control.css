@@ -1,1 +1,347 @@
-.settingspage{padding:30px;max-width:1500px;margin:auto}.settingspage>header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px}.settingspage>header small{font-size:11px;letter-spacing:.12em;color:#1769ff;font-weight:800}.settingspage>header h1{font-size:34px;margin:5px 0}.settingspage>header p{margin:0;color:#667085;font-size:14px}.settingslayout{display:grid;grid-template-columns:285px 1fr;gap:18px;align-items:start}.settingslayout>nav{background:#111318;border-radius:14px;padding:9px;position:sticky;top:86px;max-height:calc(100vh - 110px);overflow:auto}.settingslayout>nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:#a8afb9;text-align:left;padding:10px;border-radius:8px;font-size:12px;cursor:pointer}.settingslayout>nav button span{width:24px;height:24px;border-radius:7px;background:#20242b;display:grid;place-items:center;font-size:10px}.settingslayout>nav button.active{background:#1769ff;color:#fff}.settingslayout>nav button.active span{background:#fff2;color:#fff}.settingslayout>main{min-width:0}.settingssectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.settingssectionhead h2{font-size:21px;margin:0}.settingssectionhead span{font-size:11px;color:#16804a;background:#eaf8f0;border-radius:20px;padding:6px 10px}.settingscard{background:#fff;border:1px solid #e3e7ed;border-radius:14px;padding:20px;box-shadow:0 2px 8px #10182808}.settingsform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.settingsform>label{display:flex;flex-direction:column;gap:7px}.settingsform>label.wide{grid-column:1/-1}.settingsform>label>span{font-size:12px;font-weight:700;color:#344054}.settingsform input,.settingsform select,.settingsform textarea,.assetfield input{border:1px solid #d7dce4;border-radius:8px;padding:10px 11px;background:#fff;font:inherit;font-size:13px;outline:none}.settingsform textarea{font-family:ui-monospace,Consolas,monospace;line-height:1.5;resize:vertical}.settingsform input:focus,.settingsform textarea:focus{border-color:#1769ff;box-shadow:0 0 0 3px #1769ff16}.switch{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;font-size:12px}.switch input{min-height:auto!important;width:17px;height:17px}.assetfield{display:grid;grid-template-columns:1fr auto;gap:8px}.settingsstack{display:flex;flex-direction:column;gap:12px}.settingsstack>button{align-self:flex-start;border:1px solid #d7dce4;background:#fff;padding:10px 13px;border-radius:8px;font-weight:700}.bankhead,.settingsactions{display:flex;align-items:center;gap:16px;justify-content:space-between;margin-bottom:16px}.bankhead h3,.settingscard h3{margin:0;font-size:16px}.settingsactions>div b,.settingsactions>div span{display:block}.settingsactions>div span{font-size:12px;color:#667085;margin-top:4px}.settingsnotice{background:#111827;color:#fff;border-radius:9px;padding:11px 14px;font-size:12px;margin-bottom:12px}.settingstable{overflow:auto}.settingsrow{display:grid;grid-template-columns:1.4fr .7fr .9fr .55fr .55fr;gap:12px;align-items:center;padding:12px 8px;border-top:1px solid #eaecf0;font-size:12px;min-width:760px}.settingsrow.head{background:#f8fafc;color:#667085;font-size:11px;font-weight:800;text-transform:uppercase}.settingsrow span b,.settingsrow span small{display:block}.settingsrow span small{color:#667085;margin-top:3px}.settingsrow button{border:1px solid #d7dce4;background:#fff;border-radius:7px;padding:7px;font-size:11px}.healthgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.healthgrid article{background:#fff;border:1px solid #e3e7ed;border-radius:13px;padding:18px}.healthgrid small,.healthgrid b{display:block}.healthgrid small{font-size:11px;color:#667085;margin-bottom:8px}.healthgrid b{font-size:14px;word-break:break-word}.productiongrid{grid-template-columns:repeat(2,minmax(0,1fr))}.auditlist{margin-top:14px;max-height:440px;overflow:auto}.auditlist>div{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;padding:11px 0;border-top:1px solid #eaecf0;font-size:12px}.auditlist b{text-transform:capitalize}.auditlist span,.auditlist time{color:#667085}.profile-settings{max-width:900px}.profile-settings .settingscard{margin-top:18px}@media(max-width:1000px){.settingslayout{grid-template-columns:220px 1fr}.healthgrid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.settingspage{padding:20px 14px}.settingspage>header{align-items:flex-start}.settingslayout{grid-template-columns:1fr}.settingslayout>nav{position:static;display:flex;overflow:auto;padding:7px}.settingslayout>nav button{min-width:190px}.settingsform{grid-template-columns:1fr}.settingsform>label.wide{grid-column:auto}.settingssectionhead{align-items:flex-start;gap:8px}.settingssectionhead span{display:none}.healthgrid,.productiongrid{grid-template-columns:1fr}.auditlist>div{grid-template-columns:1fr}.settingspage>header h1{font-size:28px}}
+.settingspage {
+  padding: 30px;
+  max-width: 100%;
+  width: 100%;
+  margin: auto;
+  overflow-x: hidden;
+}
+.settingspage > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.settingspage > header small {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #1769ff;
+  font-weight: 800;
+}
+.settingspage > header h1 {
+  font-size: 34px;
+  margin: 5px 0;
+}
+.settingspage > header p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+.settingslayout {
+  display: grid;
+  grid-template-columns: minmax(220px, 285px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  max-width: 100%;
+}
+.settingslayout > nav {
+  background: #111318;
+  border-radius: 14px;
+  padding: 9px;
+  position: sticky;
+  top: 86px;
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+}
+.settingslayout > nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #a8afb9;
+  text-align: left;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.settingslayout > nav button span {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: #20242b;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+}
+.settingslayout > nav button.active {
+  background: #1769ff;
+  color: #fff;
+}
+.settingslayout > nav button.active span {
+  background: #fff2;
+  color: #fff;
+}
+.settingslayout > main {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.settingssectionhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.settingssectionhead h2 {
+  font-size: 21px;
+  margin: 0;
+}
+.settingssectionhead span {
+  font-size: 11px;
+  color: #16804a;
+  background: #eaf8f0;
+  border-radius: 20px;
+  padding: 6px 10px;
+}
+.settingscard {
+  background: #fff;
+  border: 1px solid #e3e7ed;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px #10182808;
+}
+.settingsform {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.settingsform > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.settingsform > label.wide {
+  grid-column: 1/-1;
+}
+.settingsform > label > span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #344054;
+}
+.settingsform input,
+.settingsform select,
+.settingsform textarea,
+.assetfield input {
+  border: 1px solid #d7dce4;
+  border-radius: 8px;
+  padding: 10px 11px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.settingsform textarea {
+  font-family: ui-monospace, Consolas, monospace;
+  line-height: 1.5;
+  resize: vertical;
+}
+.settingsform input:focus,
+.settingsform textarea:focus {
+  border-color: #1769ff;
+  box-shadow: 0 0 0 3px #1769ff16;
+}
+.switch {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.switch input {
+  min-height: auto !important;
+  width: 17px;
+  height: 17px;
+}
+.assetfield {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.settingsstack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settingsstack > button {
+  align-self: flex-start;
+  border: 1px solid #d7dce4;
+  background: #fff;
+  padding: 10px 13px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.bankhead,
+.settingsactions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.bankhead h3,
+.settingscard h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.settingsactions > div b,
+.settingsactions > div span {
+  display: block;
+}
+.settingsactions > div span {
+  font-size: 12px;
+  color: #667085;
+  margin-top: 4px;
+}
+.settingsnotice {
+  background: #111827;
+  color: #fff;
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.settingstable {
+  overflow: auto;
+}
+.settingsrow {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.9fr 0.55fr 0.55fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 8px;
+  border-top: 1px solid #eaecf0;
+  font-size: 12px;
+  min-width: 760px;
+}
+.settingsrow.head {
+  background: #f8fafc;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.settingsrow span b,
+.settingsrow span small {
+  display: block;
+}
+.settingsrow span small {
+  color: #667085;
+  margin-top: 3px;
+}
+.settingsrow button {
+  border: 1px solid #d7dce4;
+  background: #fff;
+  border-radius: 7px;
+  padding: 7px;
+  font-size: 11px;
+}
+.healthgrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.healthgrid article {
+  background: #fff;
+  border: 1px solid #e3e7ed;
+  border-radius: 13px;
+  padding: 18px;
+}
+.healthgrid small,
+.healthgrid b {
+  display: block;
+}
+.healthgrid small {
+  font-size: 11px;
+  color: #667085;
+  margin-bottom: 8px;
+}
+.healthgrid b {
+  font-size: 14px;
+  word-break: break-word;
+}
+.productiongrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.auditlist {
+  margin-top: 14px;
+  max-height: 440px;
+  overflow: auto;
+}
+.auditlist > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid #eaecf0;
+  font-size: 12px;
+}
+.auditlist b {
+  text-transform: capitalize;
+}
+.auditlist span,
+.auditlist time {
+  color: #667085;
+}
+.profile-settings {
+  max-width: 900px;
+}
+.profile-settings .settingscard {
+  margin-top: 18px;
+}
+@media (max-width: 1000px) {
+  .settingslayout {
+    grid-template-columns: 220px 1fr;
+  }
+  .healthgrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .settingspage {
+    padding: 20px 14px;
+  }
+  .settingspage > header {
+    align-items: flex-start;
+  }
+  .settingslayout {
+    grid-template-columns: 1fr;
+  }
+  .settingslayout > nav {
+    position: static;
+    display: flex;
+    overflow: auto;
+    padding: 7px;
+  }
+  .settingslayout > nav button {
+    min-width: 190px;
+  }
+  .settingsform {
+    grid-template-columns: 1fr;
+  }
+  .settingsform > label.wide {
+    grid-column: auto;
+  }
+  .settingssectionhead {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settingssectionhead span {
+    display: none;
+  }
+  .healthgrid,
+  .productiongrid {
+    grid-template-columns: 1fr;
+  }
+  .auditlist > div {
+    grid-template-columns: 1fr;
+  }
+  .settingspage > header h1 {
+    font-size: 28px;
+  }
+}

@@ -274,6 +274,7 @@ function QuoteWorkspace({
     [newMode, setNewMode] = useState(!id),
     [customerId, setCustomerId] = useState(""),
     [siteId, setSiteId] = useState(""),
+    [salesId, setSalesId] = useState(""),
     [creating, setCreating] = useState(false),
     [branding, setBranding] = useState<R>({});
   const timer = useRef<any>(null);
@@ -291,6 +292,7 @@ function QuoteWorkspace({
       setSnap(d.quotation.snapshot);
       setCustomerId(String(d.quotation.customer_id));
       setSiteId(String(d.quotation.site_id));
+      setSalesId(String(d.quotation.sales_id || d.quotation.created_by || ""));
       setActivity(d.activities || []);
       setRevisions(d.revisions || []);
       setFiles(d.files || []);
@@ -324,6 +326,7 @@ function QuoteWorkspace({
           total: totals.grand,
           title: snap.details?.title,
           validUntil: snap.details?.validUntil,
+          salesId,
         }),
       }),
       d = await r.json();
@@ -334,7 +337,7 @@ function QuoteWorkspace({
       );
       setQuote({ ...quote, total: totals.grand, updated_at: d.savedAt });
     } else setSave(`Save failed — ${d.error}`);
-  }, [quote, dirty, snap, totals.grand]);
+  }, [quote, dirty, snap, totals.grand, salesId]);
   useEffect(() => {
     if (!dirty || !quote) return;
     clearTimeout(timer.current);
@@ -360,6 +363,7 @@ function QuoteWorkspace({
           validUntil: snap.details.validUntil,
           floors: snap.floors,
           total: totals.grand,
+          salesId: salesId || undefined,
           details: { ...snap.details, customer: c.name, site: s.name },
         }),
       }),
@@ -401,6 +405,12 @@ function QuoteWorkspace({
     }
     notify("Quotation customer and site updated");
     setSave("Saved");
+    const customer = customers.find((x: R) => String(x.id) === nextCustomerId);
+    const site = (filters.sites || []).find((x: R) => String(x.id) === nextSiteId);
+    if (customer && site) {
+      setQuote((current: R) => ({...current, customer_id: Number(nextCustomerId), site_id: nextSiteId, customer_name: customer.name, phone: customer.phone, site_name: site.name, site_address: site.address, city: site.city, state: site.state}));
+      setSnap((current: R) => ({...current, details: {...current.details, customer: customer.name, customerName: customer.name, site: site.name, siteName: site.name}}));
+    }
     await load();
   };
   const pdf = async (download = false) => {
@@ -418,8 +428,9 @@ function QuoteWorkspace({
         const blob = await html2pdf()
           .set({
             filename,
-            margin: 8,
-            html2canvas: { scale: 2, useCORS: true },
+            margin: 0,
+            image: { type: "png", quality: 1 },
+            html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000 },
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
             pagebreak: { mode: ["css", "legacy"] },
           })
@@ -430,7 +441,7 @@ function QuoteWorkspace({
         form.set("revision", String(quote.revision || 0));
         form.set(
           "kind",
-          quote.snapshot?.details?.quoteType === "Full Smart Home Proposal"
+          quotePdfFormat(snap) === "detailed"
             ? "Detailed Proposal PDF"
             : "Commercial Quotation PDF",
         );
@@ -470,6 +481,9 @@ function QuoteWorkspace({
         create={create}
         creating={creating}
         close={close}
+        users={filters.users || []}
+        salesId={salesId}
+        setSalesId={(value:string)=>{const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);setSnap((current:R)=>({...current,details:{...current.details,quotationByName:employee?.name||""}}))}}
       />
     );
   if (!quote) return <div className="qloading">Loading quotation…</div>;
@@ -491,7 +505,7 @@ function QuoteWorkspace({
           </small>
           <h1>{snap.details?.title || quote.title}</h1>
           <span>
-            {quote.customer_name} · {quote.site_name}
+            {snap.details?.customerName || snap.details?.customer || quote.customer_name} · {snap.details?.siteName || snap.details?.site || quote.site_name}
           </span>
         </div>
         <div className="qsave">
@@ -499,6 +513,18 @@ function QuoteWorkspace({
           <em>{quote.status}</em>
         </div>
         <div className="qactions">
+          <label className="documenttemplateselect">
+            <span>PDF format</span>
+            <select
+              disabled={locked}
+              value={snap.details?.pdfFormat || "auto"}
+              onChange={(e) => change({...snap,details:{...snap.details,pdfFormat:e.target.value}})}
+            >
+              <option value="auto">Auto</option>
+              <option value="detailed">Detailed proposal</option>
+              <option value="compact">Compact quotation</option>
+            </select>
+          </label>
           <label className="documenttemplateselect">
             <span>PDF design</span>
             <select
@@ -629,6 +655,9 @@ function QuoteWorkspace({
             }}
             setSiteId={setSiteId}
             onRelink={relink}
+            users={filters.users || []}
+            salesId={salesId}
+            setSalesId={(value: string) => { const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);change({...snap,details:{...snap.details,quotationByName:employee?.name||""}}); }}
           />
         ) : tab === "Scope & Items" ? (
           <Builder
@@ -714,6 +743,9 @@ function NewQuote({
   create,
   creating,
   close,
+  users,
+  salesId,
+  setSalesId,
 }: R) {
   return (
     <div className="newquote">
@@ -823,6 +855,13 @@ function NewQuote({
           />
         </label>
         <label>
+          <span>Quotation by</span>
+          <select value={salesId} onChange={(e) => setSalesId(e.target.value)}>
+            <option value="">Current user</option>
+            {(users || []).map((user: R) => <option key={user.id} value={user.id}>{user.name} · {user.role}</option>)}
+          </select>
+        </label>
+        <label>
           <span>Valid until</span>
           <input
             type="date"
@@ -861,6 +900,9 @@ function Details({
   setCustomerId,
   setSiteId,
   onRelink,
+  users,
+  salesId,
+  setSalesId,
 }: R) {
   const d = snap.details || {},
     change = (k: string, v: any) => set({ ...snap, details: { ...d, [k]: v } }),
@@ -956,6 +998,13 @@ function Details({
         <label>
           <span>GSTIN</span>
           <input disabled value={quote.gstin || "Unregistered"} />
+        </label>
+        <label>
+          <span>Quotation by</span>
+          <select disabled={locked} value={salesId} onChange={(e) => setSalesId(e.target.value)}>
+            <option value="">Select employee</option>
+            {(users || []).map((user: R) => <option key={user.id} value={user.id}>{user.name} · {user.role}</option>)}
+          </select>
         </label>
         <label>
           <span>Interior / builder / architect</span>
@@ -1588,6 +1637,8 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     company = snap.company?.displayName || "Techomie Smart Devices",
     logo = snap.company?.logo || "/techomie-logo.jpg",
     validity = snap.details?.validUntil || quote.valid_until,
+    pdfFormat = quotePdfFormat(snap),
+    detailed = pdfFormat === "detailed",
     templateId =
       snap.details?.templateId || branding.defaultQuoteTemplate || "luxury",
     templateStyle = {
@@ -1596,6 +1647,8 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
       "--doc-accent": branding.accentColour || "#c8aa72",
       fontFamily: branding.pdfFont || "Arial",
     } as CSSProperties;
+  const customerName = snap.details?.customerName || snap.details?.customer || quote.customer_name;
+  const siteName = snap.details?.siteName || snap.details?.site || quote.site_name;
   const head = (section: string) => (
     <header className="qpdfhead">
       <span>
@@ -1619,7 +1672,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
   );
   return (
     <article
-      className={`qpaper qpaperpremium qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
+      className={`qpaper qpaperpremium qproposalclean qformat-${pdfFormat} qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
       style={templateStyle}
     >
       <section className="qcover">
@@ -1632,10 +1685,10 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
           </span>
         </header>
         <div className="qcoverbody">
-          <small>SMART HOME AUTOMATION PROPOSAL</small>
-          <h1>{snap.details?.title}</h1>
+          <small>{detailed ? "SMART HOME AUTOMATION PROPOSAL" : "COMMERCIAL QUOTATION"}</small>
+          <h1>{customerName}</h1>
           <p>
-            Prepared exclusively for <b>{quote.customer_name}</b>
+            {siteName}{quote.city ? `, ${quote.city}` : ""}
           </p>
         </div>
         <div className="qcovermeta">
@@ -1650,7 +1703,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
           <span>
             <small>PROJECT / SITE</small>
             <b>
-              {quote.site_name}, {quote.city}
+              {siteName}, {quote.city}
             </b>
           </span>
           <span>
@@ -1663,7 +1716,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
           <small>SMART HOME | SECURITY | AUTOMATION</small>
         </footer>
       </section>
-      <section className="qintro">
+      {detailed && <section className="qintro">
         {head("PROPOSAL OVERVIEW")}
         <div className="qintrohero">
           <small>DESIGNED AROUND YOUR SPACE</small>
@@ -1677,14 +1730,14 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
         <div className="qpdfcards">
           <article>
             <small>CLIENT</small>
-            <b>{quote.customer_name}</b>
+            <b>{customerName}</b>
             <span>
               {quote.phone || quote.contact_phone || "Contact on record"}
             </span>
           </article>
           <article>
             <small>PROJECT / SITE</small>
-            <b>{quote.site_name}</b>
+            <b>{siteName}</b>
             <span>
               {[quote.site_address, quote.city, quote.state, quote.pincode]
                 .filter(Boolean)
@@ -1725,7 +1778,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
           </span>
         </div>
         {foot("Proposal overview")}
-      </section>
+      </section>}
       {floors.map((floor: R, floorIndex: number) => (
         <section className="qpaperscope" key={floor.name}>
           {head("ROOM-WISE SCOPE")}
@@ -1745,7 +1798,9 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
               <div className="qpapercolumns">
                 <span>PRODUCT / CONFIGURATION</span>
                 <span>QTY</span>
+                <span>UNIT</span>
                 <span>RATE</span>
+                <span>DISC.</span>
                 <span>AMOUNT</span>
               </div>
               {(room.items || []).map((item: R, index: number) => (
@@ -1764,9 +1819,11 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
                     </em>
                   </span>
                   <i>
-                    {item.qty} {item.unit}
+                    {item.qty}
                   </i>
+                  <i>{item.unit}</i>
                   <i>{money(item.price)}</i>
+                  <i>{Number(item.discount || 0)}%</i>
                   <strong>{money(line(item).total)}</strong>
                 </div>
               ))}
@@ -1886,10 +1943,21 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
           <small>THANK YOU FOR CHOOSING TECHOMIE</small>
           <b>Let's make your space smarter.</b>
         </div>
+        <div className="qpreparedby"><small>QUOTATION PREPARED BY</small><b>{snap.details?.quotationByName || quote.sales_name || quote.created_name || "Techomie Sales Team"}</b></div>
         {foot("Payment and terms")}
       </section>
     </article>
   );
+}
+
+function quotePdfFormat(snap: R) {
+  const manual = snap?.details?.pdfFormat;
+  if (manual === "detailed" || manual === "compact") return manual;
+  const rooms = (snap?.floors || []).flatMap((f: R) => f.rooms || []);
+  const items = rooms.flatMap((r: R) => r.items || []);
+  return snap?.details?.quoteType === "Full Smart Home Proposal" || rooms.length > 1 || items.length > 4
+    ? "detailed"
+    : "compact";
 }
 
 function Activity({ rows, revisions }: R) {

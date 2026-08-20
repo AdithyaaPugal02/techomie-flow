@@ -337,6 +337,7 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
                 typeof x.attributes === "string"
                   ? JSON.parse(x.attributes || "{}")
                   : x.attributes || {};
+            setDetail(null);
             setEdit({
               variantId: x.variant_id,
               name: x.name,
@@ -531,10 +532,10 @@ function ItemForm({
     </label>
   );
   return (
-    <div className="modalback">
+    <div className="modalback" onMouseDown={(e) => e.target === e.currentTarget && close()}>
       <div className="itemmodal">
         <header>
-          <h2>{v.variantId ? "Edit Item" : "Add Item"}</h2>
+          <h2>{v.variantId ? "Edit item" : "Add item"}</h2>
           <button onClick={close}>×</button>
         </header>
         <div className="itemform">

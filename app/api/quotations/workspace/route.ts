@@ -220,13 +220,14 @@ export async function PATCH(req: Request) {
       const total = Number(p.total || 0),
         t = now();
       await env.DB.prepare(
-        "UPDATE quotations SET snapshot=?,total=?,title=COALESCE(?,title),valid_until=COALESCE(?,valid_until),updated_at=? WHERE id=?",
+        "UPDATE quotations SET snapshot=?,total=?,title=COALESCE(?,title),valid_until=COALESCE(?,valid_until),sales_id=COALESCE(?,sales_id),updated_at=? WHERE id=?",
       )
         .bind(
           JSON.stringify(snapshot),
           total,
           p.title || null,
           p.validUntil || null,
+          p.salesId || null,
           t,
           id,
         )

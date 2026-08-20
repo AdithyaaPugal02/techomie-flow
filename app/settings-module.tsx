@@ -10,7 +10,7 @@ const sections = [
   ["paymentTerms", "Payment Terms"],
   ["warranty", "Warranty and Service Templates"],
   ["terms", "Terms and Conditions Templates"],
-  ["users", "Users, Roles and Permissions"],
+  ["users", "Manage Employees"],
   ["masters", "Items, Categories, Suppliers and Price Rules"],
   ["workflows", "Workflow and Status Settings"],
   ["notifications", "Notifications and Reminders"],
@@ -238,6 +238,7 @@ export default function SettingsModule({
               {busy ? "Saving…" : "Save changes"}
             </button>
           )}
+        {active !== "users" && <button onClick={() => setActive("users")}>Manage employees</button>}
       </header>
       {notice && <div className="settingsnotice">{notice}</div>}
       <div className="settingslayout">
