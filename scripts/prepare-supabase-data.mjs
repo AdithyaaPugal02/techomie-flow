@@ -45,7 +45,8 @@ const inserts = extractInserts(sourceSql).filter(line => {
   if (!table || !columns?.length) throw new Error(`Could not determine column order for ${table ?? "an insert"}`);
   return line
     .replace(`INSERT INTO "${table}" VALUES`, `INSERT INTO "${table}" (${columns.map(column => `"${column}"`).join(",")}) VALUES`)
-    .replace(/\bchar\(/gi, "chr(");
+    .replace(/\bchar\(/gi, "chr(")
+    .replace(/;$/, " ON CONFLICT DO NOTHING;");
 });
 
 const sequenceTables = ["activities", "audit_log", "customers", "products", "quotations", "sites", "variants"];
@@ -63,4 +64,29 @@ const sql = [
 ].join("\n");
 
 fs.writeFileSync(target, sql);
-console.log(`Prepared ${inserts.length} data rows in ${target}`);
+const parts = [];
+let current = [];
+let currentSize = 0;
+for (const insert of inserts) {
+  if (current.length && currentSize + insert.length > 350_000) {
+    parts.push(current);
+    current = [];
+    currentSize = 0;
+  }
+  current.push(insert);
+  currentSize += insert.length + 1;
+}
+if (current.length) parts.push(current);
+parts.push(sequences);
+
+for (const file of fs.readdirSync(path.dirname(target)).filter(file => /^data-part-\d+\.sql$/.test(file))) {
+  fs.unlinkSync(path.join(path.dirname(target), file));
+}
+parts.forEach((part, index) => {
+  const partSql = index === parts.length - 1
+    ? `${part.join("\n")}\n`
+    : `BEGIN;\nSET LOCAL session_replication_role = replica;\n${part.join("\n")}\nCOMMIT;\n`;
+  fs.writeFileSync(path.join(path.dirname(target), `data-part-${String(index + 1).padStart(3, "0")}.sql`), partSql);
+});
+
+console.log(`Prepared ${inserts.length} data rows in ${parts.length} resumable parts`);

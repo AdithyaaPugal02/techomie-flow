@@ -1,11 +1,11 @@
-import postgres from "postgres";
 import { createClient } from "@supabase/supabase-js";
 
 type Args = unknown[];
 type Row = Record<string, unknown>;
 
-const connection = process.env.POSTGRES_URL || process.env.DATABASE_URL || "";
-const sql = connection ? postgres(connection, { prepare: false, max: 8, idle_timeout: 20 }) : null;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
+const supabase = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } }) : null;
 
 function translate(source: string) {
   let index = 0;
@@ -33,8 +33,7 @@ class Prepared {
   constructor(private source: string) {}
   bind(...args: Args) { this.args = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value); return this; }
   async rows() {
-    if (!sql) throw new Error("POSTGRES_URL is not configured");
-    return sql.unsafe(translate(this.source), this.args as never[]) as unknown as Row[];
+    return queryRows(this.source, this.args);
   }
   async first<T = Row>() { const rows = await this.rows(); return (rows[0] as T) ?? null; }
   async all<T = Row>() { const rows = await this.rows(); return { results: rows as T[], success: true, meta: { changes: rows.length } }; }
@@ -46,16 +45,21 @@ class Database {
   prepare(source: string) { return new Prepared(source); }
   async batch(statements: Prepared[]) { return Promise.all(statements.map(statement => statement.run())); }
   async exec(source: string) {
-    if (!sql) throw new Error("POSTGRES_URL is not configured");
-    await sql.unsafe(translate(source));
+    await queryRows(source, []);
     return { count: 1, duration: 0 };
   }
 }
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+export async function queryRows(source: string, args: Args = []) {
+  if (!supabase) throw new Error("Supabase server credentials are not configured");
+  const queryParams = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
+  const { data, error } = await supabase.rpc("techomie_exec", { query_text: translate(source), query_params: queryParams });
+  if (error) throw new Error(error.message);
+  return (Array.isArray(data) ? data : []) as Row[];
+}
+
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || "techomie-files";
-const storage = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } }).storage.from(bucket) : null;
+const storage = supabase?.storage.from(bucket) ?? null;
 
 class Files {
   async put(key: string, body: ReadableStream | Blob | ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }) {
