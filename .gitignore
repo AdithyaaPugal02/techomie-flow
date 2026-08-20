@@ -38,3 +38,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# Local database exports may contain customer and employee data.
+/supabase/local-*.sql
+/supabase/data-*.sql
