@@ -39,6 +39,28 @@ const roomNames = [
   "Outdoor",
   "Other",
 ];
+const quotationTypes = [
+  "Detailed Smart Home Proposal",
+  "Compact Commercial Quotation",
+  "Budgetary / Mock Quotation",
+  "Dealer / B2B Confidential Quotation",
+  "Revision / Variation Quotation",
+];
+const scopeSectionLabels: Record<string, string> = {
+  requirementSummary: "Requirement summary",
+  proposedSolution: "Proposed solution",
+  supply: "Scope of supply",
+  installation: "Scope of installation",
+  prerequisites: "Technical prerequisites",
+  assumptions: "Assumptions",
+  responsibilities: "Customer responsibilities",
+  exclusions: "Exclusions",
+  deliveryTimeline: "Delivery timeline",
+  installationTimeline: "Installation timeline",
+  testing: "Testing and configuration",
+  handover: "Handover and training",
+  support: "After-sales support",
+};
 export default function QuotationsModule({ role }: { role: string }) {
   const [view, setView] = useState<"list" | "quote">("list"),
     [rows, setRows] = useState<R[]>([]),
@@ -231,6 +253,71 @@ export default function QuotationsModule({ role }: { role: string }) {
     />
   );
 }
+export function QuotationWorkspaceRoute({
+  quotationId = null,
+  mode = "edit",
+}: {
+  quotationId?: number | null;
+  mode?: "new" | "edit" | "preview" | "revisions";
+}) {
+  const [id, setId] = useState<number | null>(quotationId),
+    [role, setRole] = useState(""),
+    [filters, setFilters] = useState<R | null>(null),
+    [message, setMessage] = useState("");
+  useEffect(() => {
+    Promise.all([fetch("/api/auth/me"), fetch("/api/quotations?limit=100")])
+      .then(async ([authResponse, quotationResponse]) => {
+        const read = async (response: Response) => {
+            const body = await response.text();
+            try {
+              return JSON.parse(body);
+            } catch {
+              return { error: body || response.statusText };
+            }
+          },
+          auth = await read(authResponse),
+          quotations = await read(quotationResponse);
+        if (!authResponse.ok) throw new Error(auth.error || "Sign in required");
+        if (!quotationResponse.ok)
+          throw new Error(quotations.error || "Unable to load quotation data");
+        setRole(auth.user?.role || "sales");
+        setFilters(quotations.filters || {});
+      })
+      .catch((error) => setMessage(error.message));
+  }, []);
+  if (!filters || !role)
+    return (
+      <div className="qloading">
+        <p>{message || "Loading quotation workspace…"}</p>
+        {message && <button onClick={() => window.location.href = "/"}>Return to sign in</button>}
+      </div>
+    );
+  return (
+    <div className="quotationroute">
+      {message && <div className="qnotice">{message}</div>}
+      <QuoteWorkspace
+        id={id}
+        role={role}
+        filters={filters}
+        initialTab={
+          mode === "preview"
+            ? "Preview & Send"
+            : mode === "revisions"
+              ? "Revisions"
+              : "Customer & Site"
+        }
+        close={() => {
+          window.location.href = "/?module=Quotations";
+        }}
+        notify={setMessage}
+        onCreated={(createdId) => {
+          setId(createdId);
+          window.history.replaceState({}, "", `/quotations/${createdId}/edit`);
+        }}
+      />
+    </div>
+  );
+}
 function QuoteWorkspace({
   id,
   role,
@@ -238,6 +325,7 @@ function QuoteWorkspace({
   close,
   notify,
   onCreated,
+  initialTab = "Customer & Site",
 }: {
   id: number | null;
   role: string;
@@ -245,12 +333,13 @@ function QuoteWorkspace({
   close: () => void;
   notify: (s: string) => void;
   onCreated: (id: number) => void;
+  initialTab?: string;
 }) {
   const [quote, setQuote] = useState<R | null>(null),
     [snap, setSnap] = useState<R>({
       details: {
         title: "",
-        quoteType: "Full Smart Home Proposal",
+        quoteType: quotationTypes[0],
         projectType: "Villa",
         quoteDate: today(),
         validUntil: later(30),
@@ -274,7 +363,7 @@ function QuoteWorkspace({
       warranty: "",
       taxMode: "GST",
     }),
-    [tab, setTab] = useState("Details"),
+    [tab, setTab] = useState(initialTab),
     [save, setSave] = useState("Saved"),
     [dirty, setDirty] = useState(false),
     [picker, setPicker] = useState<R | null>(null),
@@ -426,7 +515,7 @@ function QuoteWorkspace({
   const pdf = async (download = false) => {
     clearTimeout(timer.current);
     await persist();
-    setTab("Preview");
+    setTab("Preview & Send");
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
@@ -520,6 +609,21 @@ function QuoteWorkspace({
     "Rejected",
     "Converted to Project",
   ].includes(quote.status);
+  const workflowSteps = [
+      "Customer & Site",
+      "Floors, Rooms & Items",
+      "Pricing & Payment",
+      "Scope, Warranty & Terms",
+      "Preview & Send",
+    ],
+    stepIndex = workflowSteps.indexOf(tab),
+    moveStep = (direction: number) => {
+      const next = Math.min(
+        4,
+        Math.max(0, (stepIndex < 0 ? 0 : stepIndex) + direction),
+      );
+      setTab(workflowSteps[next]);
+    };
   return (
     <div className="qworkspace">
       <header>
@@ -531,6 +635,9 @@ function QuoteWorkspace({
           <h1>{snap.details?.title || quote.title}</h1>
           <span>
             {snap.details?.customerName || snap.details?.customer || quote.customer_name} · {snap.details?.siteName || snap.details?.site || quote.site_name}
+          </span>
+          <span>
+            Created by {quote.created_name || quote.sales_name || "Techomie team"} · Last saved {quote.updated_at ? new Date(quote.updated_at).toLocaleString("en-IN") : "—"}
           </span>
         </div>
         <div className="qsave">
@@ -584,6 +691,7 @@ function QuoteWorkspace({
           <button onClick={() => pdf(false)}>Preview</button>
           <button onClick={() => pdf(true)}>Download PDF</button>
           {!locked && <button onClick={persist}>Save draft</button>}
+          <button onClick={() => window.location.href = `/quotations/${quote.id}/revisions`}>More actions</button>
           {quote.status === "Draft" && (
             <button onClick={() => action("submit-review")}>
               Submit review
@@ -646,25 +754,18 @@ function QuoteWorkspace({
         </div>
       </header>
       <nav>
-        {[
-          "Details",
-          "Scope & Items",
-          "Payment & Terms",
-          "Preview",
-          "Activity",
-          "Files",
-        ].map((x) => (
+        {workflowSteps.map((x, index) => (
           <button
             key={x}
             className={tab === x ? "active" : ""}
             onClick={() => setTab(x)}
           >
-            {x}
+            <><b>{index + 1}</b> {x}</>
           </button>
         ))}
       </nav>
       <main>
-        {tab === "Details" ? (
+        {tab === "Customer & Site" ? (
           <Details
             snap={snap}
             set={change}
@@ -684,34 +785,37 @@ function QuoteWorkspace({
             salesId={salesId}
             setSalesId={(value: string) => { const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);change({...snap,details:{...snap.details,quotationByName:employee?.name||""}}); }}
           />
-        ) : tab === "Scope & Items" ? (
+        ) : tab === "Floors, Rooms & Items" ? (
           <Builder
             snap={snap}
             set={change}
             locked={locked}
             openPicker={setPicker}
           />
-        ) : tab === "Payment & Terms" ? (
+        ) : tab === "Pricing & Payment" ? (
           <Payment
             snap={snap}
             set={change}
             total={totals.grand}
             locked={locked}
+            section="pricing"
           />
-        ) : tab === "Preview" ? (
+        ) : tab === "Scope, Warranty & Terms" ? (
+          <ScopeTerms snap={snap} set={change} locked={locked} />
+        ) : tab === "Preview & Send" ? (
           <QuotePaperPremium
             quote={quote}
             snap={snap}
             totals={totals}
             branding={branding}
           />
-        ) : tab === "Activity" ? (
+        ) : tab === "Revisions" ? (
           <Activity rows={activity} revisions={revisions} />
         ) : (
           <Files rows={files} />
         )}
       </main>
-      {tab !== "Preview" && (
+      {tab !== "Preview & Send" && tab !== "Revisions" && (
         <aside>
           <Totals t={totals} />
           <div className="qvalid">
@@ -730,6 +834,13 @@ function QuoteWorkspace({
           </div>
         </aside>
       )}
+      {stepIndex >= 0 && (
+        <div className="qworkflowfooter">
+          <button disabled={stepIndex === 0} onClick={() => moveStep(-1)}>Previous</button>
+          <span>Step {stepIndex + 1} of 5</span>
+          <button className="primary" disabled={stepIndex === 4} onClick={() => moveStep(1)}>Next</button>
+        </div>
+      )}
       {picker && (
         <ItemPicker
           target={picker}
@@ -746,7 +857,12 @@ function QuoteWorkspace({
         />
       )}
       <div className="qmobilebar">
-        <button onClick={() => pdf(false)}>Preview PDF</button>
+        {tab === "Floors, Rooms & Items" && !locked && (
+          <button onClick={() => setPicker({ floor: 0, room: 0 })}>Add Item</button>
+        )}
+        <button disabled={stepIndex <= 0} onClick={() => moveStep(-1)}>Previous</button>
+        <button disabled={stepIndex < 0 || stepIndex >= 4} onClick={() => moveStep(1)}>Next</button>
+        <button onClick={() => setTab("Preview & Send")}>Preview</button>
         {!locked && (
           <button className="primary" onClick={persist}>
             Save Draft
@@ -831,13 +947,7 @@ function NewQuote({
               })
             }
           >
-            {[
-              "Full Smart Home Proposal",
-              "Standard Product Quotation",
-              "CCTV / Networking Quotation",
-              "Gate Automation Quotation",
-              "Service Estimate",
-            ].map((x) => (
+            {quotationTypes.map((x) => (
               <option key={x}>{x}</option>
             ))}
           </select>
@@ -952,8 +1062,8 @@ function Details({
         </label>
         <label>
           <span>Quote type</span>
-          <select disabled={locked} value={d.quoteType || quote.quote_type || "Standard Product Quotation"} onChange={(e) => change("quoteType", e.target.value)}>
-            {["Full Smart Home Proposal","Standard Product Quotation","CCTV / Networking Quotation","Gate Automation Quotation","Service Estimate","Custom Quotation"].map((value) => <option key={value}>{value}</option>)}
+          <select disabled={locked} value={d.quoteType || quote.quote_type || quotationTypes[0]} onChange={(e) => change("quoteType", e.target.value)}>
+            {quotationTypes.map((value) => <option key={value}>{value}</option>)}
           </select>
         </label>
         <label>
@@ -1591,7 +1701,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     </div>
   );
 }
-function Payment({ snap, set, total, locked }: R) {
+function Payment({ snap, set, total, locked, section }: R) {
   const plan = snap.paymentPlan || [],
     mut = (fn: (n: R) => void) => {
       const n = structuredClone(snap);
@@ -1600,7 +1710,7 @@ function Payment({ snap, set, total, locked }: R) {
     };
   return (
     <div className="qpay">
-      <section className="qcard">
+      {section !== "terms" && <section className="qcard">
         <h2>Payment schedule</h2>
         {plan.map((m: R, i: number) => (
           <div className="milestone" key={i}>
@@ -1649,8 +1759,8 @@ function Payment({ snap, set, total, locked }: R) {
             ＋ Add milestone
           </button>
         )}
-      </section>
-      <section className="qcard">
+      </section>}
+      {section !== "pricing" && <section className="qcard">
         <h2>Warranty, exclusions and terms</h2>
         <label>
           <span>Warranty terms</span>
@@ -1668,6 +1778,59 @@ function Payment({ snap, set, total, locked }: R) {
             onChange={(e) => set({ ...snap, terms: e.target.value })}
           />
         </label>
+      </section>}
+    </div>
+  );
+}
+function ScopeTerms({ snap, set, locked }: R) {
+  const mut = (fn: (next: R) => void) => {
+      const next = structuredClone(snap);
+      fn(next);
+      set(next);
+    },
+    scope = snap.scope || {},
+    scenes = snap.scenes || [];
+  return (
+    <div className="qscopeterms">
+      <section className="qcard">
+        <h2>Customer-facing scope</h2>
+        <p className="qsectionhelp">Only include systems and categories present in this quotation.</p>
+        <div className="qscopegrid">
+          {Object.entries(scopeSectionLabels).map(([key, label]) => (
+            <label key={key}>
+              <span>{label}</span>
+              <textarea
+                disabled={locked}
+                value={scope[key] || ""}
+                onChange={(event) => mut((next) => {
+                  next.scope = { ...(next.scope || {}), [key]: event.target.value };
+                })}
+              />
+            </label>
+          ))}
+        </div>
+      </section>
+      <section className="qcard">
+        <h2>Smart scenes</h2>
+        {scenes.map((scene: R, index: number) => (
+          <div className="qscenerow" key={scene.id || index}>
+            <select disabled={locked} value={scene.name || "Welcome Home"} onChange={(event) => mut((next) => next.scenes[index].name = event.target.value)}>
+              {["Welcome Home", "Good Night", "Away", "Movie", "Morning", "Security", "Custom scene"].map((name) => <option key={name}>{name}</option>)}
+            </select>
+            <input disabled={locked} value={scene.description || ""} placeholder="Customer-facing description" onChange={(event) => mut((next) => next.scenes[index].description = event.target.value)} />
+            <input disabled={locked} value={scene.rooms || ""} placeholder="Rooms / actions" onChange={(event) => mut((next) => next.scenes[index].rooms = event.target.value)} />
+            {!locked && <button onClick={() => mut((next) => next.scenes.splice(index, 1))}>×</button>}
+          </div>
+        ))}
+        {!locked && <button onClick={() => mut((next) => {
+          next.scenes = next.scenes || [];
+          next.scenes.push({ id: crypto.randomUUID(), name: "Welcome Home", description: "", rooms: "" });
+        })}>＋ Add scene</button>}
+      </section>
+      <section className="qcard qpay">
+        <h2>Warranty and commercial terms</h2>
+        <label><span>Warranty terms</span><textarea disabled={locked} value={snap.warranty || ""} onChange={(event) => set({ ...snap, warranty: event.target.value })} /></label>
+        <label><span>Terms and conditions</span><textarea disabled={locked} value={snap.terms || ""} onChange={(event) => set({ ...snap, terms: event.target.value })} /></label>
       </section>
     </div>
   );
@@ -1827,6 +1990,58 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
       <span>{quote.number}</span>
     </footer>
   );
+  const paginateFloor = (floor: R) => {
+    const pageCapacity = 4.7,
+      roomHeadingCost = 0.7,
+      pages: R[] = [];
+    let page: R = { rooms: [], used: 0 };
+    const pushPage = () => {
+      if (page.rooms.length) pages.push(page);
+      page = { rooms: [], used: 0 };
+    };
+    for (const room of floor.rooms || []) {
+      const roomItems = room.items || [];
+      if (!roomItems.length) {
+        if (page.used + roomHeadingCost > pageCapacity) pushPage();
+        page.rooms.push({ ...room, items: [], originalItemCount: 0, continued: false });
+        page.used += roomHeadingCost;
+        continue;
+      }
+      let itemIndex = 0,
+        chunkIndex = 0;
+      while (itemIndex < roomItems.length) {
+        if (page.used + roomHeadingCost + 1 > pageCapacity) pushPage();
+        const availableRows = Math.max(
+            1,
+            Math.floor(pageCapacity - page.used - roomHeadingCost),
+          ),
+          chunk = roomItems.slice(itemIndex, itemIndex + availableRows);
+        page.rooms.push({
+          ...room,
+          items: chunk,
+          originalItemCount: roomItems.length,
+          continued: chunkIndex > 0,
+          chunkIndex,
+        });
+        page.used += roomHeadingCost + chunk.length;
+        itemIndex += chunk.length;
+        chunkIndex += 1;
+        if (itemIndex < roomItems.length) pushPage();
+      }
+    }
+    pushPage();
+    return pages.length ? pages : [{ rooms: [], used: 0 }];
+  };
+  const scopePages = floors.flatMap((floor: R, floorIndex: number) => {
+    const pages = paginateFloor(floor);
+    return pages.map((page: R, pageIndex: number) => ({
+      floor,
+      floorIndex,
+      pageIndex,
+      pageCount: pages.length,
+      rooms: page.rooms,
+    }));
+  });
   return (
     <article
       className={`qpaper qpaperpremium ${designClass} qformat-${pdfFormat} qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
@@ -1934,20 +2149,23 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
         </div>
         {foot("Proposal overview")}
       </section>}
-      {floors.map((floor: R, floorIndex: number) => (
-        <section className="qpaperscope" key={floor.name}>
+      {scopePages.map((scope: R) => (
+        <section className="qpaperscope" key={`${scope.floor.name}-${scope.pageIndex}`}>
           {head("ROOM-WISE SCOPE")}
           <div className="qsectiontitle">
-            <small>SCOPE {String(floorIndex + 1).padStart(2, "0")}</small>
-            <h2>{floor.name}</h2>
-            <span>{(floor.rooms || []).length} rooms</span>
+            <small>
+              SCOPE {String(scope.floorIndex + 1).padStart(2, "0")}
+              {scope.pageCount > 1 ? ` · CONTINUED ${scope.pageIndex + 1}/${scope.pageCount}` : ""}
+            </small>
+            <h2>{scope.floor.name}</h2>
+            <span>{(scope.floor.rooms || []).length} rooms</span>
           </div>
-          {(floor.rooms || []).map((room: R) => (
-            <div className="qpdfroom" key={room.name}>
+          {scope.rooms.map((room: R) => (
+            <div className="qpdfroom" key={`${room.name}-${room.chunkIndex || 0}`}>
               <h3>
-                {room.name}
+                {room.name}{room.continued ? " (continued)" : ""}
                 <span>
-                  {room.note || `${(room.items || []).length} configured items`}
+                  {room.note || `${room.originalItemCount} configured items`}
                 </span>
               </h3>
               <div className="qpapercolumns">
@@ -1984,7 +2202,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
               ))}
             </div>
           ))}
-          {foot(`${floor.name} scope`)}
+          {foot(`${scope.floor.name} scope${scope.pageCount > 1 ? ` · ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`)}
         </section>
       ))}
       <section className="qpaperfinance">
@@ -2186,7 +2404,7 @@ function quotePdfFormat(snap: R) {
   if (manual === "detailed" || manual === "compact") return manual;
   const rooms = (snap?.floors || []).flatMap((f: R) => f.rooms || []);
   const items = rooms.flatMap((r: R) => r.items || []);
-  return snap?.details?.quoteType === "Full Smart Home Proposal" || rooms.length > 1 || items.length > 4
+  return ["Full Smart Home Proposal", "Detailed Smart Home Proposal"].includes(snap?.details?.quoteType) || rooms.length > 1 || items.length > 4
     ? "detailed"
     : "compact";
 }
