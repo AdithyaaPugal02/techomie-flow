@@ -1991,7 +1991,9 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     </footer>
   );
   const paginateFloor = (floor: R) => {
-    const pageCapacity = 4.7,
+    // Detailed catalogue descriptions vary in height. Three rows leave a
+    // reliable footer reserve even for the tallest approved product cards.
+    const pageCapacity = 3.7,
       roomHeadingCost = 0.7,
       pages: R[] = [];
     let page: R = { rooms: [], used: 0 };
