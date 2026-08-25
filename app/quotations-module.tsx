@@ -1665,6 +1665,15 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     } as CSSProperties;
   const customerName = snap.details?.customerName || snap.details?.customer || quote.customer_name;
   const siteName = snap.details?.siteName || snap.details?.site || quote.site_name;
+  if (templateId === "minimal")
+    return (
+      <QuotePaperMinimal
+        quote={quote}
+        snap={snap}
+        totals={totals}
+        branding={branding}
+      />
+    );
   const head = (section: string) => (
     <header className="qpdfhead">
       <span>
@@ -1962,6 +1971,84 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
         <div className="qpreparedby"><small>QUOTATION PREPARED BY</small><b>{snap.details?.quotationByName || quote.sales_name || quote.created_name || "Techomie Sales Team"}</b></div>
         {foot("Payment and terms")}
       </section>
+    </article>
+  );
+}
+
+function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
+  const company = snap.company || {},
+    companyName = company.displayName || "Techomie Smart Devices",
+    logo = company.logo || "/techomie-logo.jpg",
+    customerName = snap.details?.customerName || snap.details?.customer || quote.customer_name,
+    siteName = snap.details?.siteName || snap.details?.site || quote.site_name,
+    address = [company.address, company.city, company.state, company.pincode]
+      .filter(Boolean)
+      .join(", "),
+    customerAddress = [quote.billing_address, quote.site_address, quote.city, quote.state, quote.pincode]
+      .filter(Boolean)
+      .join(", "),
+    items = (snap.floors || []).flatMap((floor: R) =>
+      (floor.rooms || []).flatMap((room: R) =>
+        (room.items || []).map((item: R) => ({ ...item, floorName: floor.name, roomName: room.name })),
+      ),
+    ),
+    chunks: R[][] = [];
+  for (let index = 0; index < items.length; index += 6)
+    chunks.push(items.slice(index, index + 6));
+  if (!chunks.length) chunks.push([]);
+  const compactSinglePage = items.length <= 5;
+  const header = (continued = false) => (
+    <>
+      <header className="qminimalhead">
+        <span><img src={logo} alt="Techomie" /><b>{companyName}</b></span>
+        <div><small>{continued ? "QUOTATION - CONTINUED" : "QUOTATION"}</small><strong>{quote.number}</strong><em>Rev {quote.revision || 0}</em></div>
+      </header>
+      {!continued && <>
+        <div className="qminimalcompany">
+          <p>{address || company.registeredAddress || "Coimbatore, Tamil Nadu"}</p>
+          <p>{[company.gstin && `GSTIN ${company.gstin}`, company.phone, company.email, company.website].filter(Boolean).join(" | ")}</p>
+        </div>
+        <div className="qminimalmeta">
+          <span><small>Quote date</small><b>{snap.details?.quoteDate || quote.quote_date}</b></span>
+          <span><small>Valid until</small><b>{snap.details?.validUntil || quote.valid_until}</b></span>
+          <span><small>Place of supply</small><b>{snap.placeOfSupply || quote.state || "Tamil Nadu"}</b></span>
+        </div>
+        <div className="qminimalbill">
+          <small>BILL TO</small><b>{customerName}</b><span>{customerAddress || siteName}</span>
+          {quote.gstin && <em>GSTIN {quote.gstin}</em>}
+        </div>
+      </>}
+    </>
+  );
+  const table = (rows: R[]) => (
+    <div className="qminimaltable">
+      <div className="qminimalrow qminimalcolumns"><span>#</span><span>Item & description</span><span>Qty</span><span>Rate</span><span>Disc.</span><span>Tax</span><span>Amount</span></div>
+      {rows.map((item: R, index: number) => (
+        <div className="qminimalrow" key={`${item.id || item.variantId || item.sku}-${index}`}>
+          <span>{index + 1}</span>
+          <span><b>{item.name}</b><small>{[item.floorName, item.roomName, item.sku, item.variantSummary].filter(Boolean).join(" | ")}</small></span>
+          <span>{item.qty} {item.unit}</span><span>{money(item.price)}</span><span>{Number(item.discount || 0)}%</span><span>{item.taxMode === "Non-GST" ? "-" : `${Number(item.gst || 18)}%`}</span><strong>{money(line(item).total)}</strong>
+        </div>
+      ))}
+    </div>
+  );
+  const summary = () => (
+    <div className="qminimalsummary">
+      <section><small>TOTAL IN WORDS</small><b>{snap.details?.amountWords || "Amount payable as per the total shown"}</b><h3>Terms & conditions</h3><p>{snap.terms || "Prices are valid until the quotation validity date. Site readiness and required access are the customer's responsibility."}</p></section>
+      <aside><p><span>Sub total</span><b>{money(totals.subtotal)}</b></p><p><span>Discount</span><b>- {money(totals.discount)}</b></p><p><span>Taxable value</span><b>{money(totals.taxable)}</b></p><p><span>CGST</span><b>{money(totals.tax / 2)}</b></p><p><span>SGST</span><b>{money(totals.tax / 2)}</b></p><p className="qminimaltotal"><span>Total</span><b>{money(totals.grand)}</b></p><div>Authorised Signatory</div></aside>
+    </div>
+  );
+  const footer = (page: number, count: number) => <footer className="qminimalfoot"><span>{branding.footer || companyName}</span><span>{quote.number}</span><span>{page} / {count}</span></footer>;
+  if (compactSinglePage) return (
+    <article className="qpaper qminimal" style={{ "--doc-primary": branding.primaryColour || "#2b6cb0" } as CSSProperties}>
+      <section>{header()}{table(items)}{summary()}{footer(1, 1)}</section>
+    </article>
+  );
+  const pageCount = chunks.length + 1;
+  return (
+    <article className="qpaper qminimal" style={{ "--doc-primary": branding.primaryColour || "#2b6cb0" } as CSSProperties}>
+      {chunks.map((chunk, index) => <section key={index}>{header(index > 0)}{table(chunk)}{footer(index + 1, pageCount)}</section>)}
+      <section>{header(true)}<div className="qminimalsummarytitle"><small>COMMERCIAL SUMMARY</small><h2>{snap.details?.title || "Quotation summary"}</h2><p>{customerName} - {siteName}</p></div>{summary()}{footer(pageCount, pageCount)}</section>
     </article>
   );
 }

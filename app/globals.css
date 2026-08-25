@@ -639,6 +639,21 @@
 .qtemplate-technical .qpaperline,.qtemplate-technical .qcommercialgrid>div,.qtemplate-technical .qcommercialgrid aside,.qtemplate-technical .qmilestones article{border-radius:2px!important}
 .qtemplate-technical .qtotalhero{background:linear-gradient(135deg,#06243b,#087da8)!important}
 
+/* Zoho-inspired clean quotation: compact, tabular and business-first. */
+.qminimal{width:210mm!important;min-height:0!important;background:#fff!important;color:#202124!important;font-family:Arial,"Segoe UI",sans-serif!important;box-shadow:0 8px 28px #1018281f}
+.qminimal>section{position:relative!important;width:210mm!important;height:296mm!important;min-height:296mm!important;padding:12mm 14mm 15mm!important;overflow:hidden!important;background:#fff!important;box-sizing:border-box!important;break-after:page!important;page-break-after:always!important}
+.qminimal>section:last-child{break-after:auto!important;page-break-after:auto!important}
+.qminimalhead{height:25mm!important;padding:0 0 5mm!important;border:0!important;border-bottom:1px solid #aeb4bb!important;background:#fff!important;display:flex!important;align-items:center!important;justify-content:space-between!important;position:static!important}
+.qminimalhead>span{display:flex;align-items:center;gap:4mm}.qminimalhead img{width:22mm;height:18mm;object-fit:contain}.qminimalhead>span b{font-size:16px}.qminimalhead>div{text-align:right;display:flex;flex-direction:column;gap:1mm}.qminimalhead small{font-size:20px;font-weight:400;letter-spacing:.02em;color:#202124}.qminimalhead strong{font-size:10px}.qminimalhead em{font-size:8px;font-style:normal;color:#667085}
+.qminimalcompany{margin:3mm 0;font-size:8px;line-height:1.45}.qminimalcompany p{margin:0!important;font-size:8px!important;line-height:1.45!important}
+.qminimalmeta{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #b7bcc2}.qminimalmeta span{padding:3mm;border-right:1px solid #b7bcc2;display:flex;flex-direction:column;gap:1mm}.qminimalmeta span:last-child{border-right:0}.qminimalmeta small,.qminimalbill small{font-size:7px;color:#5f6368;text-transform:uppercase}.qminimalmeta b{font-size:9px}
+.qminimalbill{min-height:20mm;padding:3mm;border:1px solid #b7bcc2;border-top:0;display:flex;flex-direction:column;gap:1mm}.qminimalbill b{font-size:11px}.qminimalbill span,.qminimalbill em{font-size:8px;line-height:1.35;font-style:normal;color:#4b5563}
+.qminimaltable{margin-top:4mm;border:1px solid #aeb4bb;border-bottom:0}.qminimalrow{display:grid;grid-template-columns:8mm minmax(0,1fr) 16mm 22mm 15mm 14mm 25mm;min-height:20mm;border-bottom:1px solid #aeb4bb}.qminimalrow>span,.qminimalrow>strong{padding:2.5mm 2mm;border-right:1px solid #c8ccd0;font-size:8px;line-height:1.35;text-align:right;font-weight:400;overflow-wrap:anywhere}.qminimalrow>span:nth-child(2){text-align:left}.qminimalrow>strong{border-right:0;font-weight:700}.qminimalrow b,.qminimalrow small{display:block}.qminimalrow b{font-size:8.5px;margin-bottom:1mm}.qminimalrow small{font-size:7px;color:#667085;line-height:1.35}.qminimalcolumns{min-height:10mm;background:#f1f3f4}.qminimalcolumns>span{display:flex;align-items:flex-end;font-weight:700;font-size:7.5px}.qminimalcolumns>span:first-child{justify-content:center}
+.qminimalsummary{margin-top:5mm;display:grid;grid-template-columns:1.25fr .9fr;border:1px solid #aeb4bb;min-height:65mm}.qminimalsummary>section{padding:4mm;border-right:1px solid #aeb4bb}.qminimalsummary>section small{font-size:7px;color:#667085}.qminimalsummary>section>b{display:block;margin:2mm 0 5mm;font-size:9px;font-style:italic}.qminimalsummary h3{margin:0 0 2mm;font-size:9px}.qminimalsummary>section p{margin:0!important;white-space:pre-line;font-size:7.5px!important;line-height:1.45!important;color:#4b5563}.qminimalsummary>aside{display:flex;flex-direction:column}.qminimalsummary>aside p{margin:0!important;padding:2.5mm 3mm;display:flex;justify-content:space-between;border-bottom:1px solid #d1d5d9;font-size:8px!important;line-height:1.2!important}.qminimalsummary>aside p span{color:#4b5563}.qminimalsummary>aside .qminimaltotal{font-size:11px!important;font-weight:700;background:#f1f3f4;border-top:1px solid #8f959b}.qminimalsummary>aside>div{margin-top:auto;padding:4mm;text-align:center;border-top:1px solid #aeb4bb;font-size:8px}
+.qminimalsummarytitle{margin:8mm 0 5mm}.qminimalsummarytitle small{font-size:7px;color:var(--doc-primary);font-weight:700}.qminimalsummarytitle h2{margin:2mm 0;font-size:18px}.qminimalsummarytitle p{margin:0;font-size:9px;color:#667085}
+.qminimalfoot{position:absolute!important;left:14mm!important;right:14mm!important;bottom:6mm!important;height:5mm!important;padding-top:2mm!important;border-top:1px solid #c8ccd0!important;display:grid!important;grid-template-columns:1fr 1fr 1fr!important;color:#667085!important;font-size:7px!important;text-transform:uppercase}.qminimalfoot span:nth-child(2){text-align:center}.qminimalfoot span:last-child{text-align:right}
+.qpaperpremium:not(.qminimal)>section{padding-bottom:25mm!important}.qpaperpremium:not(.qminimal) .qgrandbar{margin-bottom:14mm!important}.qpaperpremium:not(.qminimal) .qpdffoot{bottom:8mm!important;background:inherit;padding-bottom:1mm}
+
 @media print{
   @page{size:A4 portrait;margin:0}
   html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
@@ -647,6 +662,8 @@
   body:has(.qpaper) .qpaper{position:absolute!important;inset:0 auto auto 0!important;width:210mm!important;margin:0!important;box-shadow:none!important}
   body:has(.qpaper) .qpaper>section{width:210mm!important;min-height:297mm!important;height:297mm!important;break-after:page!important;page-break-after:always!important}
   body:has(.qpaper) .qpaper>section:last-child{break-after:auto!important;page-break-after:auto!important}
+  body:has(.qminimal) .qminimal>section{height:296mm!important;min-height:296mm!important;padding:12mm 14mm 15mm!important;break-after:page!important;page-break-after:always!important}
+  body:has(.qminimal) .qminimal>section:last-child{break-after:auto!important;page-break-after:auto!important}
 }
 
 /* Techomie OS application design system — screen UI only. */
