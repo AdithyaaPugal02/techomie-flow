@@ -54,7 +54,7 @@ export async function GET(req: Request) {
           "SELECT l.*,u.name assigned_name FROM leads l LEFT JOIN users u ON u.id=l.assigned_to WHERE l.customer_id=? AND l.archived=0 ORDER BY l.created_at DESC",
         ),
         q(
-          "SELECT q.*,s.name site_name FROM quotations q LEFT JOIN sites s ON s.id=q.site_id WHERE q.customer_id=? ORDER BY q.created_at DESC",
+          "SELECT q.*,s.name site_name FROM quotations q LEFT JOIN customer_sites s ON s.id=q.site_id WHERE q.customer_id=? ORDER BY q.created_at DESC",
         ),
         q(
           "SELECT i.*,COALESCE((SELECT SUM(p.amount)FROM invoice_payments p WHERE p.invoice_id=i.id),0)paid FROM tax_invoices i WHERE i.customer_id=? ORDER BY i.invoice_date DESC",

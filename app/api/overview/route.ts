@@ -14,7 +14,7 @@ export async function GET(req:Request){try{const user=await requireUser(),u=new 
  const [users,leads,quotes,invoices,projects,materials,payments,invoicePayments,expenses,tasks,service,amc,warranties,activities,audit]=await Promise.all([
   all("SELECT id,name,role FROM users WHERE active=1 ORDER BY name"),
   all("SELECT * FROM leads WHERE archived=0 ORDER BY created_at DESC LIMIT 1000"),
-  all("SELECT q.*,c.name customer_name,c.phone,c.lead_source,s.name site_name,s.address site_address FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN sites s ON s.id=q.site_id ORDER BY q.created_at DESC LIMIT 1000"),
+  all("SELECT q.*,c.name customer_name,c.phone,c.lead_source,s.name site_name,s.address site_address FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN customer_sites s ON s.id=q.site_id ORDER BY q.created_at DESC LIMIT 1000"),
   all("SELECT i.*,c.name customer_name,c.phone FROM tax_invoices i JOIN customers c ON c.id=i.customer_id ORDER BY i.created_at DESC LIMIT 1000"),
   all("SELECT p.*,c.name customer_name,c.phone,cs.name site_name,cs.city,cs.address site_address,u.name manager_name FROM projects p JOIN customers c ON c.id=p.customer_id LEFT JOIN customer_sites cs ON cs.id=p.site_id LEFT JOIN users u ON u.id=p.manager_id WHERE p.archived=0 ORDER BY p.updated_at DESC LIMIT 1000"),
   all("SELECT m.*,p.manager_id,p.title project_title,c.name customer_name,cs.name site_name FROM project_materials m JOIN projects p ON p.id=m.project_id JOIN customers c ON c.id=p.customer_id LEFT JOIN customer_sites cs ON cs.id=p.site_id ORDER BY m.updated_at DESC LIMIT 1000"),
