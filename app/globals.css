@@ -546,7 +546,7 @@
 
 /* Connected role-based navigation. */
 @media screen {
-  .sidebar nav button label{display:block;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar nav a{border:0;background:transparent;color:#9197a2;text-align:left;padding:11px 12px;border-radius:8px;font-size:13px;display:flex;gap:13px;align-items:center;cursor:pointer;text-decoration:none}.sidebar nav a>span:first-child{width:18px;text-align:center}.sidebar nav a.selected{background:#252930;color:#fff}.sidebar nav a .navlabel{display:block;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .navcollapse{width:36px;height:36px;min-height:36px!important;border:1px solid var(--border)!important;background:#fff!important;color:var(--secondary)!important}
   .globalsearch{position:relative;width:min(520px,42vw);height:40px;display:flex;align-items:center;gap:8px;padding:0 11px;border:1px solid var(--border-strong);border-radius:8px;background:#f9fafb}
   .globalsearch>span{color:var(--muted)}.globalsearch input{width:100%;min-height:0!important;height:36px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:13px!important}
@@ -558,15 +558,15 @@
   .notification{width:40px;height:40px;min-height:40px!important;border:1px solid var(--border)!important;background:#fff!important;font-size:18px!important}
   .mobilebottom{display:none}
   .navcollapsed .sidebar{width:72px!important;padding-left:10px!important;padding-right:10px!important}.navcollapsed .workspace{margin-left:72px!important;width:calc(100% - 72px)!important}
-  .navcollapsed .sidebar .brand{padding-left:10px!important;padding-right:10px!important}.navcollapsed .sidebar .brand>span,.navcollapsed .sidebar nav button label,.navcollapsed .sidebar nav em,.navcollapsed .sidebar .profile>div,.navcollapsed .sidebar .logout{display:none!important}
-  .navcollapsed .sidebar nav button{justify-content:center!important;padding:10px!important}.navcollapsed .sidebar nav button span{width:20px!important}.navcollapsed .sidebar .profile{justify-content:center!important;padding-left:0!important;padding-right:0!important}
+  .navcollapsed .sidebar .brand{padding-left:10px!important;padding-right:10px!important}.navcollapsed .sidebar .brand>span,.navcollapsed .sidebar nav .navlabel,.navcollapsed .sidebar nav em,.navcollapsed .sidebar .profile>div,.navcollapsed .sidebar .logout{display:none!important}
+  .navcollapsed .sidebar nav a{justify-content:center!important;padding:10px!important}.navcollapsed .sidebar nav a>span:first-child{width:20px!important}.navcollapsed .sidebar .profile{justify-content:center!important;padding-left:0!important;padding-right:0!important}
 }
 @media screen and (max-width:960px){.globalsearch{width:min(360px,34vw)}.quickcreate>button{font-size:0!important;width:42px!important;padding:0!important}.quickcreate>button::first-letter{font-size:18px}.save{display:none!important}}
 @media screen and (max-width:760px){
   .navcollapse{display:none!important}.globalsearch{flex:1;width:auto;max-width:none}.globalsearch input{font-size:12px!important}.workspace>header{gap:8px!important}.notification{display:none}.quickcreate{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:31}.quickcreate>button{display:none!important}.quickcreate>div{position:static;width:min(300px,calc(100vw - 32px))}
   .mobilebottom{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;z-index:20;height:64px;padding:5px 8px max(5px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--border)}
   .mobilebottom button{min-height:52px!important;padding:4px!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0!important;background:#fff!important;color:var(--secondary)!important;font-size:11px!important}.mobilebottom button b{font-size:18px}.mobilebottom button span{font-size:11px}.mobilebottom button.active{color:var(--brand)!important}.mobilebottom button:nth-child(3){color:var(--brand)!important}.mobilebottom button:nth-child(3) b{width:38px;height:38px;display:grid;place-items:center;margin-top:-18px;border-radius:50%;background:var(--brand);color:#fff;box-shadow:0 5px 14px rgba(0,159,227,.24)}
-  .workspace{padding-bottom:64px}.sidebar.open{z-index:40!important}.navcollapsed .workspace{margin-left:0!important;width:100%!important}.navcollapsed .sidebar{width:min(300px,86vw)!important}.navcollapsed .sidebar .brand>span,.navcollapsed .sidebar nav button label,.navcollapsed .sidebar nav em,.navcollapsed .sidebar .profile>div,.navcollapsed .sidebar .logout{display:block!important}.navcollapsed .sidebar nav button{justify-content:flex-start!important;padding:10px 12px!important}
+  .workspace{padding-bottom:64px}.sidebar.open{z-index:40!important}.navcollapsed .workspace{margin-left:0!important;width:100%!important}.navcollapsed .sidebar{width:min(300px,86vw)!important}.navcollapsed .sidebar .brand>span,.navcollapsed .sidebar nav .navlabel,.navcollapsed .sidebar nav em,.navcollapsed .sidebar .profile>div,.navcollapsed .sidebar .logout{display:block!important}.navcollapsed .sidebar nav a{justify-content:flex-start!important;padding:10px 12px!important}
 }
 
 /* Premium customer quotation: clean A4 proposal system. */
@@ -662,6 +662,12 @@
   .sidebar nav button:hover { background:#f9fafb!important; color:var(--text)!important; }
   .sidebar nav button.selected { background:var(--brand-light)!important; color:var(--brand)!important; }
   .sidebar nav button.selected span { color:var(--brand)!important; }
+  .sidebar nav a { min-height:40px!important; padding:9px 10px!important; border-radius:8px!important; color:var(--secondary)!important; font-size:14px!important; gap:10px!important; }
+  .sidebar nav a>span:first-child { width:20px!important; color:var(--muted); font-size:18px!important; }
+  .sidebar nav a:hover { background:#f9fafb!important; color:var(--text)!important; }
+  .sidebar nav a.selected { background:var(--brand-light)!important; color:var(--brand)!important; }
+  .sidebar nav a.selected>span:first-child { color:var(--brand)!important; }
+  .sidebar nav a:last-child { margin-top:auto; }
   .sidebar nav button:last-child { margin-top:auto; }
   .sidebar nav em { background:var(--brand-light)!important; color:var(--brand)!important; font-size:12px!important; padding:2px 7px!important; }
   .sidebar .profile { border-top:1px solid var(--border)!important; padding:16px 8px 0!important; color:var(--text)!important; }

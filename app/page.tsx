@@ -317,6 +317,12 @@ export default function Home() {
   }, []);
   useEffect(()=>{const saved=window.localStorage.getItem("techomie-sidebar-collapsed");setSidebarCollapsed(saved==="1")},[]);
   useEffect(()=>{window.localStorage.setItem("techomie-sidebar-collapsed",sidebarCollapsed?"1":"0")},[sidebarCollapsed]);
+  useEffect(()=>{
+    const syncModuleFromUrl=()=>{const requested=new URLSearchParams(window.location.search).get("module");if(requested)setModule(requested)};
+    syncModuleFromUrl();
+    window.addEventListener("popstate",syncModuleFromUrl);
+    return()=>window.removeEventListener("popstate",syncModuleFromUrl);
+  },[]);
   useEffect(()=>{if(globalSearch.trim().length<2){setSearchResults([]);return}const timer=window.setTimeout(async()=>{const q=encodeURIComponent(globalSearch.trim()),sources=[
     ["Leads",`/api/leads?q=${q}`],["Customers",`/api/customers?q=${q}`],["Quotations",`/api/quotations?q=${q}`],["Projects",`/api/projects?q=${q}`],["Invoices",`/api/invoices?q=${q}`],["Items",`/api/products?q=${q}`]
   ] as const;const found=(await Promise.all(sources.map(async([module,url])=>{try{const r=await fetch(url);if(!r.ok)return[];const d=await r.json(),rows=d.leads||d.customers||d.quotations||d.projects||d.invoices||d.items||[];return rows.slice(0,4).map((x:Record<string,unknown>)=>({module,title:String(x.customerName||x.customer_name||x.name||x.title||x.number||x.invoice_number||x.sku||"Record"),detail:String(x.phone||x.site_name||x.number||x.sku||x.status||""),id:String(x.id||x.variant_id||"")}))}catch{return[]}}))).flat().slice(0,12);setSearchResults(found)},220);return()=>window.clearTimeout(timer)},[globalSearch]);
@@ -384,7 +390,8 @@ export default function Home() {
     {icon:"▤",name:"Reports",roles:["admin"]},
     {icon:"⚙",name:"Settings",roles:["admin","crm","sales","technician"]},
   ].filter(x=>x.roles.includes(role));
-  const navigate=(target:string,filter:Record<string,string>={})=>{setModuleFilter(filter);setModule(target);if(target==="Quotations")setQuoteScreen("list");setMobileNav(false);setGlobalSearch("");setSearchResults([])};
+  const moduleHref=(target:string)=>`/?module=${encodeURIComponent(target)}`;
+  const navigate=(target:string,filter:Record<string,string>={})=>{setModuleFilter(filter);setModule(target);if(target==="Quotations")setQuoteScreen("list");setMobileNav(false);setGlobalSearch("");setSearchResults([]);window.history.pushState(null,"",moduleHref(target))};
   const quickActions=[
     {label:"New lead",module:"Leads",roles:["admin","crm","sales"]},{label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales"]},{label:"New customer",module:"Customers",roles:["admin","crm","sales"]},{label:"New quotation",module:"Quotations",roles:["admin","crm","sales"]},{label:"New project",module:"Projects",roles:["admin","sales"]},{label:"New invoice",module:"Invoices",roles:["admin"]},{label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},{label:"Add item",module:"Items",roles:["admin"]},{label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]}
   ].filter(x=>x.roles.includes(role));
@@ -400,18 +407,19 @@ export default function Home() {
         </div>
         <nav>
           {allNavigation.map(({icon:i,name:n,label}) => (
-            <button
+            <a
               key={n}
+              href={moduleHref(n)}
               title={sidebarCollapsed?(label||n):undefined}
-              onClick={() => navigate(n)}
+              onClick={(event) => {if(event.button===0&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();navigate(n)}}}
               className={n === module ? "selected" : ""}
             >
               <span>{i}</span>
-              <label>{label||n}</label>
+              <span className="navlabel">{label||n}</span>
               {n === "Leads" && leadCount !== null && leadCount > 0 && (
                 <em title={`${leadCount} lead${leadCount === 1 ? "" : "s"}`}>{leadCount}</em>
               )}
-            </button>
+            </a>
           ))}
         </nav>
         <div className="profile">

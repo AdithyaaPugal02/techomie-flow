@@ -65,12 +65,25 @@ export async function GET(req: Request) {
         args.push(val);
       }
     }
-    const q = x.searchParams.get("q");
-    if (q) {
+    const searchTerms = (x.searchParams.get("q") || "")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+    const searchableColumns = [
+      "p.name",
+      "v.name",
+      "v.sku",
+      "p.brand",
+      "p.category",
+      "p.subcategory",
+      "v.hsn",
+    ];
+    for (const term of searchTerms) {
       where.push(
-        "(p.name LIKE ? OR v.name LIKE ? OR v.sku LIKE ? OR p.brand LIKE ? OR p.category LIKE ? OR p.subcategory LIKE ? OR v.hsn LIKE ?)",
+        `(${searchableColumns.map((column) => `LOWER(COALESCE(${column},'')) LIKE ?`).join(" OR ")})`,
       );
-      for (let i = 0; i < 7; i++) args.push(`%${q}%`);
+      args.push(...searchableColumns.map(() => `%${term}%`));
     }
     const technology = x.searchParams.get("technology");
     if (technology) {
@@ -191,7 +204,7 @@ export async function POST(req: Request) {
           p.imageKey || null,
         )
         .first<{ id: number }>();
-    const sku = variantSku({ category: p.category, brand: p.brand, series: p.series, name: p.name, attributes }, variant!.id);
+    const sku = variantSku({ category: p.category }, variant!.id);
     await env.DB.prepare("UPDATE variants SET sku=? WHERE id=?").bind(sku, variant!.id).run();
     await env.DB.prepare(
       "INSERT INTO audit_log(user_id,action,entity_type,entity_id,created_at)VALUES(?,'item_created','product',?,?)",
@@ -240,7 +253,7 @@ export async function PATCH(req: Request) {
       ...(p.attributes || {}),
       ...(p.sku && !String(p.sku).startsWith("TCM-") ? { supplierSku: p.sku } : {}),
     },
-      sku = variantSku({ category: p.category, brand: p.brand, series: p.series, name: p.name, attributes }, id);
+      sku = variantSku({ category: p.category }, id);
     await env.DB.prepare(
       "UPDATE products SET name=?,category=?,subcategory=?,brand=?,series=?,short_description=?,description=?,hsn=?,unit=?,tax_rate=?,warranty=?,active=?,updated_at=? WHERE id=?",
     )
