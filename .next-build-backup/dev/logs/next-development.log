@@ -1,0 +1,51 @@
+{"timestamp":"00:00:02.590","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:47.660","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:00:51.820","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select count(*) from \"users\"\nparams: "}
+{"timestamp":"00:00:51.935","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select count(*) from \"users\"\nparams: "}
+{"timestamp":"00:01:03.731","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:01:32.639","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:01:33.609","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:01:34.016","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:01:34.222","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:01:34.413","source":"Server","level":"ERROR","message":"⨯ Error: Failed query: select \"id\", \"email\", \"name\", \"phone\", \"profile_image\", \"notification_preferences\", \"permissions\", \"role\", \"password_hash\", \"password_salt\", \"active\", \"last_login\", \"created_at\" from \"users\" where \"users\".\"email\" = ? limit ?\nparams: adithyaapugal@gmail.com,1"}
+{"timestamp":"00:44:29.740","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:44:31.149","source":"Browser","level":"DEBUG","message":"#1 0ms Starting document clone with size 1600x1000 scrolled to 0,0"}
+{"timestamp":"00:44:54.118","source":"Browser","level":"DEBUG","message":"#1 134ms Document cloned, element located at 403.140625,0 with size 793.703125x3366.515625 using computed rendering"}
+{"timestamp":"00:44:54.118","source":"Browser","level":"DEBUG","message":"#1 135ms Starting DOM parsing"}
+{"timestamp":"00:44:54.118","source":"Browser","level":"DEBUG","message":"#1 191ms Added image http://localhost:3000/techomie-logo.jpg"}
+{"timestamp":"00:44:54.118","source":"Browser","level":"DEBUG","message":"#1 253ms Starting renderer for element at 403.140625,0 with size 794x3367"}
+{"timestamp":"00:44:54.118","source":"Browser","level":"DEBUG","message":"#1 254ms Canvas renderer initialized (794x3367) with scale 3"}
+{"timestamp":"00:44:54.119","source":"Browser","level":"DEBUG","message":"#1 296ms Finished rendering"}
+{"timestamp":"00:45:41.208","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:45:42.515","source":"Browser","level":"DEBUG","message":"#1 0ms Starting document clone with size 1600x1000 scrolled to 0,0"}
+{"timestamp":"00:45:57.001","source":"Browser","level":"DEBUG","message":"#1 118ms Document cloned, element located at 403.140625,0 with size 793.703125x2245.03125 using computed rendering"}
+{"timestamp":"00:45:57.002","source":"Browser","level":"DEBUG","message":"#1 118ms Starting DOM parsing"}
+{"timestamp":"00:45:57.002","source":"Browser","level":"DEBUG","message":"#1 141ms Added image http://localhost:3000/techomie-logo.jpg"}
+{"timestamp":"00:45:57.002","source":"Browser","level":"DEBUG","message":"#1 173ms Starting renderer for element at 403.140625,0 with size 794x2246"}
+{"timestamp":"00:45:57.002","source":"Browser","level":"DEBUG","message":"#1 173ms Canvas renderer initialized (794x2246) with scale 3"}
+{"timestamp":"00:45:57.002","source":"Browser","level":"DEBUG","message":"#1 199ms Finished rendering"}
+{"timestamp":"00:46:21.369","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:46:22.724","source":"Browser","level":"DEBUG","message":"#1 0ms Starting document clone with size 1600x1000 scrolled to 0,0"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 132ms Document cloned, element located at 403.140625,0 with size 793.703125x2240.734375 using computed rendering"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 133ms Starting DOM parsing"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 163ms Added image http://localhost:3000/techomie-logo.jpg"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 202ms Starting renderer for element at 403.140625,0 with size 794x2241"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 203ms Canvas renderer initialized (794x2241) with scale 3"}
+{"timestamp":"00:46:38.216","source":"Browser","level":"DEBUG","message":"#1 234ms Finished rendering"}
+{"timestamp":"00:47:07.707","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:47:08.976","source":"Browser","level":"DEBUG","message":"#1 0ms Starting document clone with size 1600x1000 scrolled to 0,0"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 123ms Document cloned, element located at 403.140625,0 with size 793.703125x1122.515625 using computed rendering"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 123ms Starting DOM parsing"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 148ms Added image http://localhost:3000/techomie-logo.jpg"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 179ms Starting renderer for element at 403.140625,0 with size 794x1123"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 180ms Canvas renderer initialized (794x1123) with scale 3"}
+{"timestamp":"00:47:16.801","source":"Browser","level":"DEBUG","message":"#1 202ms Finished rendering"}
+{"timestamp":"00:47:35.860","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:47:37.145","source":"Browser","level":"DEBUG","message":"#1 0ms Starting document clone with size 1600x1000 scrolled to 0,0"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 127ms Document cloned, element located at 403.140625,0 with size 793.703125x1118.734375 using computed rendering"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 127ms Starting DOM parsing"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 152ms Added image http://localhost:3000/techomie-logo.jpg"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 181ms Starting renderer for element at 403.140625,0 with size 794x1119"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 182ms Canvas renderer initialized (794x1119) with scale 3"}
+{"timestamp":"00:47:45.869","source":"Browser","level":"DEBUG","message":"#1 208ms Finished rendering"}
+{"timestamp":"01:33:47.348","source":"Server","level":"ERROR","message":"⨯ ./app/catalog-data.json\nModule build failed: Error: ENOENT: no such file or directory, open 'D:\\Techomie-Flow\\app\\catalog-data.json'\n\nImport trace for requested module:\n./app/catalog-data.json\n./app/catalog-data.ts\n./app/page.tsx"}

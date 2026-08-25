@@ -14,6 +14,15 @@ const money = (n: any) =>
     currency: "INR",
     maximumFractionDigits: 2,
   }).format(Number(n || 0));
+const wholeQty = (value: any) => Math.max(1, Math.round(Number(value) || 1));
+const normalizeQuantities = (snapshot: R) => {
+  const normalized = structuredClone(snapshot);
+  for (const floor of normalized.floors || [])
+    for (const room of floor.rooms || [])
+      for (const item of room.items || []) item.qty = wholeQty(item.qty);
+  for (const item of normalized.projectItems || []) item.qty = wholeQty(item.qty);
+  return normalized;
+};
 const today = () => new Date().toISOString().slice(0, 10);
 const later = (n: number) =>
   new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
@@ -290,7 +299,7 @@ function QuoteWorkspace({
       d = await r.json();
     if (r.ok) {
       setQuote(d.quotation);
-      setSnap(d.quotation.snapshot);
+      setSnap(normalizeQuantities(d.quotation.snapshot));
       setCustomerId(String(d.quotation.customer_id));
       setSiteId(String(d.quotation.site_id));
       setSalesId(String(d.quotation.sales_id || d.quotation.created_by || ""));
@@ -1240,12 +1249,13 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <input
                           disabled={locked}
                           type="number"
-                          min=".01"
-                          value={x.qty}
+                          min="1"
+                          step="1"
+                          value={wholeQty(x.qty)}
                           onChange={(e) =>
                             mut(
                               (n) =>
-                                (n.floors[fi].rooms[ri].items[ii].qty = Number(
+                                (n.floors[fi].rooms[ri].items[ii].qty = wholeQty(
                                   e.target.value,
                                 )),
                             )
@@ -1494,7 +1504,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         {showCustom && <div className="customquoteitem">
           <h3>Add an item not in Items Master</h3>
           <label><span>Item name *</span><input value={custom.name} onChange={(e) => setCustom({...custom,name:e.target.value})} /></label>
-          <label><span>Quantity</span><input type="number" min=".01" value={custom.qty} onChange={(e) => setCustom({...custom,qty:Number(e.target.value)})} /></label>
+          <label><span>Quantity</span><input type="number" min="1" step="1" value={wholeQty(custom.qty)} onChange={(e) => setCustom({...custom,qty:wholeQty(e.target.value)})} /></label>
           <label><span>Unit</span><input value={custom.unit} onChange={(e) => setCustom({...custom,unit:e.target.value})} /></label>
           <label><span>Rate</span><input type="number" min="0" value={custom.price} onChange={(e) => setCustom({...custom,price:Number(e.target.value)})} /></label>
           <label><span>Discount %</span><input type="number" min="0" max="100" value={custom.discount} onChange={(e) => setCustom({...custom,discount:Number(e.target.value)})} /></label>
@@ -1704,7 +1714,7 @@ function QuotePaper({ quote, snap, totals }: R) {
                     </em>
                   </span>
                   <i>
-                    {x.qty} {x.unit}
+                    {wholeQty(x.qty)} {x.unit}
                   </i>
                   <i>{money(x.price)}</i>
                   <strong>{money(line(x).total)}</strong>
@@ -1963,7 +1973,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
                     </em>
                   </span>
                   <i>
-                    {item.qty}
+                    {wholeQty(item.qty)}
                   </i>
                   <i>{item.unit}</i>
                   <i>{money(item.price)}</i>
@@ -2144,7 +2154,7 @@ function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
         <div className="qminimalrow" key={`${item.id || item.variantId || item.sku}-${index}`}>
           <span>{index + 1}</span>
           <span><b>{item.name}</b><small>{[item.floorName, item.roomName, item.sku, item.variantSummary].filter(Boolean).join(" | ")}</small></span>
-          <span>{item.qty} {item.unit}</span><span>{money(item.price)}</span><span>{Number(item.discount || 0)}%</span><span>{item.taxMode === "Non-GST" ? "-" : `${Number(item.gst || 18)}%`}</span><strong>{money(line(item).total)}</strong>
+          <span>{wholeQty(item.qty)} {item.unit}</span><span>{money(item.price)}</span><span>{Number(item.discount || 0)}%</span><span>{item.taxMode === "Non-GST" ? "-" : `${Number(item.gst || 18)}%`}</span><strong>{money(line(item).total)}</strong>
         </div>
       ))}
     </div>
@@ -2261,7 +2271,7 @@ function Totals({ t }: R) {
   );
 }
 const line = (x: R) => {
-  const base = Number(x.price || 0) * Number(x.qty || 0),
+  const base = Number(x.price || 0) * wholeQty(x.qty),
     discount = (base * Number(x.discount || 0)) / 100,
     taxable = x.optional && x.excluded ? 0 : base - discount,
     tax = x.taxMode === "Non-GST" ? 0 : (taxable * Number(x.gst || 18)) / 100;
