@@ -547,7 +547,9 @@ function QuoteWorkspace({
             image: { type: "png", quality: 1 },
             html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000 },
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-            pagebreak: { mode: ["css", "legacy"] },
+            // Every proposal section is already an exact A4 canvas. Applying
+            // an additional CSS break after it creates an empty PDF page.
+            pagebreak: { mode: [] },
           })
           .from(el)
           .outputPdf("blob");
