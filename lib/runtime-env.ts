@@ -47,7 +47,11 @@ class Prepared {
 
 class Database {
   prepare(source: string) { return new Prepared(source); }
-  async batch(statements: Prepared[]) { return Promise.all(statements.map(statement => statement.run())); }
+  async batch(statements: Prepared[]) {
+    const results = [];
+    for (const statement of statements) results.push(await statement.run());
+    return results;
+  }
   async exec(source: string) {
     await queryRows(source, []);
     return { count: 1, duration: 0 };

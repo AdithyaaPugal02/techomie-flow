@@ -628,6 +628,27 @@
 .qproposalclean.qformat-compact .qcoverbody{margin-top:24mm!important}.qproposalclean.qformat-compact .qcovermeta{margin-top:10mm!important}.qproposalclean.qformat-compact .qcover{min-height:140mm!important}.qproposalclean.qformat-compact>section{min-height:277mm!important}
 @media print{.qproposalclean{box-shadow:none!important;margin:0!important;width:210mm!important}.qproposalclean>section{page-break-after:always!important;size:A4 portrait!important}}
 
+/* Each quotation design keeps a genuinely distinct visual system. */
+.qtemplate-technical{--doc-primary:#008fc7!important;--doc-secondary:#06243b!important;--doc-accent:#38bdf8!important;font-family:"Segoe UI",Arial,sans-serif!important}
+.qtemplate-technical>section:not(.qcover){background-color:#fafdff!important;background-image:linear-gradient(#0aa9e80a 1px,transparent 1px),linear-gradient(90deg,#0aa9e80a 1px,transparent 1px)!important;background-size:8mm 8mm!important}
+.qtemplate-technical .qpdfhead{border-bottom:2px solid var(--doc-primary)!important}
+.qtemplate-technical .qsectiontitle h2{font-family:"Segoe UI",Arial,sans-serif!important;font-weight:700!important;letter-spacing:.01em!important}
+.qtemplate-technical .qpdfroom h3{background:#e8f7fd!important;border:1px solid #94d8f1!important;color:#06243b!important;border-radius:2px!important}
+.qtemplate-technical .qpdfroom h3 span{color:#397187!important}
+.qtemplate-technical .qpapercolumns{background:#06243b!important;color:#fff!important}
+.qtemplate-technical .qpaperline,.qtemplate-technical .qcommercialgrid>div,.qtemplate-technical .qcommercialgrid aside,.qtemplate-technical .qmilestones article{border-radius:2px!important}
+.qtemplate-technical .qtotalhero{background:linear-gradient(135deg,#06243b,#087da8)!important}
+
+@media print{
+  @page{size:A4 portrait;margin:0}
+  html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
+  body:has(.qpaper) *{visibility:hidden!important}
+  body:has(.qpaper) .qpaper,body:has(.qpaper) .qpaper *{visibility:visible!important}
+  body:has(.qpaper) .qpaper{position:absolute!important;inset:0 auto auto 0!important;width:210mm!important;margin:0!important;box-shadow:none!important}
+  body:has(.qpaper) .qpaper>section{width:210mm!important;min-height:297mm!important;height:297mm!important;break-after:page!important;page-break-after:always!important}
+  body:has(.qpaper) .qpaper>section:last-child{break-after:auto!important;page-break-after:auto!important}
+}
+
 /* Techomie OS application design system — screen UI only. */
 @media screen {
   :root {

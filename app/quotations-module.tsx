@@ -414,11 +414,27 @@ function QuoteWorkspace({
     await load();
   };
   const pdf = async (download = false) => {
+    clearTimeout(timer.current);
+    await persist();
     setTab("Preview");
-    setTimeout(async () => {
-      if (download) {
-        const el = document.querySelector(".qpaper") as HTMLElement;
-        if (!el) return;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    const el = document.querySelector(".qpaper") as HTMLElement | null;
+    if (!el) return notify("PDF preview could not be prepared");
+    await document.fonts?.ready;
+    await Promise.all(
+      Array.from(el.querySelectorAll("img")).map(
+        (image) =>
+          image.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => {
+                image.addEventListener("load", () => resolve(), { once: true });
+                image.addEventListener("error", () => resolve(), { once: true });
+              }),
+      ),
+    );
+    if (download) {
         const html2pdf = (await import("html2pdf.js")).default;
         const filename =
           `${quote?.number || "Quotation"}-Rev-${quote?.revision || 0}-${quote?.customer_name || "Customer"}.pdf`.replace(
@@ -461,8 +477,7 @@ function QuoteWorkspace({
         a.click();
         URL.revokeObjectURL(a.href);
         await load();
-      } else window.print();
-    }, 120);
+    } else window.print();
   };
   if (newMode)
     return (
@@ -1641,6 +1656,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     detailed = pdfFormat === "detailed",
     templateId =
       snap.details?.templateId || branding.defaultQuoteTemplate || "luxury",
+    designClass = templateId === "minimal" ? "qproposalclean" : "",
     templateStyle = {
       "--doc-primary": branding.primaryColour || "#0aa9e8",
       "--doc-secondary": branding.secondaryColour || "#071522",
@@ -1672,7 +1688,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
   );
   return (
     <article
-      className={`qpaper qpaperpremium qproposalclean qformat-${pdfFormat} qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
+      className={`qpaper qpaperpremium ${designClass} qformat-${pdfFormat} qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
       style={templateStyle}
     >
       <section className="qcover">
