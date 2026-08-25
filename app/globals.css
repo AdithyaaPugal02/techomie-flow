@@ -15,6 +15,7 @@
 @import "./projects-system.css";
 @import "./settings-control.css";
 @import "./quotations-workspace.css";
+@import "./quotation-advanced.css";
 @import "./quotation-templates.css";
 @import "./site-visits.css";
 .authbrand img{width:54px;height:54px;object-fit:contain;border-radius:12px}.brand>img{width:34px;height:34px;object-fit:contain;border-radius:9px;background:#fff}

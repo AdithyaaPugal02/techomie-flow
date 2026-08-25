@@ -263,6 +263,7 @@ function QuoteWorkspace({
       ],
       terms: "",
       warranty: "",
+      taxMode: "GST",
     }),
     [tab, setTab] = useState("Details"),
     [save, setSave] = useState("Saved"),
@@ -724,6 +725,7 @@ function QuoteWorkspace({
         <ItemPicker
           target={picker}
           role={role}
+          taxMode={snap.taxMode || "GST"}
           close={() => setPicker(null)}
           add={(item) => {
             const next = structuredClone(snap);
@@ -731,7 +733,6 @@ function QuoteWorkspace({
               room = floor.rooms[picker.room];
             room.items.push(item);
             change(next);
-            setPicker(null);
           }}
         />
       )}
@@ -936,6 +937,22 @@ function Details({
           <span>Revision</span>
           <input disabled value={`Rev ${quote.revision || 0}`} />
         </label>
+        <label className="wide">
+          <span>Quotation / project title</span>
+          <input disabled={locked} value={d.title || quote.title || ""} onChange={(e) => change("title", e.target.value)} />
+        </label>
+        <label>
+          <span>Quote type</span>
+          <select disabled={locked} value={d.quoteType || quote.quote_type || "Standard Product Quotation"} onChange={(e) => change("quoteType", e.target.value)}>
+            {["Full Smart Home Proposal","Standard Product Quotation","CCTV / Networking Quotation","Gate Automation Quotation","Service Estimate","Custom Quotation"].map((value) => <option key={value}>{value}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>Project type</span>
+          <select disabled={locked} value={d.projectType || "Other"} onChange={(e) => change("projectType", e.target.value)}>
+            {["Home","Villa","Apartment","Office","Hotel","Commercial","Other"].map((value) => <option key={value}>{value}</option>)}
+          </select>
+        </label>
         <label>
           <span>Quote date</span>
           <input
@@ -999,20 +1016,42 @@ function Details({
         <label>
           <span>Contact</span>
           <input
-            disabled
-            value={quote.contact_name || quote.primary_contact || ""}
+            disabled={locked}
+            value={d.contactName ?? quote.contact_name ?? quote.primary_contact ?? ""}
+            onChange={(e) => change("contactName", e.target.value)}
           />
         </label>
         <label className="wide">
           <span>Installation address</span>
           <textarea
-            disabled
-            value={`${quote.site_address || ""}, ${quote.city || ""}, ${quote.state || ""} ${quote.pincode || ""}`}
+            disabled={locked}
+            value={d.installationAddress ?? `${quote.site_address || ""}, ${quote.city || ""}, ${quote.state || ""} ${quote.pincode || ""}`}
+            onChange={(e) => change("installationAddress", e.target.value)}
           />
         </label>
         <label>
           <span>GSTIN</span>
-          <input disabled value={quote.gstin || "Unregistered"} />
+          <input disabled={locked} value={d.gstin ?? quote.gstin ?? "Unregistered"} onChange={(e) => change("gstin", e.target.value)} />
+        </label>
+        <label>
+          <span>Quotation tax mode</span>
+          <select
+            disabled={locked}
+            value={snap.taxMode || "GST"}
+            onChange={(e) => {
+              const taxMode = e.target.value;
+              const next = structuredClone(snap);
+              next.taxMode = taxMode;
+              for (const floor of next.floors || [])
+                for (const room of floor.rooms || [])
+                  for (const item of room.items || []) item.taxMode = taxMode;
+              for (const item of next.projectItems || []) item.taxMode = taxMode;
+              set(next);
+            }}
+          >
+            <option value="GST">GST quotation</option>
+            <option value="Non-GST">Non-GST quotation</option>
+          </select>
         </label>
         <label>
           <span>Quotation by</span>
@@ -1028,6 +1067,10 @@ function Details({
             value={d.reference || ""}
             onChange={(e) => change("reference", e.target.value)}
           />
+        </label>
+        <label>
+          <span>Customer PO / reference</span>
+          <input disabled={locked} value={d.customerReference || ""} onChange={(e) => change("customerReference", e.target.value)} />
         </label>
         <label>
           <span>Expected installation</span>
@@ -1064,6 +1107,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
       floor?: number;
       name: string;
     }>(null),
+    [editingItem, setEditingItem] = useState(""),
     floors = snap.floors || [],
     mut = (fn: (n: R) => void) => {
       const n = structuredClone(snap);
@@ -1151,8 +1195,10 @@ function Builder({ snap, set, locked, openPicker }: R) {
                   }
                 />
                 <div className="qitems">
-                  {(r.items || []).map((x: R, ii: number) => (
-                    <div className="qitem" key={ii}>
+                  {(r.items || []).map((x: R, ii: number) => {
+                    const itemKey = `${fi}-${ri}-${ii}`;
+                    return <article className="qitemcard" key={itemKey}>
+                    <div className="qitem">
                       <img src={x.image || "/techomie-logo.jpg"} alt="" />
                       <span>
                         <b>{x.name}</b>
@@ -1211,19 +1257,24 @@ function Builder({ snap, set, locked, openPicker }: R) {
                       </label>
                       <strong>{money(line(x).total)}</strong>
                       {!locked && (
-                        <button
-                          className="danger"
-                          onClick={() =>
-                            mut((n) =>
-                              n.floors[fi].rooms[ri].items.splice(ii, 1),
-                            )
-                          }
-                        >
-                          ×
-                        </button>
+                        <div className="qitemactions">
+                          <button disabled={ii === 0} title="Move up" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii-1],a[ii]]=[a[ii],a[ii-1]]})}>↑</button>
+                          <button disabled={ii === r.items.length - 1} title="Move down" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii],a[ii+1]]=[a[ii+1],a[ii]]})}>↓</button>
+                          <button title="Edit item" onClick={() => setEditingItem(editingItem === itemKey ? "" : itemKey)}>Edit</button>
+                          <button className="danger" title="Remove item" onClick={() => mut((n) => n.floors[fi].rooms[ri].items.splice(ii, 1))}>×</button>
+                        </div>
                       )}
                     </div>
-                  ))}
+                    {editingItem === itemKey && <div className="qitemedit">
+                      <label><span>Item title</span><input value={x.name || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].name = e.target.value)} /></label>
+                      <label><span>Unit</span><input value={x.unit || "Nos"} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].unit = e.target.value)} /></label>
+                      <label><span>GST rate %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
+                      <label><span>Warranty</span><input value={x.warranty || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].warranty = e.target.value)} /></label>
+                      <label className="wide"><span>Description</span><textarea value={x.description || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].description = e.target.value)} /></label>
+                      <label className="wide"><span>Line note / exclusions</span><textarea value={x.note || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].note = e.target.value)} /></label>
+                      <label className="qitemcheck"><input type="checkbox" checked={!!x.optional} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].optional = e.target.checked)} /><span>Optional item</span></label>
+                    </div>}
+                    </article>})}
                 </div>
               </article>
             ))}
@@ -1347,10 +1398,16 @@ function Builder({ snap, set, locked, openPicker }: R) {
     </div>
   );
 }
-function ItemPicker({ target, role, close, add }: R) {
+function ItemPicker({ target, role, taxMode, close, add }: R) {
   const [q, setQ] = useState(""),
     [items, setItems] = useState<R[]>([]),
-    [loading, setLoading] = useState(false);
+    [loading, setLoading] = useState(false),
+    [category, setCategory] = useState(""),
+    [technology, setTechnology] = useState(""),
+    [material, setMaterial] = useState(""),
+    [added, setAdded] = useState(0),
+    [showCustom, setShowCustom] = useState(false),
+    [custom, setCustom] = useState<R>({ name: "", description: "", qty: 1, unit: "Nos", price: 0, discount: 0, gst: 18, warranty: "", note: "" });
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
@@ -1363,6 +1420,19 @@ function ItemPicker({ target, role, close, add }: R) {
     }, 200);
     return () => clearTimeout(t);
   }, [q]);
+  const parsed = items.map((item) => ({
+      ...item,
+      parsedAttributes: typeof item.attributes === "string" ? JSON.parse(item.attributes || "{}") : item.attributes || {},
+    })),
+    categories = [...new Set(parsed.map((item) => item.category).filter(Boolean))].sort(),
+    technologies = [...new Set(parsed.map((item) => item.parsedAttributes.technology).filter(Boolean))].sort(),
+    materials = [...new Set(parsed.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish]).filter(Boolean))].sort(),
+    visibleItems = parsed.filter((item) =>
+      (!category || item.category === category) &&
+      (!technology || item.parsedAttributes.technology === technology) &&
+      (!material || item.parsedAttributes.material === material || item.parsedAttributes.finish === material),
+    );
+  const addAndContinue = (item: R) => { add(item); setAdded((count) => count + 1); };
   return (
     <div className="modalback">
       <div className="itemdrawer">
@@ -1371,7 +1441,7 @@ function ItemPicker({ target, role, close, add }: R) {
             <small>ITEMS MASTER</small>
             <h2>Add item to selected room</h2>
           </div>
-          <button onClick={close}>×</button>
+          <div className="itemdrawerclose"><span>{added ? `${added} item${added === 1 ? "" : "s"} added` : "Add multiple items, then close"}</span><button onClick={close}>Done ×</button></div>
         </header>
         <input
           className="itemsearch"
@@ -1380,15 +1450,31 @@ function ItemPicker({ target, role, close, add }: R) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search product, brand, model, SKU, category or technology"
         />
+        <div className="itempickerfilters">
+          <select value={category} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={technology} onChange={(e) => setTechnology(e.target.value)}><option value="">All technologies</option>{technologies.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={material} onChange={(e) => setMaterial(e.target.value)}><option value="">All materials / finishes</option>{materials.map((value) => <option key={value}>{value}</option>)}</select>
+          <button className="primary" onClick={() => setShowCustom((value) => !value)}>＋ Custom item</button>
+        </div>
+        {showCustom && <div className="customquoteitem">
+          <h3>Add an item not in Items Master</h3>
+          <label><span>Item name *</span><input value={custom.name} onChange={(e) => setCustom({...custom,name:e.target.value})} /></label>
+          <label><span>Quantity</span><input type="number" min=".01" value={custom.qty} onChange={(e) => setCustom({...custom,qty:Number(e.target.value)})} /></label>
+          <label><span>Unit</span><input value={custom.unit} onChange={(e) => setCustom({...custom,unit:e.target.value})} /></label>
+          <label><span>Rate</span><input type="number" min="0" value={custom.price} onChange={(e) => setCustom({...custom,price:Number(e.target.value)})} /></label>
+          <label><span>Discount %</span><input type="number" min="0" max="100" value={custom.discount} onChange={(e) => setCustom({...custom,discount:Number(e.target.value)})} /></label>
+          <label><span>GST %</span><input type="number" disabled={taxMode === "Non-GST"} value={custom.gst} onChange={(e) => setCustom({...custom,gst:Number(e.target.value)})} /></label>
+          <label className="wide"><span>Description / specification</span><textarea value={custom.description} onChange={(e) => setCustom({...custom,description:e.target.value})} /></label>
+          <label><span>Warranty</span><input value={custom.warranty} onChange={(e) => setCustom({...custom,warranty:e.target.value})} /></label>
+          <label><span>Line note</span><input value={custom.note} onChange={(e) => setCustom({...custom,note:e.target.value})} /></label>
+          <button className="primary" disabled={!custom.name.trim()} onClick={() => {addAndContinue({...custom,id:crypto.randomUUID(),custom:true,brand:"Custom",sku:"CUSTOM",taxMode});setCustom({...custom,name:"",description:"",note:""})}}>Add custom item</button>
+        </div>}
         <div className="pickeritems">
           {loading ? (
             <p>Searching Items…</p>
           ) : (
-            items.map((x) => {
-              const attrs =
-                  typeof x.attributes === "string"
-                    ? JSON.parse(x.attributes || "{}")
-                    : x.attributes || {},
+            visibleItems.map((x) => {
+              const attrs = x.parsedAttributes,
                 name = /^noviq\s/i.test(x.name)
                   ? x.name
                   : x.brand === "Noviq" || x.brand === "Noviq OEM"
@@ -1421,7 +1507,7 @@ function ItemPicker({ target, role, close, add }: R) {
                     )}
                     <button
                       onClick={() =>
-                        add({
+                        addAndContinue({
                           variantId: x.variant_id,
                           productId: x.product_id,
                           name,
@@ -1440,7 +1526,7 @@ function ItemPicker({ target, role, close, add }: R) {
                           purchaseCost: Number(x.purchase_cost || 0),
                           discount: 0,
                           gst: Number(x.tax_rate || 18),
-                          taxMode: "GST",
+                          taxMode,
                           warranty: x.warranty || x.default_warranty || "",
                           optional: false,
                           note: "",
@@ -1757,16 +1843,14 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
             <small>CLIENT</small>
             <b>{customerName}</b>
             <span>
-              {quote.phone || quote.contact_phone || "Contact on record"}
+              {snap.details?.contactName || quote.phone || quote.contact_phone || "Contact on record"}
             </span>
           </article>
           <article>
             <small>PROJECT / SITE</small>
             <b>{siteName}</b>
             <span>
-              {[quote.site_address, quote.city, quote.state, quote.pincode]
-                .filter(Boolean)
-                .join(", ")}
+              {snap.details?.installationAddress || [quote.site_address, quote.city, quote.state, quote.pincode].filter(Boolean).join(", ")}
             </span>
           </article>
           <article>
@@ -1984,9 +2068,7 @@ function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
     address = [company.address, company.city, company.state, company.pincode]
       .filter(Boolean)
       .join(", "),
-    customerAddress = [quote.billing_address, quote.site_address, quote.city, quote.state, quote.pincode]
-      .filter(Boolean)
-      .join(", "),
+    customerAddress = snap.details?.installationAddress || [quote.billing_address, quote.site_address, quote.city, quote.state, quote.pincode].filter(Boolean).join(", "),
     items = (snap.floors || []).flatMap((floor: R) =>
       (floor.rooms || []).flatMap((room: R) =>
         (room.items || []).map((item: R) => ({ ...item, floorName: floor.name, roomName: room.name })),
@@ -2015,7 +2097,7 @@ function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
         </div>
         <div className="qminimalbill">
           <small>BILL TO</small><b>{customerName}</b><span>{customerAddress || siteName}</span>
-          {quote.gstin && <em>GSTIN {quote.gstin}</em>}
+          {(snap.details?.gstin || quote.gstin) && <em>GSTIN {snap.details?.gstin || quote.gstin}</em>}
         </div>
       </>}
     </>
