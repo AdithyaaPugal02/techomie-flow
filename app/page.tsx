@@ -6,7 +6,7 @@ import InvoiceModule from "./invoice-module";
 import OverviewModule from "./overview-module";
 import LeadsModule from "./leads-module";
 import CustomersModule from "./customers-module";
-import ItemsModule from "./items-module";
+import ItemMasterModule from "./item-master-module";
 import ProjectsModule from "./projects-module";
 import SettingsModule from "./settings-module";
 import QuotationsModule from "./quotations-module";
@@ -792,7 +792,7 @@ export default function Home() {
             total={total}
           />
         ) : module === "Items" ? (
-          <ItemsModule isAdmin={auth.user.role === "admin"} />
+          <ItemMasterModule isAdmin={auth.user.role === "admin"} />
         ) : module === "Expenses" ? (
           <ExpensesModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : module === "Site Visits" ? (

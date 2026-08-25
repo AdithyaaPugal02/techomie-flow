@@ -1,0 +1,13 @@
+{
+  "baseItems": 719,
+  "variants": 2937,
+  "supplierItems": 2938,
+  "quantityTiers": 2803,
+  "media": 719,
+  "errors": 16,
+  "errorTypes": {
+    "CONFLICTING_TECHNOLOGY_LABEL": 3,
+    "INVALID_PRICE": 2,
+    "MISSING_MODEL": 11
+  }
+}

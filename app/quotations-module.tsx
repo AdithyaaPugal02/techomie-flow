@@ -1451,11 +1451,12 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
-      const r = await fetch(
-          `/api/products?q=${encodeURIComponent(q)}&page=1&limit=100&active=active`,
-        ),
-        d = await r.json();
-      if (r.ok) setItems(d.items || []);
+      const query = encodeURIComponent(q), [masterResponse, legacyResponse] = await Promise.all([
+          fetch(`/api/item-master?view=quotation&q=${query}`),
+          fetch(`/api/products?q=${query}&page=1&limit=100&active=active`),
+        ]), [master, legacy] = await Promise.all([masterResponse.json(), legacyResponse.json()]);
+      const authoritative = masterResponse.ok ? master.items || [] : [], existing = legacyResponse.ok ? legacy.items || [] : [];
+      setItems([...authoritative, ...existing.filter((item: R) => !authoritative.some((current: R) => current.sku === item.sku))]);
       setLoading(false);
     }, 200);
     return () => clearTimeout(t);

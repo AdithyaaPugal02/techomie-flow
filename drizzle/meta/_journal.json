@@ -78,6 +78,13 @@
       "when": 1786780667481,
       "tag": "0010_tiny_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1787688620196,
+      "tag": "0011_flaky_patriot",
+      "breakpoints": true
     }
   ]
 }
