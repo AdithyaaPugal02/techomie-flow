@@ -1049,8 +1049,8 @@ function Details({
               set(next);
             }}
           >
-            <option value="GST">GST quotation</option>
-            <option value="Non-GST">Non-GST quotation</option>
+            <option value="GST">GST Bill</option>
+            <option value="Non-GST">Non-GST Bill</option>
           </select>
         </label>
         <label>
@@ -1116,6 +1116,26 @@ function Builder({ snap, set, locked, openPicker }: R) {
     };
   return (
     <div className="qbuilder">
+      <section className="qtaxmodebar">
+        <div><b>Quotation billing mode</b><span>Applies to every item in this quotation</span></div>
+        <select
+          disabled={locked}
+          value={snap.taxMode || "GST"}
+          onChange={(e) => {
+            const taxMode = e.target.value;
+            mut((next) => {
+              next.taxMode = taxMode;
+              for (const floor of next.floors || [])
+                for (const room of floor.rooms || [])
+                  for (const item of room.items || []) item.taxMode = taxMode;
+              for (const item of next.projectItems || []) item.taxMode = taxMode;
+            });
+          }}
+        >
+          <option value="GST">GST Bill</option>
+          <option value="Non-GST">Non-GST Bill</option>
+        </select>
+      </section>
       {floors.map((f: R, fi: number) => (
         <section className="qfloor" key={fi}>
           <header>
@@ -1181,6 +1201,15 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         }
                       >
                         Duplicate
+                      </button>
+                      <button
+                        className="danger"
+                        onClick={() => {
+                          if (confirm(`Remove ${r.name} and all items inside it?`))
+                            mut((n) => n.floors[fi].rooms.splice(ri, 1));
+                        }}
+                      >
+                        Remove room
                       </button>
                     </>
                   )}
@@ -1403,6 +1432,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     [items, setItems] = useState<R[]>([]),
     [loading, setLoading] = useState(false),
     [category, setCategory] = useState(""),
+    [model, setModel] = useState(""),
     [technology, setTechnology] = useState(""),
     [material, setMaterial] = useState(""),
     [added, setAdded] = useState(0),
@@ -1425,10 +1455,14 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
       parsedAttributes: typeof item.attributes === "string" ? JSON.parse(item.attributes || "{}") : item.attributes || {},
     })),
     categories = [...new Set(parsed.map((item) => item.category).filter(Boolean))].sort(),
-    technologies = [...new Set(parsed.map((item) => item.parsedAttributes.technology).filter(Boolean))].sort(),
-    materials = [...new Set(parsed.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish]).filter(Boolean))].sort(),
+    categoryItems = parsed.filter((item) => !category || item.category === category),
+    models = [...new Map(categoryItems.map((item) => [String(item.product_id), { id: String(item.product_id), name: item.name }])).values()].sort((a, b) => String(a.name).localeCompare(String(b.name))),
+    modelItems = categoryItems.filter((item) => !model || String(item.product_id) === model),
+    technologies = [...new Set(modelItems.map((item) => item.parsedAttributes.technology).filter(Boolean))].sort(),
+    materials = [...new Set(modelItems.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish]).filter(Boolean))].sort(),
     visibleItems = parsed.filter((item) =>
       (!category || item.category === category) &&
+      (!model || String(item.product_id) === model) &&
       (!technology || item.parsedAttributes.technology === technology) &&
       (!material || item.parsedAttributes.material === material || item.parsedAttributes.finish === material),
     );
@@ -1451,9 +1485,10 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
           placeholder="Search product, brand, model, SKU, category or technology"
         />
         <div className="itempickerfilters">
-          <select value={category} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((value) => <option key={value}>{value}</option>)}</select>
-          <select value={technology} onChange={(e) => setTechnology(e.target.value)}><option value="">All technologies</option>{technologies.map((value) => <option key={value}>{value}</option>)}</select>
-          <select value={material} onChange={(e) => setMaterial(e.target.value)}><option value="">All materials / finishes</option>{materials.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={category} onChange={(e) => {setCategory(e.target.value);setModel("");setTechnology("");setMaterial("")}}><option value="">1. Select category</option>{categories.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={model} disabled={!category} onChange={(e) => {setModel(e.target.value);setTechnology("");setMaterial("")}}><option value="">2. All models</option>{models.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</select>
+          <select value={technology} disabled={!category} onChange={(e) => setTechnology(e.target.value)}><option value="">3. All technologies</option>{technologies.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={material} disabled={!category} onChange={(e) => setMaterial(e.target.value)}><option value="">4. All materials / finishes</option>{materials.map((value) => <option key={value}>{value}</option>)}</select>
           <button className="primary" onClick={() => setShowCustom((value) => !value)}>＋ Custom item</button>
         </div>
         {showCustom && <div className="customquoteitem">
