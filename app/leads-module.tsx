@@ -296,15 +296,6 @@ export default function LeadsModule({
     won: rows.filter((x) => x.status === "Won").length,
     lost: rows.filter((x) => x.status === "Lost").length,
   };
-  if (role === "technician")
-    return (
-      <div className="modulepage">
-        <h1>Leads</h1>
-        <p className="formerror">
-          Technician accounts do not have general CRM access.
-        </p>
-      </div>
-    );
   return (
     <div className="leadcrm">
       <div className="leadhero">

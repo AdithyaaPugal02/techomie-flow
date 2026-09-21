@@ -1,9 +1,10 @@
 .settingspage {
-  padding: 30px;
+  padding: 28px;
   max-width: 100%;
   width: 100%;
   margin: auto;
   overflow-x: hidden;
+  color: #0f172a;
 }
 .settingspage > header {
   display: flex;
@@ -13,65 +14,79 @@
 }
 .settingspage > header small {
   font-size: 11px;
-  letter-spacing: 0.12em;
-  color: #1769ff;
-  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #0284c7;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 .settingspage > header h1 {
-  font-size: 34px;
-  margin: 5px 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 4px 0;
+  color: #0f172a;
 }
 .settingspage > header p {
   margin: 0;
-  color: #667085;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 13.5px;
 }
 .settingslayout {
   display: grid;
-  grid-template-columns: minmax(220px, 285px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
   max-width: 100%;
 }
 .settingslayout > nav {
-  background: #111318;
+  background: linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  padding: 9px;
+  padding: 10px;
   position: sticky;
-  top: 86px;
+  top: 84px;
   max-height: calc(100vh - 110px);
   overflow: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 .settingslayout > nav button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   border: 0;
   background: transparent;
-  color: #a8afb9;
+  color: #94a3b8;
   text-align: left;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.16s ease;
 }
 .settingslayout > nav button span {
   width: 24px;
   height: 24px;
   border-radius: 7px;
-  background: #20242b;
+  background: rgba(255, 255, 255, 0.06);
   display: grid;
   place-items: center;
-  font-size: 10px;
+  font-size: 11px;
+}
+.settingslayout > nav button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 .settingslayout > nav button.active {
-  background: #1769ff;
-  color: #fff;
+  background: rgba(14, 165, 233, 0.16);
+  color: #38bdf8;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #38bdf8;
 }
 .settingslayout > nav button.active span {
-  background: #fff2;
-  color: #fff;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
 }
 .settingslayout > main {
   min-width: 0;
@@ -82,25 +97,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .settingssectionhead h2 {
-  font-size: 21px;
+  font-size: 20px;
+  font-weight: 750;
   margin: 0;
+  color: #0f172a;
 }
 .settingssectionhead span {
-  font-size: 11px;
-  color: #16804a;
-  background: #eaf8f0;
-  border-radius: 20px;
-  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 4px 12px;
 }
 .settingscard {
-  background: #fff;
-  border: 1px solid #e3e7ed;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 2px 8px #10182808;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
 }
 .settingsform {
   display: grid;
@@ -110,31 +129,33 @@
 .settingsform > label {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 .settingsform > label.wide {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
 }
 .settingsform > label > span {
-  font-size: 12px;
-  font-weight: 700;
-  color: #344054;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
 }
 .settingsform input,
 .settingsform select,
 .settingsform textarea,
 .assetfield input {
-  border: 1px solid #d7dce4;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 10px 11px;
-  background: #fff;
+  padding: 9px 12px;
+  background: #ffffff;
   font: inherit;
   font-size: 13px;
+  color: #0f172a;
   outline: none;
   display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  transition: all 0.16s ease;
 }
 .settingsform textarea {
   font-family: ui-monospace, Consolas, monospace;
@@ -143,20 +164,22 @@
 }
 .settingsform input:focus,
 .settingsform textarea:focus {
-  border-color: #1769ff;
-  box-shadow: 0 0 0 3px #1769ff16;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
 }
 .switch {
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 13px;
+  color: #334155;
 }
 .switch input {
   min-height: auto !important;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
+  accent-color: #0284c7;
 }
 .assetfield {
   display: grid;
@@ -166,15 +189,23 @@
 .settingsstack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 .settingsstack > button {
   align-self: flex-start;
-  border: 1px solid #d7dce4;
-  background: #fff;
-  padding: 10px 13px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 9px 16px;
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.settingsstack > button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 .bankhead,
 .settingsactions {
@@ -188,58 +219,75 @@
 .settingscard h3 {
   margin: 0;
   font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
 }
 .settingsactions > div b,
 .settingsactions > div span {
   display: block;
 }
+.settingsactions > div b {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
 .settingsactions > div span {
   font-size: 12px;
-  color: #667085;
-  margin-top: 4px;
+  color: #64748b;
+  margin-top: 2px;
 }
 .settingsnotice {
-  background: #111827;
-  color: #fff;
-  border-radius: 9px;
-  padding: 11px 14px;
-  font-size: 12px;
-  margin-bottom: 12px;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 14px;
 }
 .settingstable {
   overflow: auto;
 }
 .settingsrow {
   display: grid;
-  grid-template-columns: 1.4fr 0.7fr 0.9fr 0.55fr 0.55fr;
+  grid-template-columns: 1.3fr 0.65fr 0.8fr 0.5fr 1fr;
   gap: 12px;
   align-items: center;
-  padding: 12px 8px;
-  border-top: 1px solid #eaecf0;
-  font-size: 12px;
-  min-width: 760px;
+  padding: 12px 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 13px;
+  min-width: 780px;
 }
 .settingsrow.head {
   background: #f8fafc;
-  color: #667085;
+  color: #64748b;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-top: 0;
 }
 .settingsrow span b,
 .settingsrow span small {
   display: block;
 }
+.settingsrow span b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
 .settingsrow span small {
-  color: #667085;
-  margin-top: 3px;
+  color: #64748b;
+  margin-top: 2px;
+  font-size: 11.5px;
 }
 .settingsrow button {
-  border: 1px solid #d7dce4;
-  background: #fff;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   border-radius: 7px;
-  padding: 7px;
-  font-size: 11px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 .healthgrid {
   display: grid;
@@ -247,22 +295,27 @@
   gap: 12px;
 }
 .healthgrid article {
-  background: #fff;
-  border: 1px solid #e3e7ed;
-  border-radius: 13px;
-  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
 }
 .healthgrid small,
 .healthgrid b {
   display: block;
 }
 .healthgrid small {
-  font-size: 11px;
-  color: #667085;
-  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
 }
 .healthgrid b {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
   word-break: break-word;
 }
 .productiongrid {
@@ -278,15 +331,17 @@
   grid-template-columns: 1fr 1fr auto;
   gap: 12px;
   padding: 11px 0;
-  border-top: 1px solid #eaecf0;
-  font-size: 12px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12.5px;
 }
 .auditlist b {
   text-transform: capitalize;
+  font-weight: 600;
+  color: #0f172a;
 }
 .auditlist span,
 .auditlist time {
-  color: #667085;
+  color: #64748b;
 }
 .profile-settings {
   max-width: 900px;
@@ -294,6 +349,7 @@
 .profile-settings .settingscard {
   margin-top: 18px;
 }
+
 @media (max-width: 1000px) {
   .settingslayout {
     grid-template-columns: 220px 1fr;
@@ -304,7 +360,7 @@
 }
 @media (max-width: 760px) {
   .settingspage {
-    padding: 20px 14px;
+    padding: 16px 12px;
   }
   .settingspage > header {
     align-items: flex-start;
@@ -315,11 +371,17 @@
   .settingslayout > nav {
     position: static;
     display: flex;
-    overflow: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     padding: 7px;
   }
+  .settingslayout > nav::-webkit-scrollbar {
+    display: none;
+  }
   .settingslayout > nav button {
-    min-width: 190px;
+    min-width: 170px;
+    flex-shrink: 0;
   }
   .settingsform {
     grid-template-columns: 1fr;
@@ -341,7 +403,20 @@
   .auditlist > div {
     grid-template-columns: 1fr;
   }
+}
+@media (max-width: 480px) {
+  .settingspage {
+    padding: 12px 8px;
+  }
   .settingspage > header h1 {
-    font-size: 28px;
+    font-size: 22px;
+  }
+  .settingslayout > nav button {
+    min-width: 140px;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .settingscard {
+    padding: 14px 12px;
   }
 }

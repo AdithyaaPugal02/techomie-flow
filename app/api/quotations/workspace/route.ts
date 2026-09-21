@@ -46,9 +46,9 @@ export async function GET(req: Request) {
       x = new URL(req.url),
       id = Number(x.searchParams.get("id")),
       q = await env.DB.prepare(
-        "SELECT q.*,c.name customer_name,c.phone,c.gstin,c.billing_address,c.primary_contact,s.name site_name,s.address site_address,s.city,s.state,s.pincode,s.contact_name,s.contact_phone,u.name sales_name FROM quotations q JOIN customers c ON c.id=q.customer_id JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id WHERE q.id=? AND q.archived=0 AND (?!='sales' OR q.sales_id=? OR q.created_by=?)",
+        "SELECT q.*,c.name customer_name,c.phone,c.gstin,c.billing_address,c.primary_contact,s.name site_name,s.address site_address,s.city,s.state,s.pincode,s.contact_name,s.contact_phone,u.name sales_name FROM quotations q JOIN customers c ON c.id=q.customer_id JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id WHERE q.id=? AND q.archived=0",
       )
-        .bind(id, u.role, u.id, u.id)
+        .bind(id)
         .first<R>();
     if (!q)
       return Response.json({ error: "Quotation unavailable" }, { status: 404 });
@@ -112,8 +112,7 @@ export async function PATCH(req: Request) {
         .first<R>();
     if (!q)
       return Response.json({ error: "Quotation not found" }, { status: 404 });
-    if (u.role === "sales" && q.sales_id !== u.id && q.created_by !== u.id)
-      return Response.json({ error: "Quotation unavailable" }, { status: 403 });
+
     const action = String(p.action || "autosave");
     if (action === "relink") {
       if (!["Draft", "Revision Required", "Revised", "Pending Internal Approval"].includes(String(q.status)))

@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   try {
     const u = await requireUser(["admin", "crm", "sales"]), x = new URL(req.url), id = x.searchParams.get("id"), revision = x.searchParams.get("revision");
     if (id) {
-      const quote = await env.DB.prepare("SELECT q.*,c.name customer_name,c.phone,c.billing_address,c.gstin,c.lead_source,s.name site_name,s.address site_address,s.city,s.state,s.contact_name,s.contact_phone,u.name sales_name,cu.name created_name FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id LEFT JOIN users cu ON cu.id=q.created_by WHERE q.id=? AND (?!='sales' OR q.sales_id=? OR q.created_by=?)").bind(Number(id), u.role, u.id, u.id).first<R>();
+      const quote = await env.DB.prepare("SELECT q.*,c.name customer_name,c.phone,c.billing_address,c.gstin,c.lead_source,s.name site_name,s.address site_address,s.city,s.state,s.contact_name,s.contact_phone,u.name sales_name,cu.name created_name FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id LEFT JOIN users cu ON cu.id=q.created_by WHERE q.id=?").bind(Number(id)).first<R>();
       if (!quote) return Response.json({ error: "Quotation not found" }, { status: 404 });
       let snapshot = parse(quote.snapshot);
       if (revision !== null) {
@@ -29,7 +29,6 @@ export async function GET(req: Request) {
       return Response.json({ quotation: { ...quote, snapshot: u.role === "admin" ? snapshot : redact(snapshot) }, revisions, statuses });
     }
     const where = ["q.archived=0"], args: any[] = [];
-    if (u.role === "sales") { where.push("(q.sales_id=? OR q.created_by=?)"); args.push(u.id, u.id); }
     for (const [key, col] of [["status", "q.status"], ["customer", "q.customer_id"], ["employee", "q.sales_id"], ["type", "q.quote_type"], ["city", "s.city"]]) { const value = x.searchParams.get(key); if (value) { where.push(`${col}=?`); args.push(value); } }
     const q = x.searchParams.get("q"); if (q) { where.push("(q.number LIKE ? OR c.name LIKE ? OR c.phone LIKE ? OR s.name LIKE ? OR q.title LIKE ? OR u.name LIKE ?)"); for (let i = 0; i < 6; i++) args.push(`%${q}%`); }
     const from = x.searchParams.get("from"), to = x.searchParams.get("to"), expiry = x.searchParams.get("expiry"), min = x.searchParams.get("min"), max = x.searchParams.get("max");
@@ -82,7 +81,6 @@ export async function PATCH(req: Request) {
   try {
     const u = await requireUser(["admin", "crm", "sales"]), p = await req.json() as R, id = Number(p.id), action = String(p.action || "update");
     const quote = await env.DB.prepare("SELECT * FROM quotations WHERE id=? AND archived=0").bind(id).first<R>(); if (!quote) return Response.json({ error: "Quotation not found" }, { status: 404 });
-    if (u.role === "sales" && quote.sales_id !== u.id && quote.created_by !== u.id) return Response.json({ error: "Quotation unavailable" }, { status: 403 });
     if (action === "archive") { if (String(quote.status) !== "Draft") return Response.json({ error: "Only draft quotations can be archived" }, { status: 409 }); await env.DB.prepare("UPDATE quotations SET archived=1,updated_at=? WHERE id=?").bind(stamp(), id).run(); await audit(u.id, "quote_archived", id); return Response.json({ ok: true }); }
     if (action === "duplicate") { const now = stamp(), next = await env.DB.prepare("SELECT COALESCE(MAX(CAST(substr(number,4) AS INTEGER)),1144)+1 n FROM quotations WHERE number LIKE 'QT-%'").first<{ n: number }>(), number = `QT-${next?.n || 1145}`; const row = await env.DB.prepare("INSERT INTO quotations(number,revision,customer_id,site_id,title,quote_type,category,quote_date,valid_until,status,snapshot,total,sales_id,created_by,created_at,updated_at)VALUES(?,0,?,?,?,?,?,date('now'),date('now','+30 day'),'Draft',?,?,?,?,?,?) RETURNING id").bind(number, quote.customer_id, quote.site_id, `${quote.title} (Copy)`, quote.quote_type, quote.category, quote.snapshot, quote.total, quote.sales_id || u.id, u.id, now, now).first<{ id: number }>(); await env.DB.prepare("INSERT INTO quotation_revisions(id,quotation_id,revision,snapshot,created_by,created_at)VALUES(?,?,0,?,?,?)").bind(crypto.randomUUID(), row!.id, quote.snapshot, u.id, now).run(); await audit(u.id, "quote_duplicated", row!.id); return Response.json({ ok: true, id: row!.id, number }); }
     const transitions: Record<string, string> = { review: "Ready for Review", send: "Sent", viewed: "Viewed", negotiate: "Negotiation", accept: "Accepted", reject: "Rejected" };

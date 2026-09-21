@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { catalog } from "./catalog-data";
 import InvoiceModule from "./invoice-module";
 import OverviewModule from "./overview-module";
@@ -110,12 +110,40 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [moduleSize, setModuleSize] = useState("All module sizes");
-  const [notice, setNotice] = useState("All changes saved");
+  const [notice, _setNotice] = useState("All changes saved");
   const [mobileNav, setMobileNav] = useState(false);
   const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
   const [globalSearch,setGlobalSearch]=useState("");
   const [searchResults,setSearchResults]=useState<{module:string;title:string;detail:string;id:string}[]>([]);
   const [quickOpen,setQuickOpen]=useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [shortcutOpen, setShortcutOpen] = useState(false);
+  const [toasts, setToasts] = useState<{ id: string; text: string }[]>([]);
+  const [notifications, setNotifications] = useState([
+    { id: "1", type: "urgent", icon: "⚡", title: "Follow-up overdue for Lead #1048", detail: "Vikram Residence requested a revised quotation.", time: "10m ago", module: "Leads", unread: true },
+    { id: "2", type: "quote", icon: "✦", title: "Quotation QT-1146 ready for review", detail: "Abhilash Residence smart switch package (₹26,844).", time: "1h ago", module: "Quotations", unread: true },
+    { id: "3", type: "payment", icon: "₹", title: "Milestone payment recorded", detail: "Received advance payment for Vikram Residence.", time: "3h ago", module: "Invoices", unread: true },
+    { id: "4", type: "lead", icon: "⌖", title: "Site visit scheduled for tomorrow", detail: "Swetha Residence initial inspection at 11:00 AM.", time: "5h ago", module: "Site Visits", unread: false },
+  ]);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const quickRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const pushToast = useCallback((msg: string) => {
+    const id = Math.random().toString(36).slice(2, 9);
+    setToasts((prev) => [...prev.slice(-2), { id, text: msg }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3200);
+  }, []);
+
+  const setNotice = useCallback((msg: string) => {
+    _setNotice(msg);
+    if (msg && msg !== "All changes saved" && !msg.startsWith("Preparing")) {
+      pushToast(msg);
+    }
+  }, [pushToast]);
   const [leadCount, setLeadCount] = useState<number | null>(null);
   const [quoteSetup, setQuoteSetup] = useState(false);
   const [configure, setConfigure] = useState<ProductGroup | null>(null);
@@ -294,7 +322,14 @@ export default function Home() {
     try {
       const html2pdf = (await import("html2pdf.js")).default;
       const filename = `Techomie-${quoteDetails.customer || "Quotation"}-${quoteDetails.site || "Proposal"}`.replace(/[^a-z0-9-]+/gi, "-") + ".pdf";
-      await html2pdf().set({ margin: [8, 8, 8, 8], filename, image: { type: "jpeg", quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }, pagebreak: { mode: ["css", "legacy"] } }).from(workspace).save();
+      await html2pdf().set({
+        margin: 0,
+        filename,
+        image: { type: "jpeg", quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+        pagebreak: { mode: ["css", "legacy"], avoid: [".line", ".roomhead", ".printterms table", ".summary"] },
+      }).from(workspace).save();
       setNotice("PDF downloaded");
     } catch {
       setNotice("Unable to download PDF");
@@ -349,6 +384,54 @@ export default function Home() {
       window.clearInterval(timer);
     };
   }, [auth.user, module]);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName || "");
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      } else if (e.key === "/" && !isInput) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+        e.preventDefault();
+        setSidebarCollapsed((v) => !v);
+      } else if (e.key === "Escape") {
+        setQuickOpen(false);
+        setNotifOpen(false);
+        setShortcutOpen(false);
+        setSearchResults([]);
+        if (document.activeElement === searchRef.current) {
+          searchRef.current?.blur();
+        }
+      } else if (e.key === "?" && !isInput) {
+        e.preventDefault();
+        setShortcutOpen((v) => !v);
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (searchBoxRef.current && !searchBoxRef.current.contains(target)) {
+        setSearchResults([]);
+      }
+      if (quickRef.current && !quickRef.current.contains(target)) {
+        setQuickOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(target)) {
+        setNotifOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   if (auth.loading)
     return (
       <div className="authpage">
@@ -373,28 +456,60 @@ export default function Home() {
       />
     );
   const role=auth.user.role;
+  const navSections = [
+    { id: "CORE", label: "Core Workspace" },
+    { id: "CRM & SALES", label: "CRM & Sales" },
+    { id: "OPERATIONS", label: "Operations" },
+    { id: "FINANCE", label: "Finance & Accounts" },
+    { id: "CATALOG & ADMIN", label: "Catalog & Admin" },
+  ];
   const allNavigation=[
-    {icon:"⌂",name:"Overview",roles:["admin","crm","sales"]},
-    {icon:"◎",name:"Leads",label:role==="sales"?"My leads":"Leads",roles:["admin","crm","sales"]},
-    {icon:"⌖",name:"Site Visits",roles:["admin","crm","sales","technician"]},
-    {icon:"♙",name:"Customers",roles:["admin","crm","sales","technician"]},
-    {icon:"✦",name:"Quotations",roles:["admin","crm","sales"]},
-    {icon:"◇",name:"Projects",label:role==="technician"?"Assigned projects":"Projects",roles:["admin","crm","sales","technician"]},
-    {icon:"✓",name:"Tasks",label:role==="technician"?"My tasks":"Tasks",roles:["admin","crm","sales","technician"]},
-    {icon:"₹",name:"Invoices",roles:["admin"]},
-    {icon:"₹",name:"Payments",roles:["admin"]},
-    {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",roles:["admin","sales","technician"]},
-    {icon:"◫",name:"Items",roles:["admin","crm","sales","technician"]},
-    {icon:"⌑",name:"Procurement",roles:["admin"]},
-    {icon:"⚒",name:"Service",label:"Service & warranty",roles:["admin","sales","technician"]},
-    {icon:"▤",name:"Reports",roles:["admin"]},
-    {icon:"⚙",name:"Settings",roles:["admin","crm","sales","technician"]},
+    {icon:"⌂",name:"Overview",section:"CORE",roles:["admin","crm","sales","technician"]},
+    {icon:"◎",name:"Leads",label:"Leads",section:"CRM & SALES",roles:["admin","crm","sales"]},
+    {icon:"⌖",name:"Site Visits",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
+    {icon:"♙",name:"Customers",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
+    {icon:"✦",name:"Quotations",section:"CRM & SALES",roles:["admin","crm","sales"]},
+    {icon:"◇",name:"Projects",label:"Projects",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
+    {icon:"✓",name:"Tasks",label:"Tasks",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
+    {icon:"⚒",name:"Service",label:"Service & warranty",section:"OPERATIONS",roles:["admin","sales","technician"]},
+    {icon:"₹",name:"Invoices",section:"FINANCE",roles:["admin","crm","sales","technician"]},
+    {icon:"₹",name:"Payments",section:"FINANCE",roles:["admin","crm","sales"]},
+    {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",section:"FINANCE",roles:["admin","sales","technician"]},
+    {icon:"◫",name:"Items",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
+    {icon:"⌑",name:"Procurement",section:"CATALOG & ADMIN",roles:["admin"]},
+    {icon:"▤",name:"Reports",section:"CATALOG & ADMIN",roles:["admin"]},
+    {icon:"⚙",name:"Settings",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
   ].filter(x=>x.roles.includes(role));
   const moduleHref=(target:string)=>`/?module=${encodeURIComponent(target)}`;
-  const navigate=(target:string,filter:Record<string,string>={})=>{setModuleFilter(filter);setModule(target);if(target==="Quotations")setQuoteScreen("list");setMobileNav(false);setGlobalSearch("");setSearchResults([]);window.history.pushState(null,"",moduleHref(target))};
+  const navigate=(target:string,filter:Record<string,string>={})=>{
+    setModuleFilter(filter);
+    setModule(target);
+    if(target==="Quotations")setQuoteScreen("list");
+    setMobileNav(false);
+    setGlobalSearch("");
+    setSearchResults([]);
+    setQuickOpen(false);
+    setNotifOpen(false);
+    window.history.pushState(null,"",moduleHref(target));
+  };
   const quickActions=[
-    {label:"New lead",module:"Leads",roles:["admin","crm","sales"]},{label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales"]},{label:"New customer",module:"Customers",roles:["admin","crm","sales"]},{label:"New quotation",module:"Quotations",roles:["admin","crm","sales"]},{label:"New project",module:"Projects",roles:["admin","sales"]},{label:"New invoice",module:"Invoices",roles:["admin"]},{label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},{label:"Add item",module:"Items",roles:["admin"]},{label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]}
+    {icon:"◎",label:"New lead",module:"Leads",roles:["admin","crm","sales"]},
+    {icon:"⌖",label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales"]},
+    {icon:"♙",label:"New customer",module:"Customers",roles:["admin","crm","sales"]},
+    {icon:"✦",label:"New quotation",module:"Quotations",roles:["admin","crm","sales"]},
+    {icon:"◇",label:"New project",module:"Projects",roles:["admin","sales"]},
+    {icon:"₹",label:"New invoice",module:"Invoices",roles:["admin","crm","sales"]},
+    {icon:"₹",label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},
+    {icon:"◫",label:"Add item",module:"Items",roles:["admin"]},
+    {icon:"⚒",label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]}
   ].filter(x=>x.roles.includes(role));
+
+  const unreadCount = notifications.filter(n => n.unread).length;
+  const markAllNotifsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    pushToast("All notifications marked as read");
+  };
+
   return (
     <main className={`shell ${sidebarCollapsed?"navcollapsed":""}`}>
       <aside className={mobileNav ? "sidebar open" : "sidebar"}>
@@ -406,21 +521,30 @@ export default function Home() {
           </span>
         </div>
         <nav>
-          {allNavigation.map(({icon:i,name:n,label}) => (
-            <a
-              key={n}
-              href={moduleHref(n)}
-              title={sidebarCollapsed?(label||n):undefined}
-              onClick={(event) => {if(event.button===0&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();navigate(n)}}}
-              className={n === module ? "selected" : ""}
-            >
-              <span>{i}</span>
-              <span className="navlabel">{label||n}</span>
-              {n === "Leads" && leadCount !== null && leadCount > 0 && (
-                <em title={`${leadCount} lead${leadCount === 1 ? "" : "s"}`}>{leadCount}</em>
-              )}
-            </a>
-          ))}
+          {navSections.map(sec => {
+            const items = allNavigation.filter(x => x.section === sec.id);
+            if (!items.length) return null;
+            return (
+              <div key={sec.id} className="navgroup">
+                <div className="navsection">{sec.label}</div>
+                {items.map(({icon:i,name:n,label}) => (
+                  <a
+                    key={n}
+                    href={moduleHref(n)}
+                    title={sidebarCollapsed?(label||n):undefined}
+                    onClick={(event) => {if(event.button===0&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();navigate(n)}}}
+                    className={n === module ? "selected" : ""}
+                  >
+                    <span>{i}</span>
+                    <span className="navlabel">{label||n}</span>
+                    {n === "Leads" && leadCount !== null && leadCount > 0 && (
+                      <em title={`${leadCount} lead${leadCount === 1 ? "" : "s"}`}>{leadCount}</em>
+                    )}
+                  </a>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="profile">
           <span>{auth.user.name.slice(0, 2).toUpperCase()}</span>
@@ -445,50 +569,73 @@ export default function Home() {
           <button className="hamb" onClick={() => setMobileNav(!mobileNav)}>
             ☰
           </button>
-          <button className="navcollapse" onClick={()=>setSidebarCollapsed(v=>!v)} title={sidebarCollapsed?"Expand navigation":"Collapse navigation"}>{sidebarCollapsed?"→":"←"}</button>
+          <button className="navcollapse" onClick={()=>setSidebarCollapsed(v=>!v)} title={sidebarCollapsed?"Expand navigation (Ctrl+\\)":"Collapse navigation (Ctrl+\\)"}>{sidebarCollapsed?"→":"←"}</button>
           <div className="crumb">
-            <span>Techomie Flow</span>
+            <button type="button" onClick={()=>navigate("Overview")} title="Return to Overview">Techomie Flow</button>
             <i>/</i>
             <b>{module}</b>
           </div>
-          <div className="globalsearch">
-            <span>⌕</span><input value={globalSearch} onChange={e=>setGlobalSearch(e.target.value)} placeholder="Search customers, leads, quotes, projects, invoices or items" />
+          <div className="globalsearch" ref={searchBoxRef}>
+            <span>⌕</span>
+            <input
+              ref={searchRef}
+              value={globalSearch}
+              onChange={e=>setGlobalSearch(e.target.value)}
+              placeholder="Search customers, leads, quotes, projects, invoices or items"
+            />
+            {globalSearch ? (
+              <button type="button" className="searchclear" onClick={()=>{setGlobalSearch("");setSearchResults([]);searchRef.current?.focus();}} title="Clear search">×</button>
+            ) : (
+              <kbd className="searchhint" onClick={()=>searchRef.current?.focus()}>⌘K</kbd>
+            )}
             {searchResults.length>0&&<div className="searchresults">{searchResults.map((x,i)=><button key={`${x.module}-${x.id}-${i}`} onClick={()=>navigate(x.module,{id:x.id,q:globalSearch})}><span>{x.module}</span><b>{x.title}</b><small>{x.detail}</small></button>)}</div>}
           </div>
           <div className="save">
             <span>●</span>
             {notice}
           </div>
-          <div className="quickcreate"><button className="primary" onClick={()=>setQuickOpen(v=>!v)}>＋ Quick create</button>{quickOpen&&<div>{quickActions.map(x=><button key={x.label} onClick={()=>{navigate(x.module,{create:"1"});setQuickOpen(false)}}>{x.label}</button>)}</div>}</div>
-          <button className="notification" title="Notifications">♢</button>
-          {false && module === "Quotations" && quoteScreen === "detail" && (
-            <>
-              <button className="preview" onClick={() => setQuoteSetup(true)}>
-                Quote details
-              </button>
-              <button className="preview" onClick={() => setQuoteScreen("list")}>
-                All quotes
-              </button>
-              <button className="preview" onClick={() => window.print()}>
-                Preview PDF
-              </button>
-              <button className="preview" onClick={() => window.print()}>
-                Print
-              </button>
-              <button className="preview" onClick={downloadPdf}>
-                Download PDF
-              </button>
-              <button className="preview" onClick={() => saveQuotation(false)}>
-                Save draft
-              </button>
-              <button
-                className="send"
-                onClick={() => saveQuotation(true)}
-              >
-                Send quote <span>↗</span>
-              </button>
-            </>
-          )}
+          <div className="quickcreate" ref={quickRef}>
+            <button className="primary" onClick={()=>setQuickOpen(v=>!v)}>＋ Quick create</button>
+            {quickOpen&&<div>{quickActions.map(x=><button key={x.label} onClick={()=>{navigate(x.module,{create:"1"});setQuickOpen(false)}}><span style={{width:'18px',color:'#0284c7'}}>{x.icon}</span>{x.label}</button>)}</div>}
+          </div>
+          <div className="notifwrap" ref={notifRef}>
+            <button className="notification" title="Notifications" onClick={()=>setNotifOpen(v=>!v)}>
+              ♢
+              {unreadCount > 0 && <span className="notifbadge">{unreadCount}</span>}
+            </button>
+            {notifOpen && (
+              <div className="notifpanel">
+                <div className="notifhead">
+                  <b>Notifications ({unreadCount} new)</b>
+                  {unreadCount > 0 && <button onClick={markAllNotifsRead}>Mark all read</button>}
+                </div>
+                <div className="notiflist">
+                  {notifications.length ? notifications.map((n) => (
+                    <button
+                      key={n.id}
+                      className={`notifitem ${n.unread ? "unread" : ""} ${n.type}`}
+                      onClick={() => {
+                        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, unread: false } : x));
+                        navigate(n.module);
+                      }}
+                    >
+                      <div className="notificon">{n.icon}</div>
+                      <div className="notifbody">
+                        <b>{n.title}</b>
+                        <p>{n.detail}</p>
+                        <time>{n.time}</time>
+                      </div>
+                    </button>
+                  )) : (
+                    <div className="notifempty">No notifications</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <button className="notification" title="Keyboard Shortcuts (?)" onClick={()=>setShortcutOpen(true)}>
+            ?
+          </button>
         </header>
         {false ? quoteScreen === "list" ? (
           <QuotesList onNew={() => setQuoteScreen("detail")} onOpen={(customer,site) => {setQuoteDetails(d=>({...d,customer,site}));setQuoteScreen("detail")}} />
@@ -805,6 +952,35 @@ export default function Home() {
           <OperationsModule name={module} role={auth.user.role} initialFilter={moduleFilter} />
         )}
       </section>
+      <div className={`mobiledrop ${mobileNav ? "active" : ""}`} onClick={() => setMobileNav(false)} />
+      {toasts.length > 0 && (
+        <div className="toaststack">
+          {toasts.map((t) => (
+            <div key={t.id} className="toastcard">
+              <i>✓</i>
+              <span>{t.text}</span>
+              <button onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {shortcutOpen && (
+        <div className="shortcutoverlay" onClick={() => setShortcutOpen(false)}>
+          <div className="shortcutmodal" onClick={(e) => e.stopPropagation()}>
+            <div className="shortcuthead">
+              <h2>Keyboard Shortcuts & Productivity</h2>
+              <button onClick={() => setShortcutOpen(false)}>×</button>
+            </div>
+            <div className="shortcutgrid">
+              <div className="shortcutrow"><span>Global search</span><div><kbd className="shortcutkey">⌘ K</kbd> or <kbd className="shortcutkey">/</kbd></div></div>
+              <div className="shortcutrow"><span>Toggle navigation sidebar</span><kbd className="shortcutkey">Ctrl + \</kbd></div>
+              <div className="shortcutrow"><span>Close menus / search results</span><kbd className="shortcutkey">Esc</kbd></div>
+              <div className="shortcutrow"><span>Toggle keyboard shortcuts guide</span><kbd className="shortcutkey">?</kbd></div>
+              <div className="shortcutrow"><span>Quick home navigation</span><span style={{fontSize:'12px',color:'#0284c7',fontWeight:600}}>Click "Techomie Flow" in header</span></div>
+            </div>
+          </div>
+        </div>
+      )}
       <nav className="mobilebottom">{[{i:"⌂",n:role==="technician"?"Tasks":"Overview"},{i:role==="technician"?"◇":"◎",n:role==="technician"?"Projects":"Leads"},{i:"＋",n:"Create"},{i:role==="technician"?"⚒":"◇",n:role==="technician"?"Service":"Projects"},{i:"•••",n:"More"}].map(x=><button key={x.n} className={module===x.n?"active":""} onClick={()=>x.n==="Create"?setQuickOpen(true):x.n==="More"?setMobileNav(true):navigate(x.n)}><b>{x.i}</b><span>{x.n}</span></button>)}</nav>
     </main>
   );

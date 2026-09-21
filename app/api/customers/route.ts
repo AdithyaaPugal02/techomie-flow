@@ -16,9 +16,9 @@ export async function GET(req: Request) {
       id = url.searchParams.get("id");
     if (id) {
       const c = await env.DB.prepare(
-        "SELECT c.*,u.name assigned_name FROM customers c LEFT JOIN users u ON u.id=c.assigned_to WHERE c.id=? AND (? IN ('admin','crm') OR c.assigned_to=? OR EXISTS(SELECT 1 FROM projects p WHERE p.customer_id=c.id AND p.manager_id=? ) OR EXISTS(SELECT 1 FROM service_tickets s WHERE s.customer_id=c.id AND s.assigned_to=?))",
+        "SELECT c.*,u.name assigned_name FROM customers c LEFT JOIN users u ON u.id=c.assigned_to WHERE c.id=?",
       )
-        .bind(id, u.role, u.id, u.id, u.id)
+        .bind(id)
         .first<R>();
       if (!c)
         return Response.json(
@@ -148,11 +148,9 @@ export async function GET(req: Request) {
       assigned = url.searchParams.get("assigned") || "",
       where = ["c.archived=0"],
       args: unknown[] = [];
-    if (!["admin", "crm"].includes(u.role)) {
-      where.push(
-        "(c.assigned_to=? OR EXISTS(SELECT 1 FROM projects p WHERE p.customer_id=c.id AND p.manager_id=?) OR EXISTS(SELECT 1 FROM service_tickets s WHERE s.customer_id=c.id AND s.assigned_to=?))",
-      );
-      args.push(u.id, u.id, u.id);
+    if (assigned) {
+      where.push("c.assigned_to=?");
+      args.push(assigned);
     }
     if (q) {
       where.push(

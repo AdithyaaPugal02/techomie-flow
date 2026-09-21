@@ -1,3 +1,315 @@
-.quoteslist{min-height:calc(100vh - 68px);background:#fff}.quotesbar{height:78px;display:flex;align-items:center;gap:12px;padding:0 22px;border-bottom:1px solid #e3e6ec}.quotesbar>div{display:flex;align-items:center;gap:5px}.quotesbar h1{font-size:17px;margin:0}.quotesbar>div button,.morebutton{border:0;background:transparent;font-weight:800}.quotesbar>label{margin-left:auto;width:min(420px,34vw);display:flex;gap:8px;background:#f5f7fb;border:1px solid #e2e6ee;border-radius:8px;padding:10px 12px;color:#78808c}.quotesbar input{border:0;background:transparent;outline:0;width:100%;font-size:10px}.morebutton{border:1px solid #dce1e8!important;border-radius:7px!important;padding:9px!important}.quotefilters{height:48px;display:flex;align-items:center;gap:6px;padding:0 22px;border-bottom:1px solid #e7eaf0}.quotefilters button{border:0;background:transparent;padding:7px 12px;border-radius:6px;font-size:10px}.quotefilters button.active{background:#edf4ff;color:#1769ff;font-weight:800}.quotefilters span{margin-left:auto;color:#858c96;font-size:9px}.quotelisttable{overflow:auto}.quotegrid{width:100%;display:grid;grid-template-columns:.7fr .7fr .75fr 1.2fr .55fr .55fr;gap:18px;align-items:center;padding:15px 30px;border:0;border-bottom:1px solid #e7eaf0;background:#fff;text-align:left;font-size:10px;cursor:pointer}.quotegrid:not(.quotegridhead):hover{background:#f6f8fc}.quotegridhead{background:#f7f8fb;color:#858d9c;font-size:8px;font-weight:800;padding-top:12px;padding-bottom:12px;cursor:default}.quotegrid>b{color:#1769ff}.quotegrid strong{font-size:10px}.quotegrid strong small{display:block;color:#858c96;font-weight:400;margin-top:4px}.quotegrid em{font-size:8px;font-style:normal;color:#89919c}.quotegrid em.invoiced{color:#19a66a;font-weight:800}.quotegrid>strong:last-child{text-align:right}@media(max-width:760px){.quotesbar{height:auto;padding:14px;flex-wrap:wrap}.quotesbar>label{order:3;width:100%;margin:0}.quotegrid{min-width:820px}.quotefilters{padding:0 12px}}
+.quoteslist {
+  min-height: calc(100vh - 68px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+  margin: 28px;
+  overflow: hidden;
+}
+.quotesbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+.quotesbar > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.quotesbar h1 {
+  font-size: 20px;
+  font-weight: 750;
+  margin: 0;
+  color: #0f172a;
+}
+.quotesbar > div button, .morebutton {
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.morebutton:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+.quotesbar > label {
+  margin-left: auto;
+  width: min(440px, 36vw);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+.quotesbar > label:focus-within {
+  background: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+.quotesbar input {
+  border: 0 !important;
+  background: transparent !important;
+  outline: 0 !important;
+  width: 100%;
+  font-size: 13px !important;
+  color: #0f172a;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
 
-.quotegrid{grid-template-columns:.72fr 1fr 1fr .8fr .55fr 1fr;padding:15px 22px;cursor:default}.quotegrid span small,.quotegrid strong small{display:block;color:#858c96;font-weight:400;margin-top:4px}.quotegrid em.accepted,.quotegrid em.converted-to-project{color:#14985e;font-weight:800}.quotegrid em.rejected,.quotegrid em.expired{color:#d23a45}.quotegrid em.sent,.quotegrid em.negotiation{color:#1769ff}.quotelink{border:0;background:transparent;color:#1769ff;font-weight:800;padding:0;cursor:pointer}.quotelink small{display:inline!important}.quoteactions{display:flex!important;justify-content:flex-end;gap:4px;flex-wrap:wrap}.quoteactions button,.quotepager button{border:1px solid #dfe3ea;background:#fff;border-radius:6px;padding:5px 7px;font-size:8px;cursor:pointer}.quoteempty{padding:50px;text-align:center;color:#858c96;font-size:11px}.quotepager{display:flex;justify-content:center;align-items:center;gap:12px;padding:15px}.quotepager span{font-size:9px;color:#747b86}.quotepager button:disabled{opacity:.4}.quotenotice{position:fixed;right:22px;top:78px;background:#111827;color:#fff;padding:10px 14px;border-radius:8px;z-index:20;font-size:10px}.quotefilters{overflow:auto}.quotefilters button{white-space:nowrap}@media(max-width:760px){.quotegrid{min-width:1050px}}
+.quotefilters {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  overflow-x: auto;
+}
+.quotefilters button {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.14s ease;
+}
+.quotefilters button:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.04);
+}
+.quotefilters button.active {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+}
+.quotefilters span {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.quotelisttable {
+  overflow: auto;
+}
+.quotegrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 0.72fr 1fr 1fr 0.8fr 0.55fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 24px;
+  border: 0;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  text-align: left;
+  font-size: 13px;
+  cursor: default;
+  transition: background 0.14s ease;
+}
+.quotegrid:not(.quotegridhead):hover {
+  background: #f8faff;
+}
+.quotegridhead {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: default;
+}
+.quotegrid span small, .quotegrid strong small {
+  display: block;
+  color: #64748b;
+  font-weight: 400;
+  font-size: 11.5px;
+  margin-top: 2px;
+}
+.quotelink {
+  border: 0;
+  background: transparent;
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.quotelink:hover {
+  text-decoration: underline;
+}
+.quotegrid > strong:last-child {
+  text-align: right;
+  font-size: 14px;
+  color: #0f172a;
+}
+.quoteactions {
+  display: flex !important;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.quoteactions button, .quotepager button {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.quoteactions button:hover, .quotepager button:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0284c7;
+}
+
+.quotegrid em {
+  font-size: 11px !important;
+  font-style: normal;
+  border-radius: 999px;
+  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  font-weight: 600;
+}
+.quotegrid em.accepted, .quotegrid em.converted-to-project {
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.quotegrid em.rejected, .quotegrid em.expired {
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.quotegrid em.sent, .quotegrid em.negotiation {
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+.quotegrid em.draft {
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
+.quoteempty {
+  padding: 60px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13.5px;
+}
+.quotepager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+.quotepager span {
+  font-size: 12.5px;
+  color: #64748b;
+}
+.quotepager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.quotenotice {
+  position: fixed;
+  right: 24px;
+  top: 78px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 11px 18px;
+  border-radius: 10px;
+  z-index: 50;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1100px) {
+  .quotelisttable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .quotegrid {
+    min-width: 960px;
+  }
+}
+@media (max-width: 900px) {
+  .quoteslist {
+    margin: 16px;
+  }
+  .quotesbar {
+    height: auto;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .quotesbar > label {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+  .quotefilters {
+    padding: 6px 14px;
+  }
+}
+@media (max-width: 480px) {
+  .quoteslist {
+    margin: 10px;
+    border-radius: 10px;
+  }
+  .quotesbar {
+    padding: 12px;
+  }
+  .quotesbar h1 {
+    font-size: 18px;
+  }
+  .quotesbar > div {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .quotesbar .primary,
+  .morebutton {
+    flex: 1;
+    text-align: center;
+  }
+  .quotepager {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

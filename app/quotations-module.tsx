@@ -544,12 +544,13 @@ function QuoteWorkspace({
           .set({
             filename,
             margin: 0,
-            image: { type: "png", quality: 1 },
-            html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000 },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-            // Every proposal section is already an exact A4 canvas. Applying
-            // an additional CSS break after it creates an empty PDF page.
-            pagebreak: { mode: [] },
+            image: { type: "jpeg", quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000, logging: false },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+            pagebreak: {
+              mode: ["css", "legacy"],
+              avoid: [".qpaperline", ".qminimalsummary", ".qmilestones article", ".qtermgrid article", ".qpdfcards article", ".qscopebrief", ".qtotalhero", ".qcommercialgrid"],
+            },
           })
           .from(el)
           .outputPdf("blob");
@@ -713,7 +714,7 @@ function QuoteWorkspace({
           ].includes(quote.status) && (
             <button onClick={() => action("revision")}>Create revision</button>
           )}
-          {role === "admin" &&
+          {["admin", "crm", "sales"].includes(role) &&
             ["Sent", "Viewed", "Negotiation", "Revised"].includes(
               quote.status,
             ) && (
@@ -729,7 +730,7 @@ function QuoteWorkspace({
                 Accept
               </button>
             )}
-          {role === "admin" && quote.status === "Accepted" && (
+          {["admin", "crm", "sales"].includes(role) && quote.status === "Accepted" && (
             <button
               className="primary"
               onClick={async () => {
@@ -1993,10 +1994,10 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     </footer>
   );
   const paginateFloor = (floor: R) => {
-    // Detailed catalogue descriptions vary in height. Three rows leave a
-    // reliable footer reserve even for the tallest approved product cards.
-    const pageCapacity = 3.7,
-      roomHeadingCost = 0.7,
+    // Balanced capacity allowing 4-6 neatly framed product items per A4 scope page
+    // with reliable header and footer spacing.
+    const pageCapacity = 5.2,
+      roomHeadingCost = 0.8,
       pages: R[] = [];
     let page: R = { rooms: [], used: 0 };
     const pushPage = () => {

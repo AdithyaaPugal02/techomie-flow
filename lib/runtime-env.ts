@@ -1,7 +1,48 @@
 import { createClient } from "@supabase/supabase-js";
+import { DatabaseSync } from "node:sqlite";
+import fs from "node:fs";
+import path from "node:path";
 
 type Args = unknown[];
 type Row = Record<string, unknown>;
+
+function findSqlitePath(): string {
+  if (process.env.SQLITE_PATH && fs.existsSync(process.env.SQLITE_PATH)) {
+    return process.env.SQLITE_PATH;
+  }
+  const primary = path.resolve(process.cwd(), "db/local.sqlite");
+  if (fs.existsSync(primary)) return primary;
+
+  const wranglerD1Dir = path.resolve(process.cwd(), ".wrangler/state/v3/d1/miniflare-D1DatabaseObject");
+  if (fs.existsSync(wranglerD1Dir)) {
+    try {
+      const files = fs.readdirSync(wranglerD1Dir);
+      const sqliteFile = files.find(f => f.endsWith(".sqlite") && !f.startsWith("metadata"));
+      if (sqliteFile) {
+        const full = path.join(wranglerD1Dir, sqliteFile);
+        try {
+          fs.mkdirSync(path.resolve(process.cwd(), "db"), { recursive: true });
+          fs.copyFileSync(full, primary);
+          return primary;
+        } catch {
+          return full;
+        }
+      }
+    } catch {}
+  }
+  return primary;
+}
+
+let sqliteInstance: DatabaseSync | null = null;
+function getSqliteDb(): DatabaseSync {
+  if (!sqliteInstance) {
+    const dbPath = findSqlitePath();
+    const dir = path.dirname(dbPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    sqliteInstance = new DatabaseSync(dbPath);
+  }
+  return sqliteInstance;
+}
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "";
@@ -32,17 +73,70 @@ function translate(source: string) {
   return query;
 }
 
+export async function queryRows(source: string, args: Args = []): Promise<Row[]> {
+  const queryParams = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
+  try {
+    const db = getSqliteDb();
+    const isQuery = /^\s*(SELECT|PRAGMA|WITH)\b/i.test(source) || /\bRETURNING\b/i.test(source);
+    const stmt = db.prepare(source);
+    if (isQuery) {
+      return (stmt.all(...(queryParams as any[])) as Row[]) || [];
+    } else {
+      stmt.run(...(queryParams as any[]));
+      return [];
+    }
+  } catch (sqliteErr) {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.rpc("techomie_exec", { query_text: translate(source), query_params: queryParams });
+        if (error) throw new Error(error.message);
+        return (Array.isArray(data) ? data : []) as Row[];
+      } catch {}
+    }
+    throw sqliteErr;
+  }
+}
+
 class Prepared {
   private args: Args = [];
   constructor(private source: string) {}
-  bind(...args: Args) { this.args = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value); return this; }
+  bind(...args: Args) {
+    this.args = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
+    return this;
+  }
   async rows() {
     return queryRows(this.source, this.args);
   }
-  async first<T = Row>() { const rows = await this.rows(); return (rows[0] as T) ?? null; }
-  async all<T = Row>() { const rows = await this.rows(); return { results: rows as T[], success: true, meta: { changes: rows.length } }; }
-  async run() { const rows = await this.rows(); return { success: true, results: rows, meta: { changes: rows.length } }; }
-  async raw<T = unknown[]>() { const rows = await this.rows(); return rows.map(row => Object.values(row)) as T[]; }
+  async first<T = Row>() {
+    const rows = await this.rows();
+    return (rows[0] as T) ?? null;
+  }
+  async all<T = Row>() {
+    const rows = await this.rows();
+    return { results: rows as T[], success: true, meta: { changes: rows.length } };
+  }
+  async run() {
+    const queryParams = this.args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
+    try {
+      const db = getSqliteDb();
+      const isQuery = /^\s*(SELECT|PRAGMA|WITH)\b/i.test(this.source) || /\bRETURNING\b/i.test(this.source);
+      const stmt = db.prepare(this.source);
+      if (isQuery) {
+        const rows = stmt.all(...(queryParams as any[])) as Row[];
+        return { success: true, results: rows, meta: { changes: rows.length } };
+      } else {
+        const info = stmt.run(...(queryParams as any[]));
+        return { success: true, results: [], meta: { changes: Number(info.changes) } };
+      }
+    } catch {
+      const rows = await queryRows(this.source, this.args);
+      return { success: true, results: rows, meta: { changes: rows.length } };
+    }
+  }
+  async raw<T = unknown[]>() {
+    const rows = await this.rows();
+    return rows.map(row => Object.values(row)) as T[];
+  }
 }
 
 class Database {
@@ -58,35 +152,106 @@ class Database {
   }
 }
 
-export async function queryRows(source: string, args: Args = []) {
-  if (!supabase) throw new Error("Supabase server credentials are not configured");
-  const queryParams = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
-  const { data, error } = await supabase.rpc("techomie_exec", { query_text: translate(source), query_params: queryParams });
-  if (error) throw new Error(error.message);
-  return (Array.isArray(data) ? data : []) as Row[];
-}
-
+const localUploadsDir = path.resolve(process.cwd(), "public/uploads");
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || "techomie-files";
 const storage = supabase?.storage.from(bucket) ?? null;
 
 class Files {
-  async put(key: string, body: ReadableStream | Blob | ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }) {
-    if (!storage) throw new Error("Supabase Storage is not configured");
-    const payload = body instanceof ReadableStream ? await new Response(body).arrayBuffer() : body;
-    const { error } = await storage.upload(key, payload, { contentType: options?.httpMetadata?.contentType, upsert: true });
-    if (error) throw error;
+  async put(key: string, body: ReadableStream | Blob | ArrayBuffer | Buffer, options?: { httpMetadata?: { contentType?: string } }) {
+    if (storage) {
+      try {
+        const payload = body instanceof ReadableStream ? await new Response(body).arrayBuffer() : body;
+        const { error } = await storage.upload(key, payload as ArrayBuffer, { contentType: options?.httpMetadata?.contentType, upsert: true });
+        if (!error) return { key };
+      } catch {}
+    }
+    const targetPath = path.join(localUploadsDir, key);
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    let buffer: Buffer;
+    if (Buffer.isBuffer(body)) {
+      buffer = body;
+    } else if (body instanceof ArrayBuffer) {
+      buffer = Buffer.from(body);
+    } else if (body instanceof Blob) {
+      buffer = Buffer.from(await body.arrayBuffer());
+    } else if (body instanceof ReadableStream) {
+      const arrayBuffer = await new Response(body).arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      buffer = Buffer.from(String(body));
+    }
+    fs.writeFileSync(targetPath, buffer);
+    if (options?.httpMetadata?.contentType) {
+      fs.writeFileSync(`${targetPath}.meta.json`, JSON.stringify(options.httpMetadata));
+    }
     return { key };
   }
+
   async get(key: string) {
-    if (!storage) throw new Error("Supabase Storage is not configured");
-    const { data, error } = await storage.download(key);
-    if (error || !data) return null;
-    return { body: data.stream(), httpMetadata: { contentType: data.type }, size: data.size };
+    if (storage) {
+      try {
+        const { data, error } = await storage.download(key);
+        if (!error && data) {
+          return {
+            body: data.stream(),
+            httpMetadata: { contentType: data.type },
+            httpEtag: `"${data.size}"`,
+            writeHttpMetadata: (headers: Headers) => {
+              if (data.type) headers.set("content-type", data.type);
+            },
+            size: data.size,
+          };
+        }
+      } catch {}
+    }
+    const targetPath = path.join(localUploadsDir, key);
+    if (!fs.existsSync(targetPath)) return null;
+    const stat = fs.statSync(targetPath);
+    let contentType = "application/octet-stream";
+    const metaPath = `${targetPath}.meta.json`;
+    if (fs.existsSync(metaPath)) {
+      try {
+        const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
+        if (meta.contentType) contentType = meta.contentType;
+      } catch {}
+    } else {
+      const ext = path.extname(key).toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".pdf": "application/pdf",
+        ".mp4": "video/mp4",
+        ".json": "application/json",
+      };
+      if (mimeTypes[ext]) contentType = mimeTypes[ext];
+    }
+    const fileBuffer = fs.readFileSync(targetPath);
+    return {
+      body: fileBuffer,
+      httpMetadata: { contentType },
+      httpEtag: `"${stat.mtimeMs}-${stat.size}"`,
+      writeHttpMetadata: (headers: Headers) => {
+        headers.set("content-type", contentType);
+      },
+      size: stat.size,
+    };
   }
+
   async delete(key: string) {
-    if (!storage) throw new Error("Supabase Storage is not configured");
-    const { error } = await storage.remove([key]);
-    if (error) throw error;
+    if (storage) {
+      try { await storage.remove([key]); } catch {}
+    }
+    const targetPath = path.join(localUploadsDir, key);
+    if (fs.existsSync(targetPath)) {
+      try { fs.unlinkSync(targetPath); } catch {}
+    }
+    const metaPath = `${targetPath}.meta.json`;
+    if (fs.existsSync(metaPath)) {
+      try { fs.unlinkSync(metaPath); } catch {}
+    }
   }
 }
 

@@ -246,26 +246,33 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
     if (!selected) return null;
     const el = document.getElementById("tax-invoice-paper");
     if (!el) return null;
-    const html2pdf = (await import("html2pdf.js")).default;
-    const worker = html2pdf()
-      .set({
-        // The invoice element is already exactly A4 and has its own safe-area padding.
-        // Additional PDF margins made the 210 mm sheet wider than the output page.
-        margin: 0,
-        filename: `${selected.number || "Draft-Invoice"}.pdf`.replaceAll(
-          "/",
-          "-",
-        ),
-        image: { type: "png", quality: 1 },
-        html2canvas: { scale: 3, useCORS: true, backgroundColor: "#fff", imageTimeout: 20000 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      })
-      .from(el);
-    if (save) {
-      await worker.save();
-      return null;
+    el.classList.add("pdfexporting");
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      const worker = html2pdf()
+        .set({
+          margin: 0,
+          filename: `${selected.number || "Draft-Invoice"}.pdf`.replaceAll(
+            "/",
+            "-",
+          ),
+          image: { type: "jpeg", quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [".paperrow", ".papertotals", ".paperhistory", "footer"],
+          },
+        })
+        .from(el);
+      if (save) {
+        await worker.save();
+        return null;
+      }
+      return (await worker.outputPdf("blob")) as Blob;
+    } finally {
+      el.classList.remove("pdfexporting");
     }
-    return (await worker.outputPdf("blob")) as Blob;
   };
   const finalise = async () => {
     if (!selected) return;
