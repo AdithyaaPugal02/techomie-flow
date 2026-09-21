@@ -580,111 +580,595 @@ function Users({
   reload: () => void;
   notice: (s: string) => void;
 }) {
-  const add = async () => {
-    const name = prompt("Employee full name");
-    if (!name) return;
-    const email = prompt("Work email");
-    const role = prompt("Role: crm, sales or technician", "sales");
-    const password = prompt("Temporary password (minimum 10 characters)");
-    if (!email || !role || !password) return;
-    const r = await fetch("/api/users", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, role, password }),
-      }),
-      d = await r.json();
-    notice(r.ok ? "Employee account created" : d.error);
-    if (r.ok) reload();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<R | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [form, setForm] = useState<R>({
+    name: "",
+    email: "",
+    phone: "",
+    role: "sales",
+    password: "",
+    active: true,
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [modalError, setModalError] = useState("");
+
+  const roleStyle: Record<string, { bg: string; color: string; border: string }> = {
+    admin: { bg: "#ecfdf5", color: "#065f46", border: "#a7f3d0" },
+    crm: { bg: "#f5f3ff", color: "#5b21b6", border: "#ddd6fe" },
+    sales: { bg: "#eff6ff", color: "#1e40af", border: "#bfdbfe" },
+    technician: { bg: "#fffbeb", color: "#92400e", border: "#fde68a" },
   };
-  const resetPassword = async (u: R) => {
-    const password = prompt(
-      `Enter new password for ${u.name} (minimum 10 characters)`,
+
+  const getInitials = (name: string) => {
+    return (
+      name
+        .split(/\s+/)
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "U"
     );
-    if (!password) return;
-    if (password.length < 10) {
-      notice("Password must be at least 10 characters");
+  };
+
+  const openAdd = () => {
+    setIsNew(true);
+    setEditingUser(null);
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      role: "sales",
+      password: "",
+      active: true,
+    });
+    setShowPassword(false);
+    setModalError("");
+    setModalOpen(true);
+  };
+
+  const openEdit = (u: R, focusPassword = false) => {
+    setIsNew(false);
+    setEditingUser(u);
+    setForm({
+      id: u.id,
+      name: u.name || "",
+      email: u.email || "",
+      phone: u.phone || "",
+      role: u.role || "sales",
+      password: "",
+      active: typeof u.active === "boolean" ? u.active : true,
+    });
+    setShowPassword(focusPassword);
+    setModalError("");
+    setModalOpen(true);
+  };
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let pass = "Tech@";
+    for (let i = 0; i < 5; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setForm((prev: R) => ({ ...prev, password: pass }));
+    setShowPassword(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setModalError("");
+    if (!form.name?.trim()) {
+      setModalError("Employee full name is required");
       return;
     }
+    if (!form.email?.trim() || !form.email.includes("@")) {
+      setModalError("A valid work email is required");
+      return;
+    }
+    if (isNew && (!form.password || form.password.length < 6)) {
+      setModalError("Password must be at least 6 characters");
+      return;
+    }
+    if (!isNew && form.password && form.password.length < 6) {
+      setModalError("New password must be at least 6 characters");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      if (isNew) {
+        const r = await fetch("/api/users", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            email: form.email.toLowerCase().trim(),
+            phone: form.phone?.trim() || undefined,
+            role: form.role,
+            password: form.password,
+            active: form.active,
+          }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "Failed to create employee");
+        notice(`Employee ${form.name} created successfully`);
+        setModalOpen(false);
+        reload();
+      } else {
+        const payload: R = {
+          id: editingUser?.id,
+          name: form.name.trim(),
+          email: form.email.toLowerCase().trim(),
+          phone: form.phone?.trim() || "",
+          role: form.role,
+          active: form.active,
+        };
+        if (form.password) {
+          payload.password = form.password;
+        }
+        const r = await fetch("/api/users", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || "Failed to update employee");
+        notice(
+          `Employee details updated for ${form.name}${form.password ? " (including new password)" : ""}`,
+        );
+        setModalOpen(false);
+        reload();
+      }
+    } catch (err: any) {
+      setModalError(err?.message || "An error occurred");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggle = async (u: R) => {
     const r = await fetch("/api/users", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: u.id, password }),
-      }),
-      d = await r.json();
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id: u.id, active: !u.active }),
+    });
+    const d = await r.json();
     notice(
       r.ok
-        ? `Password updated for ${u.name}`
-        : d.error || "Unable to update password",
+        ? `Employee ${u.name} ${u.active ? "deactivated" : "activated"}`
+        : d.error,
     );
     if (r.ok) reload();
   };
-  const toggle = async (u: R) => {
-    const r = await fetch("/api/users", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: u.id, active: !u.active }),
-      }),
-      d = await r.json();
-    notice(r.ok ? "User access updated" : d.error);
+
+  const deleteEmployee = async (u: R) => {
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete employee "${u.name}" (${u.email})?`,
+      )
+    )
+      return;
+    const r = await fetch(`/api/users?id=${encodeURIComponent(u.id)}`, {
+      method: "DELETE",
+    });
+    const d = await r.json();
+    notice(r.ok ? `Employee ${u.name} deleted` : d.error);
     if (r.ok) reload();
   };
+
   return (
     <div className="settingscard">
       <div className="settingsactions">
         <div>
-          <b>{users.length} accounts</b>
-          <span>Backend-enforced roles and status</span>
+          <b style={{ fontSize: "15px", color: "#0f172a" }}>
+            {users.length} Employee Accounts
+          </b>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>
+            Manage staff profiles, assign roles, update contact info, and set login passwords.
+          </span>
         </div>
-        <button className="primary" onClick={add}>
+        <button className="primary" onClick={openAdd}>
           ＋ Add employee
         </button>
       </div>
+
       <div className="settingstable">
         <div className="settingsrow head">
-          <span>User</span>
+          <span>Employee / Contact</span>
           <span>Role</span>
-          <span>Last login</span>
           <span>Status</span>
+          <span>Last Login</span>
           <span style={{ textAlign: "right" }}>Actions</span>
         </div>
-        {users.map((u) => (
-          <div className="settingsrow" key={u.id}>
-            <span>
-              <b>{u.name}</b>
-              <small>{u.email}</small>
-            </span>
-            <span>{u.role}</span>
-            <span>
-              {u.lastLogin
-                ? new Date(u.lastLogin).toLocaleString("en-IN")
-                : "Never"}
-            </span>
-            <span>{u.active ? "Active" : "Inactive"}</span>
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                justifyContent: "flex-end",
-              }}
-            >
+
+        {users.map((u) => {
+          const style = roleStyle[u.role] || {
+            bg: "#f1f5f9",
+            color: "#475569",
+            border: "#cbd5e1",
+          };
+          const isMe = u.email === currentEmail;
+
+          return (
+            <div className="settingsrow" key={u.id} style={{ alignItems: "center" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    background: style.bg,
+                    color: style.color,
+                    border: `1.5px solid ${style.border}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    flexShrink: 0,
+                  }}
+                >
+                  {getInitials(u.name || "")}
+                </div>
+                <div>
+                  <b style={{ color: "#0f172a", fontSize: "13px" }}>
+                    {u.name} {isMe && <small style={{ color: "#0284c7" }}>(You)</small>}
+                  </b>
+                  <small style={{ color: "#64748b", display: "block" }}>{u.email}</small>
+                  {u.phone && (
+                    <small style={{ color: "#475569", display: "block", fontSize: "11px" }}>
+                      📞 {u.phone}
+                    </small>
+                  )}
+                </div>
+              </span>
+
+              <span>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "3px 10px",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    background: style.bg,
+                    color: style.color,
+                    border: `1px solid ${style.border}`,
+                  }}
+                >
+                  {u.role}
+                </span>
+              </span>
+
+              <span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: u.active ? "#16a34a" : "#94a3b8",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: u.active ? "#16a34a" : "#cbd5e1",
+                    }}
+                  />
+                  {u.active ? "Active" : "Inactive"}
+                </span>
+              </span>
+
+              <span style={{ fontSize: "12px", color: "#64748b" }}>
+                {u.lastLogin
+                  ? new Date(u.lastLogin).toLocaleString("en-IN", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })
+                  : "Never logged in"}
+              </span>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "6px",
+                  justifyContent: "flex-end",
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => openEdit(u)}
+                  title="Edit employee details and password"
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                  }}
+                >
+                  ✎ Edit Details & Password
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isMe}
+                  onClick={() => toggle(u)}
+                  title={u.active ? "Deactivate employee" : "Activate employee"}
+                  style={{
+                    padding: "6px 10px",
+                    fontSize: "12px",
+                    borderRadius: "6px",
+                    border: "1px solid #e2e8f0",
+                    background: u.active ? "#fef2f2" : "#f0fdf4",
+                    color: u.active ? "#dc2626" : "#16a34a",
+                    cursor: isMe ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {u.active ? "Deactivate" : "Activate"}
+                </button>
+
+                {!isMe && (
+                  <button
+                    type="button"
+                    onClick={() => deleteEmployee(u)}
+                    title="Delete employee account"
+                    style={{
+                      padding: "6px 8px",
+                      fontSize: "12px",
+                      borderRadius: "6px",
+                      border: "1px solid #fecaca",
+                      background: "#fff",
+                      color: "#dc2626",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modern Edit Details & Password Modal */}
+      {modalOpen && (
+        <div className="modalback">
+          <div className="modal" style={{ maxWidth: "560px", width: "100%" }}>
+            <div className="modalhead">
+              <div>
+                <small style={{ color: "#0284c7", fontWeight: 700, letterSpacing: "1px" }}>
+                  {isNew ? "NEW EMPLOYEE" : "MANAGE EMPLOYEE"}
+                </small>
+                <h2 style={{ fontSize: "18px", margin: "4px 0 0", color: "#0f172a" }}>
+                  {isNew ? "Add Employee Account" : `Edit Details: ${editingUser?.name}`}
+                </h2>
+              </div>
               <button
                 type="button"
-                onClick={() => resetPassword(u)}
-                title="Set or reset password"
+                onClick={() => setModalOpen(false)}
+                style={{
+                  border: 0,
+                  background: "#f1f5f9",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                Set password
-              </button>
-              <button
-                type="button"
-                disabled={u.email === currentEmail}
-                onClick={() => toggle(u)}
-              >
-                {u.active ? "Deactivate" : "Activate"}
+                ×
               </button>
             </div>
+
+            <form onSubmit={handleSave}>
+              <div className="formgrid" style={{ padding: "20px 24px" }}>
+                {modalError && (
+                  <div
+                    style={{
+                      gridColumn: "1 / -1",
+                      background: "#fef2f2",
+                      border: "1px solid #fecaca",
+                      color: "#b91c1c",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {modalError}
+                  </div>
+                )}
+
+                <label className="wide">
+                  <span>Full Name *</span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Harish Kumar"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  <span>Work Email *</span>
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@techomie.com"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  <span>Phone / Mobile</span>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  <span>Assigned Role *</span>
+                  <select
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  >
+                    <option value="sales">Sales Executive</option>
+                    <option value="crm">CRM / Customer Success</option>
+                    <option value="technician">Field Technician / Engineer</option>
+                    <option value="admin">Administrator (Full Access)</option>
+                  </select>
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                  <span>Account Status</span>
+                  <label className="switch" style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={!!form.active}
+                      onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                    />
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: form.active ? "#16a34a" : "#64748b" }}>
+                      {form.active ? "Account is Active" : "Account is Inactive / Disabled"}
+                    </span>
+                  </label>
+                </label>
+
+                <div
+                  className="wide"
+                  style={{
+                    borderTop: "1px solid #e2e8f0",
+                    paddingTop: "16px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f172a" }}>
+                      {isNew ? "Login Password *" : "Update Login Password"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      style={{
+                        border: "1px solid #cbd5e1",
+                        background: "#f8fafc",
+                        borderRadius: "6px",
+                        padding: "3px 8px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: "#0284c7",
+                        cursor: "pointer",
+                      }}
+                    >
+                      🎲 Generate Password
+                    </button>
+                  </div>
+
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={
+                        isNew
+                          ? "Enter password (min. 6 characters)"
+                          : "Leave blank to keep existing password, or type new password"
+                      }
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      style={{ width: "100%", paddingRight: "45px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        background: "transparent",
+                        border: 0,
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        color: "#64748b",
+                        padding: "4px",
+                      }}
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </button>
+                  </div>
+
+                  <small style={{ color: "#64748b", fontSize: "11px", display: "block", marginTop: "5px" }}>
+                    {isNew
+                      ? "Min. 6 characters. The employee can use this password to sign in immediately."
+                      : "Leave this field empty to keep their current password unchanged. Enter at least 6 characters to set a new password."}
+                  </small>
+                </div>
+              </div>
+
+              <div className="modalactions">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  disabled={busy}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    borderRadius: "8px",
+                    padding: "9px 18px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="primary"
+                  style={{
+                    background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+                    color: "#ffffff",
+                    border: 0,
+                    borderRadius: "8px",
+                    padding: "9px 22px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: busy ? "wait" : "pointer",
+                  }}
+                >
+                  {busy ? "Saving…" : isNew ? "Create Employee" : "Save Changes"}
+                </button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
