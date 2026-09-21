@@ -5,194 +5,334 @@
 @media(max-width:600px){.qitemedit,.customquoteitem,.itempickerfilters{grid-template-columns:1fr}.itemdrawerclose span{display:none}.qtaxmodebar{align-items:stretch;flex-direction:column}.qtaxmodebar select{width:100%}}
 
 /* Smart switch card and variant selector options */
+.pickeritems article.switchmodelcard,
 .switchmodelcard {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid #e4e7ec;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
+  gap: 14px !important;
+  padding: 16px 18px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  margin-bottom: 14px !important;
+  background: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease !important;
 }
+.pickeritems article.switchmodelcard:hover,
 .switchmodelcard:hover {
-  border-color: #b2ddff;
-  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.06);
+  border-color: #0284c7 !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.09) !important;
+  transform: translateY(-1px) !important;
 }
+.pickeritems article.switchmodelcard .switchmodelhead,
 .switchmodelhead {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
+.pickeritems article.switchmodelcard .switchmodelhead img,
 .switchmodelhead img {
-  width: 84px;
-  height: 84px;
-  object-fit: contain;
-  border-radius: 8px;
-  border: 1px solid #e4e7ec;
-  background: #fff;
-  padding: 4px;
-  flex-shrink: 0;
+  width: 76px !important;
+  height: 76px !important;
+  min-width: 76px !important;
+  min-height: 76px !important;
+  max-width: 76px !important;
+  max-height: 76px !important;
+  object-fit: contain !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  padding: 4px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
+.pickeritems article.switchmodelcard .switchmodeldetails,
 .switchmodeldetails {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
 }
+.pickeritems article.switchmodelcard .switchmodeldetails small,
 .switchmodeldetails small {
-  font-size: 11px;
-  color: #667085;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin: 0 !important;
+  display: block !important;
 }
+.pickeritems article.switchmodelcard .switchmodeldetails b,
 .switchmodeldetails b {
-  font-size: 14px;
-  color: #101828;
+  font-size: 16px !important;
+  font-weight: 750 !important;
+  color: #0f172a !important;
+  margin: 2px 0 !important;
+  display: block !important;
+  line-height: 1.35 !important;
+  word-break: break-word !important;
 }
+.pickeritems article.switchmodelcard .switchmodeldetails .modulebadge,
 .switchmodeldetails .modulebadge {
-  display: inline-block;
-  font-size: 10px;
-  background: #f2f4f7;
-  color: #344054;
-  padding: 2px 7px;
-  border-radius: 12px;
-  font-weight: 600;
-  width: fit-content;
-  margin-top: 2px;
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background: #f0f9ff !important;
+  color: #0284c7 !important;
+  border: 1px solid #bae6fd !important;
+  padding: 2px 9px !important;
+  border-radius: 999px !important;
+  width: fit-content !important;
+  margin: 2px 0 0 0 !important;
 }
+.pickeritems article.switchmodelcard .switchmodeldetails p,
 .switchmodeldetails p {
-  font-size: 11px;
-  color: #475467;
-  margin: 2px 0 0;
+  font-size: 12px !important;
+  color: #475569 !important;
+  margin: 3px 0 0 0 !important;
+  line-height: 1.45 !important;
+  display: block !important;
 }
+.pickeritems article.switchmodelcard .variantoptionscontainer,
 .variantoptionscontainer {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #eaecf0;
-  border-radius: 8px;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+  padding: 12px 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 640px) {
+  .pickeritems article.switchmodelcard .variantoptionscontainer,
+  .variantoptionscontainer {
+    grid-template-columns: 1fr !important;
+  }
 }
 .variantgroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
 }
 .variantgrouplabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: #344054;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 .variantpills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
 }
+.pickeritems article.switchmodelcard .variantpill,
+.pickeritems article .variantpill,
 .variantpill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 11px;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  color: #344054;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 7px 13px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease !important;
+  outline: none !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
 }
-.variantpill:hover:not(:disabled) {
-  border-color: #1769ff;
-  color: #1769ff;
-  background: #f0f6ff;
+.pickeritems article.switchmodelcard .variantpill:hover:not(:disabled):not(.active),
+.pickeritems article .variantpill:hover:not(:disabled):not(.active),
+.variantpill:hover:not(:disabled):not(.active) {
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+  background: #f0f9ff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.15) !important;
 }
+.pickeritems article.switchmodelcard .variantpill:hover:not(:disabled):not(.active) span,
+.pickeritems article .variantpill:hover:not(:disabled):not(.active) span,
+.variantpill:hover:not(:disabled):not(.active) span {
+  color: #0369a1 !important;
+}
+.pickeritems article.switchmodelcard .variantpill.active,
+.pickeritems article .variantpill.active,
 .variantpill.active {
-  background: #1769ff;
-  color: #fff;
-  border-color: #1769ff;
-  box-shadow: 0 1px 4px rgba(23, 105, 255, 0.35);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35) !important;
+  transform: none !important;
 }
+.pickeritems article.switchmodelcard .variantpill.active:hover,
+.pickeritems article .variantpill.active:hover,
+.variantpill.active:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  border-color: #0369a1 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+.pickeritems article.switchmodelcard .variantpill.active span,
+.pickeritems article .variantpill.active span,
 .variantpill.active span {
-  color: #fff;
+  color: #ffffff !important;
 }
+.pillcheck {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: 2px !important;
+}
+.pickeritems article.switchmodelcard .variantpill:disabled,
+.pickeritems article.switchmodelcard .variantpill.disabled,
+.pickeritems article .variantpill:disabled,
+.pickeritems article .variantpill.disabled,
+.variantpill:disabled,
 .variantpill.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background: #f9fafb;
-  border-style: dashed;
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  background: #f1f5f9 !important;
+  border: 1px dashed #cbd5e1 !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
-.variantpill small {
-  font-size: 10px;
-  opacity: 0.75;
+.pickeritems article.switchmodelcard .variantpill:disabled span,
+.pickeritems article .variantpill:disabled span,
+.variantpill:disabled span {
+  color: #94a3b8 !important;
 }
+.pillna {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  font-style: italic !important;
+  margin-left: 2px !important;
+}
+.pickeritems article.switchmodelcard .switchcardfooter,
 .switchcardfooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 6px;
-  border-top: 1px solid #f2f4f7;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  margin-top: 2px !important;
 }
 .switchpricing {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
 }
 .switchpricing strong {
-  font-size: 16px;
-  color: #101828;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  display: block !important;
 }
 .switchpricing small {
-  font-size: 10px;
-  color: #667085;
+  font-size: 11px !important;
+  color: #64748b !important;
+  display: block !important;
 }
 .switchpricing .skuinfo {
-  font-size: 11px;
-  font-family: monospace;
-  color: #475467;
-  background: #f2f4f7;
-  padding: 1px 6px;
-  border-radius: 4px;
-  width: fit-content;
+  display: inline-block !important;
+  font-size: 11px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  color: #475569 !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+  width: fit-content !important;
+  margin-top: 3px !important;
 }
 .switchcardcontrols {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
 }
 .switchqtywrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #475467;
-  font-weight: 600;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
 }
 .switchqtywrap input {
-  width: 55px;
-  padding: 6px 8px;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
-  text-align: center;
-  font-weight: 700;
+  width: 58px !important;
+  height: 36px !important;
+  padding: 4px 8px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 7px !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  outline: none !important;
 }
-.switchcardcontrols button.addbtn {
-  border: 0;
-  background: #1769ff;
-  color: #fff;
-  border-radius: 7px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s;
+.switchqtywrap input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
 }
-.switchcardcontrols button.addbtn:hover {
-  background: #0050e6;
+.switchcardcontrols button.addbtn,
+.pickeritems article.switchmodelcard button.addbtn {
+  border: 0 !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 9px 20px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.15s ease !important;
+  margin-top: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+.switchcardcontrols button.addbtn:hover,
+.pickeritems article.switchmodelcard button.addbtn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Room Item badges and inline edit */

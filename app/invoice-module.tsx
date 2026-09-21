@@ -245,6 +245,7 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
   const generatePdf = async (save = false) => {
     if (!selected) return null;
     const el = document.getElementById("tax-invoice-paper");
+    if (!el) return null;
     el.classList.add("pdfexporting");
     try {
       const html2pdf = (await import("html2pdf.js")).default;
@@ -270,7 +271,7 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
       }
       return (await worker.outputPdf("blob")) as Blob;
     } finally {
-      el.classList.remove("pdfexporting");
+      el?.classList.remove("pdfexporting");
     }
   };
   const finalise = async () => {

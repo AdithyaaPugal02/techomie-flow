@@ -67,10 +67,10 @@ class Prepared {
       const db = getLocalDb();
       const queryParams = this.args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
       if (/\breturning\b/i.test(this.source)) {
-        const rows = db.prepare(this.source).all(...queryParams) as Row[];
+        const rows = db.prepare(this.source).all(...(queryParams as any[])) as Row[];
         return { success: true, results: rows, meta: { changes: rows.length } };
       }
-      const res = db.prepare(this.source).run(...queryParams);
+      const res = db.prepare(this.source).run(...(queryParams as any[]));
       return { success: true, results: [], meta: { changes: Number(res.changes) } };
     }
     const rows = await this.rows();
@@ -108,9 +108,9 @@ export async function queryRows(source: string, args: Args = []) {
   }
   const db = getLocalDb();
   if (/^\s*(select|with|pragma)\b/i.test(source) || /\breturning\b/i.test(source)) {
-    return db.prepare(source).all(...queryParams) as Row[];
+    return db.prepare(source).all(...(queryParams as any[])) as Row[];
   }
-  db.prepare(source).run(...queryParams);
+  db.prepare(source).run(...(queryParams as any[]));
   return [] as Row[];
 }
 

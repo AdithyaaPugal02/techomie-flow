@@ -166,10 +166,6 @@ export async function GET(req: Request) {
       where.push("c.city LIKE ?");
       args.push(`%${city}%`);
     }
-    if (assigned && u.role === "admin") {
-      where.push("c.assigned_to=?");
-      args.push(assigned);
-    }
     const rows = (
       await env.DB.prepare(
         `SELECT c.*,u.name assigned_name,(SELECT COUNT(*) FROM customer_sites s WHERE s.customer_id=c.id AND s.archived=0)site_count,(SELECT COALESCE(SUM(i.grand_total),0) FROM tax_invoices i WHERE i.customer_id=c.id AND i.status NOT IN('Draft','Cancelled'))invoiced,(SELECT COALESCE(SUM(p.amount),0)FROM invoice_payments p JOIN tax_invoices i ON i.id=p.invoice_id WHERE i.customer_id=c.id)received FROM customers c LEFT JOIN users u ON u.id=c.assigned_to WHERE ${where.join(" AND ")} ORDER BY c.created_at DESC LIMIT 500`,
@@ -248,7 +244,7 @@ export async function POST(req: Request) {
           p.pincode || null,
           p.country || "India",
           p.leadSource || null,
-          u.role === "sales" ? u.id : p.assignedTo || u.id,
+          p.assignedTo || u.id,
           p.status || "Prospect",
           p.notes || null,
           JSON.stringify(p.tags || []),
@@ -442,7 +438,7 @@ export async function PATCH(req: Request) {
         p.pincode || null,
         p.country || "India",
         p.leadSource || null,
-        u.role === "sales" ? u.id : p.assignedTo,
+        p.assignedTo || u.id,
         p.status || "Active",
         p.notes || null,
         JSON.stringify(p.tags || []),

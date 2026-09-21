@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       x = new URL(req.url),
       id = Number(x.searchParams.get("id")),
       q = await env.DB.prepare(
-        "SELECT q.*,c.name customer_name,c.phone,c.gstin,c.billing_address,c.primary_contact,s.name site_name,s.address site_address,s.city,s.state,s.pincode,s.contact_name,s.contact_phone,u.name sales_name FROM quotations q JOIN customers c ON c.id=q.customer_id JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id WHERE q.id=? AND q.archived=0",
+        "SELECT q.*,c.name customer_name,c.phone,c.gstin,c.billing_address,c.primary_contact,s.name site_name,s.address site_address,s.city,s.state,s.pincode,s.contact_name,s.contact_phone,u.name sales_name FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id WHERE q.id=? AND q.archived=0",
       )
         .bind(id)
         .first<R>();
@@ -461,7 +461,7 @@ export async function PATCH(req: Request) {
       return Response.json({ ok: true, status });
     }
     if (action === "converted") {
-      if (u.role !== "admin" || q.status !== "Accepted")
+      if (!["admin", "crm", "sales"].includes(u.role) || q.status !== "Accepted")
         return Response.json({ error: "Only an accepted quotation can be converted" }, { status: 409 });
       await env.DB.prepare("UPDATE quotations SET status='Converted to Project',updated_at=? WHERE id=?").bind(now(), id).run();
       await activity(u.id, id, "Converted to Project", `Linked project ${p.projectId || "created"}`);

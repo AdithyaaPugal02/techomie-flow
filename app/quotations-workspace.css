@@ -744,7 +744,7 @@
   overflow-y: auto;
   padding: 0 24px 24px;
 }
-.pickeritems article {
+.pickeritems article:not(.switchmodelcard) {
   display: grid;
   grid-template-columns: 68px 1fr 140px;
   gap: 14px;
@@ -755,7 +755,7 @@
   background: #ffffff;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.pickeritems article:hover {
+.pickeritems article:not(.switchmodelcard):hover {
   border-color: #cbd5e1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transform: translateY(-1px);
@@ -768,24 +768,35 @@
   border: 1px solid #f1f5f9;
   border-radius: 8px;
 }
-.pickeritems article div > * {
+.pickeritems article:not(.switchmodelcard) div > * {
   display: block;
 }
-.pickeritems article small,
-.pickeritems article span,
-.pickeritems article em {
+.pickeritems article:not(.switchmodelcard) b,
+.pickeritems article b {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: block !important;
+  line-height: 1.35 !important;
+  margin: 2px 0 !important;
+}
+.pickeritems article:not(.switchmodelcard) small,
+.pickeritems article:not(.switchmodelcard) span,
+.pickeritems article:not(.switchmodelcard) em {
   font-size: 11px;
   color: var(--text-secondary, #64748b);
   font-style: normal;
   margin-top: 3px;
 }
-.pickeritems article > div:last-child {
+.pickeritems article:not(.switchmodelcard) > div:last-child {
   text-align: right;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-.pickeritems article button {
+.pickeritems article:not(.switchmodelcard) button,
+.pickeritems article button.addbtn,
+.pickeritems article .switchcardcontrols button {
   border: 0;
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #ffffff;
@@ -798,7 +809,9 @@
   box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
   transition: all 0.15s ease;
 }
-.pickeritems article button:hover {
+.pickeritems article:not(.switchmodelcard) button:hover,
+.pickeritems article button.addbtn:hover,
+.pickeritems article .switchcardcontrols button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
 }
@@ -1102,10 +1115,10 @@
   .milestone {
     grid-template-columns: 1fr 60px;
   }
-  .pickeritems article {
+  .pickeritems article:not(.switchmodelcard) {
     grid-template-columns: 52px 1fr;
   }
-  .pickeritems article > div:last-child {
+  .pickeritems article:not(.switchmodelcard) > div:last-child {
     grid-column: 2;
     text-align: left;
   }

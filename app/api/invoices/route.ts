@@ -141,7 +141,7 @@ export async function GET(req: Request) {
       to = url.searchParams.get("to");
     if (id) {
       const invoice = await env.DB.prepare(
-        "SELECT i.*,c.name customer_name,c.phone customer_phone,c.email customer_email FROM tax_invoices i JOIN customers c ON c.id=i.customer_id WHERE i.id=?",
+        "SELECT i.*,c.name customer_name,c.phone customer_phone,c.email customer_email FROM tax_invoices i LEFT JOIN customers c ON c.id=i.customer_id WHERE i.id=?",
       )
         .bind(id)
         .first<Record<string, unknown>>();
@@ -180,7 +180,7 @@ export async function GET(req: Request) {
       });
     }
     let sql =
-        "SELECT i.*,c.name customer_name,COALESCE((SELECT SUM(p.amount) FROM invoice_payments p WHERE p.invoice_id=i.id),0) paid FROM tax_invoices i JOIN customers c ON c.id=i.customer_id WHERE 1=1",
+        "SELECT i.*,c.name customer_name,COALESCE((SELECT SUM(p.amount) FROM invoice_payments p WHERE p.invoice_id=i.id),0) paid FROM tax_invoices i LEFT JOIN customers c ON c.id=i.customer_id WHERE 1=1",
       args: unknown[] = [];
     if (from) {
       sql += " AND invoice_date>=?";

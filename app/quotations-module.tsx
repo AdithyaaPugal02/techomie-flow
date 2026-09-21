@@ -579,33 +579,42 @@ function QuoteWorkspace({
     if (download) {
       try {
         notify("Rendering PDF pages…");
-        const html2pdf = (await import("html2pdf.js")).default;
+        const { jsPDF } = await import("jspdf");
+        const html2canvas = (await import("html2canvas")).default;
         const filename =
           `${quote?.number || "Quotation"}-Rev-${quote?.revision || 0}-${quote?.customer_name || "Customer"}.pdf`.replace(
             /[^a-z0-9.-]+/gi,
             "-",
           );
-        const blob = await html2pdf()
-          .set({
-            filename,
-            margin: 0,
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: "#ffffff",
-              imageTimeout: 10000,
-              logging: false,
-              scrollX: 0,
-              scrollY: 0,
-            },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
-            pagebreak: {
-              mode: ["css", "legacy"],
-              avoid: [".qpaperline", ".qminimalsummary", ".qmilestones article", ".qtermgrid article", ".qpdfcards article", ".qscopebrief", ".qtotalhero", ".qcommercialgrid"],
-            },
-          })
-          .from(el)
-          .outputPdf("blob");
+
+        const sections = Array.from(el.querySelectorAll(":scope > section")) as HTMLElement[];
+        const pdf = new jsPDF({
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+          compress: true,
+        });
+
+        const targetElements = sections.length ? sections : [el];
+        for (let i = 0; i < targetElements.length; i++) {
+          const section = targetElements[i];
+          notify(`Rendering PDF page ${i + 1} of ${targetElements.length}…`);
+          if (i > 0) {
+            pdf.addPage("a4", "portrait");
+          }
+          const canvas = await html2canvas(section, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            logging: false,
+            imageTimeout: 10000,
+            windowWidth: section.scrollWidth || 794,
+          });
+          const imgData = canvas.toDataURL("image/jpeg", 0.95);
+          pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+        }
+
+        const blob = pdf.output("blob");
 
         // 1. Immediately trigger browser download for the user without waiting for server upload
         const url = URL.createObjectURL(blob);
@@ -623,8 +632,8 @@ function QuoteWorkspace({
 
         // 2. Perform background file archiving to server without blocking the user
         const form = new FormData();
-        form.set("quotationId", String(quote.id));
-        form.set("revision", String(quote.revision || 0));
+        form.set("quotationId", String(quote?.id || ""));
+        form.set("revision", String(quote?.revision || 0));
         form.set(
           "kind",
           quotePdfFormat(snap) === "detailed"
@@ -1538,7 +1547,10 @@ function Builder({ snap, set, locked, openPicker }: R) {
                                         }
                                       }}
                                     >
-                                      {t.icon} {t.label}
+                                      <span className="pillicon">{t.icon}</span>
+                                      <span className="pilllabel">{t.label}</span>
+                                      {isSelected && <span className="pillcheck">✓</span>}
+                                      {!isAvail && <small className="pillna">(N/A)</small>}
                                     </button>
                                   );
                                 })}
@@ -1574,7 +1586,10 @@ function Builder({ snap, set, locked, openPicker }: R) {
                                         }
                                       }}
                                     >
-                                      {m.icon} {m.label}
+                                      <span className="pillicon">{m.icon}</span>
+                                      <span className="pilllabel">{m.label}</span>
+                                      {isSelected && <span className="pillcheck">✓</span>}
+                                      {!isAvail && <small className="pillna">(N/A)</small>}
                                     </button>
                                   );
                                 })}
@@ -1755,7 +1770,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     return () => clearTimeout(t);
   }, [q, category]);
 
-  const parsed = items.map((item) => {
+  const parsed: R[] = items.map((item: R): R => {
     let attrs: R = {};
     try {
       attrs = typeof item.attributes === "string" ? JSON.parse(item.attributes || "{}") : (item.attributes || {});
@@ -1944,7 +1959,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                       <img src={activeVariant.image_key || m.image || "/techomie-logo.jpg"} alt={m.name} />
                       <div className="switchmodeldetails">
                         <small>{m.brand} · {m.category}{m.series ? ` · ${m.series}` : ""}</small>
-                        <b>{m.name}</b>
+                        <b>{m.name || activeVariant.name || activeVariant.sku || "Smart Switch"}</b>
                         {m.module && <span className="modulebadge">{m.module} Module Panel</span>}
                         {m.shortDescription && <p>{m.shortDescription}</p>}
                       </div>
@@ -1970,9 +1985,10 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                                   }))
                                 }
                               >
-                                <span>{t.icon}</span>
-                                <span>{t.label}</span>
-                                {!isAvail && <small>(N/A)</small>}
+                                <span className="pillicon">{t.icon}</span>
+                                <span className="pilllabel">{t.label}</span>
+                                {isSelected && <span className="pillcheck">✓</span>}
+                                {!isAvail && <small className="pillna">(N/A)</small>}
                               </button>
                             );
                           })}
@@ -1998,9 +2014,10 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                                   }))
                                 }
                               >
-                                <span>{mat.icon}</span>
-                                <span>{mat.label}</span>
-                                {!isAvail && <small>(N/A)</small>}
+                                <span className="pillicon">{mat.icon}</span>
+                                <span className="pilllabel">{mat.label}</span>
+                                {isSelected && <span className="pillcheck">✓</span>}
+                                {!isAvail && <small className="pillna">(N/A)</small>}
                               </button>
                             );
                           })}

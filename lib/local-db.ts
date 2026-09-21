@@ -2,7 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 
-export function initLocalDb(dbPath) {
+export function initLocalDb(dbPath: string) {
   const isNew = !fs.existsSync(dbPath);
   const db = new DatabaseSync(dbPath);
 
@@ -10,14 +10,14 @@ export function initLocalDb(dbPath) {
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA synchronous = NORMAL;");
 
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name);
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((t: any) => t.name);
   if (!tables.includes("users")) {
     console.log("[local-db] Initializing database schema from 0011 snapshot...");
     const root = process.cwd();
     const snapshot = JSON.parse(fs.readFileSync(path.join(root, "drizzle/meta/0011_snapshot.json"), "utf8"));
-    const quote = (val) => `"${String(val).replaceAll('"', '""')}"`;
+    const quote = (val: any) => `"${String(val).replaceAll('"', '""')}"`;
 
-    function defaultSql(val) {
+    function defaultSql(val: any) {
       if (val === undefined) return "";
       if (val === true || val === "true") return " DEFAULT 1";
       if (val === false || val === "false") return " DEFAULT 0";
@@ -28,9 +28,9 @@ export function initLocalDb(dbPath) {
 
     db.exec("BEGIN TRANSACTION;");
     try {
-      for (const table of Object.values(snapshot.tables)) {
+      for (const table of Object.values(snapshot.tables as Record<string, any>)) {
         const colDefs = [];
-        for (const col of Object.values(table.columns)) {
+        for (const col of Object.values(table.columns as Record<string, any>)) {
           let def = `${quote(col.name)} ${col.type.toUpperCase()}`;
           if (col.primaryKey) {
             def += " PRIMARY KEY";
@@ -43,8 +43,8 @@ export function initLocalDb(dbPath) {
         db.exec(`CREATE TABLE IF NOT EXISTS ${quote(table.name)} (\n  ${colDefs.join(",\n  ")}\n);`);
       }
 
-      for (const table of Object.values(snapshot.tables)) {
-        for (const idx of Object.values(table.indexes ?? {})) {
+      for (const table of Object.values(snapshot.tables as Record<string, any>)) {
+        for (const idx of Object.values((table.indexes ?? {}) as Record<string, any>)) {
           const cols = idx.columns.map(quote).join(", ");
           db.exec(`CREATE ${idx.isUnique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${quote(idx.name)} ON ${quote(table.name)} (${cols});`);
         }
@@ -130,9 +130,9 @@ export function initLocalDb(dbPath) {
 
       db.exec("COMMIT;");
       console.log(`[local-db] Seeded ${pCount} products and ${vCount} variants.`);
-    } catch (err) {
+    } catch (err: any) {
       try { db.exec("ROLLBACK;"); } catch {}
-      console.warn("[local-db] Seeding error (non-fatal):", err.message);
+      console.warn("[local-db] Seeding error (non-fatal):", err?.message);
     }
   }
 
