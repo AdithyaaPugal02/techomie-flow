@@ -218,16 +218,6 @@ export default function CustomersModule({
     setMsg("Document uploaded permanently");
     open(detail.customer.id);
   };
-  if (role === "technician" && !detail)
-    return (
-      <div className="modulepage">
-        <h1>Customers</h1>
-        <p>
-          Customer contact details appear only through your assigned projects
-          and service tickets.
-        </p>
-      </div>
-    );
   return (
     <div className="customersmaster">
       <div className="customerhero">
@@ -289,19 +279,17 @@ export default function CustomersModule({
           value={filter.city}
           onChange={(e) => setFilter({ ...filter, city: e.target.value })}
         />
-        {role === "admin" && (
-          <select
-            value={filter.assigned}
-            onChange={(e) => setFilter({ ...filter, assigned: e.target.value })}
-          >
-            <option value="">All employees</option>
-            {users.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.name}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          value={filter.assigned}
+          onChange={(e) => setFilter({ ...filter, assigned: e.target.value })}
+        >
+          <option value="">All employees</option>
+          {users.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.name}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="customertable">
         <div className="customerrow customerhead">

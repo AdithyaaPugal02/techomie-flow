@@ -596,6 +596,28 @@ function Users({
     notice(r.ok ? "Employee account created" : d.error);
     if (r.ok) reload();
   };
+  const resetPassword = async (u: R) => {
+    const password = prompt(
+      `Enter new password for ${u.name} (minimum 10 characters)`,
+    );
+    if (!password) return;
+    if (password.length < 10) {
+      notice("Password must be at least 10 characters");
+      return;
+    }
+    const r = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: u.id, password }),
+      }),
+      d = await r.json();
+    notice(
+      r.ok
+        ? `Password updated for ${u.name}`
+        : d.error || "Unable to update password",
+    );
+    if (r.ok) reload();
+  };
   const toggle = async (u: R) => {
     const r = await fetch("/api/users", {
         method: "PATCH",
@@ -623,7 +645,7 @@ function Users({
           <span>Role</span>
           <span>Last login</span>
           <span>Status</span>
-          <span>Action</span>
+          <span style={{ textAlign: "right" }}>Actions</span>
         </div>
         {users.map((u) => (
           <div className="settingsrow" key={u.id}>
@@ -638,12 +660,28 @@ function Users({
                 : "Never"}
             </span>
             <span>{u.active ? "Active" : "Inactive"}</span>
-            <button
-              disabled={u.email === currentEmail}
-              onClick={() => toggle(u)}
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                justifyContent: "flex-end",
+              }}
             >
-              {u.active ? "Deactivate" : "Activate"}
-            </button>
+              <button
+                type="button"
+                onClick={() => resetPassword(u)}
+                title="Set or reset password"
+              >
+                Set password
+              </button>
+              <button
+                type="button"
+                disabled={u.email === currentEmail}
+                onClick={() => toggle(u)}
+              >
+                {u.active ? "Deactivate" : "Activate"}
+              </button>
+            </div>
           </div>
         ))}
       </div>

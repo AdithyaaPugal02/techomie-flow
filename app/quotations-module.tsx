@@ -589,18 +589,20 @@ function QuoteWorkspace({
           .set({
             filename,
             margin: 0,
-            image: { type: "jpeg", quality: 0.95 },
             html2canvas: {
               scale: 2,
               useCORS: true,
               backgroundColor: "#ffffff",
-              imageTimeout: 3000,
+              imageTimeout: 10000,
               logging: false,
               scrollX: 0,
               scrollY: 0,
             },
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
-            pagebreak: { mode: ["css", "legacy"] },
+            pagebreak: {
+              mode: ["css", "legacy"],
+              avoid: [".qpaperline", ".qminimalsummary", ".qmilestones article", ".qtermgrid article", ".qpdfcards article", ".qscopebrief", ".qtotalhero", ".qcommercialgrid"],
+            },
           })
           .from(el)
           .outputPdf("blob");
@@ -793,7 +795,7 @@ function QuoteWorkspace({
           ].includes(quote.status) && (
             <button onClick={() => action("revision")}>Create revision</button>
           )}
-          {role === "admin" &&
+          {["admin", "crm", "sales"].includes(role) &&
             ["Sent", "Viewed", "Negotiation", "Revised"].includes(
               quote.status,
             ) && (
@@ -809,7 +811,7 @@ function QuoteWorkspace({
                 Accept
               </button>
             )}
-          {role === "admin" && quote.status === "Accepted" && (
+          {["admin", "crm", "sales"].includes(role) && quote.status === "Accepted" && (
             <button
               className="primary"
               onClick={async () => {

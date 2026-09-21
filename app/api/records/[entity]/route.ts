@@ -284,10 +284,6 @@ export async function GET(req: Request) {
       sql += " AND id=?";
       bindings.push(id);
     }
-    if (config.ownerField && user.role !== "admin") {
-      sql += ` AND (${config.ownerField}=? OR ${config.ownerField} IS NULL)`;
-      bindings.push(user.id);
-    }
     if (q) {
       const searchCols = config.columns.filter((c) =>
         /name|title|number|status|phone|problem|sku|reference/.test(c),

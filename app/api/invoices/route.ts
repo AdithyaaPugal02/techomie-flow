@@ -133,7 +133,7 @@ const audit = (uid: string, action: string, id: string) =>
 
 export async function GET(req: Request) {
   try {
-    await requireUser(["admin", "crm"]);
+    await requireUser(["admin", "crm", "sales", "technician"]);
     const url = new URL(req.url),
       format = url.searchParams.get("format"),
       id = url.searchParams.get("id"),
@@ -283,7 +283,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireUser(["admin"]),
+    const user = await requireUser(["admin", "crm", "sales"]),
       p = (await req.json()) as Record<string, unknown>,
       lines = p.items as Line[];
     if (
@@ -403,7 +403,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const user = await requireUser(["admin"]),
+    const user = await requireUser(["admin", "crm", "sales"]),
       p = (await req.json()) as Record<string, unknown>,
       id = String(p.id || ""),
       action = String(p.action || "");

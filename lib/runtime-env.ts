@@ -47,12 +47,21 @@ function translate(source: string) {
 class Prepared {
   private args: Args = [];
   constructor(private source: string) {}
-  bind(...args: Args) { this.args = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value); return this; }
+  bind(...args: Args) {
+    this.args = args.map(value => typeof value === "boolean" ? (value ? 1 : 0) : value);
+    return this;
+  }
   async rows() {
     return queryRows(this.source, this.args);
   }
-  async first<T = Row>() { const rows = await this.rows(); return (rows[0] as T) ?? null; }
-  async all<T = Row>() { const rows = await this.rows(); return { results: rows as T[], success: true, meta: { changes: rows.length } }; }
+  async first<T = Row>() {
+    const rows = await this.rows();
+    return (rows[0] as T) ?? null;
+  }
+  async all<T = Row>() {
+    const rows = await this.rows();
+    return { results: rows as T[], success: true, meta: { changes: rows.length } };
+  }
   async run() {
     if (!supabase) {
       const db = getLocalDb();
@@ -67,7 +76,10 @@ class Prepared {
     const rows = await this.rows();
     return { success: true, results: rows, meta: { changes: rows.length } };
   }
-  async raw<T = unknown[]>() { const rows = await this.rows(); return rows.map(row => Object.values(row)) as T[]; }
+  async raw<T = unknown[]>() {
+    const rows = await this.rows();
+    return rows.map(row => Object.values(row)) as T[];
+  }
 }
 
 class Database {
@@ -105,67 +117,124 @@ export async function queryRows(source: string, args: Args = []) {
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || "techomie-files";
 const storage = supabase?.storage.from(bucket) ?? null;
 const localStorageDir = path.join(process.cwd(), ".local-storage");
+const localUploadsDir = path.resolve(process.cwd(), "public/uploads");
 
 class Files {
-  async put(key: string, body: ReadableStream | Blob | ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }) {
+  async put(key: string, body: ReadableStream | Blob | ArrayBuffer | Buffer, options?: { httpMetadata?: { contentType?: string } }) {
     if (storage) {
-      const payload = body instanceof ReadableStream ? await new Response(body).arrayBuffer() : body;
-      const { error } = await storage.upload(key, payload, { contentType: options?.httpMetadata?.contentType, upsert: true });
-      if (error) throw error;
-      return { key };
+      try {
+        const payload = body instanceof ReadableStream ? await new Response(body).arrayBuffer() : body;
+        const { error } = await storage.upload(key, payload as ArrayBuffer, { contentType: options?.httpMetadata?.contentType, upsert: true });
+        if (!error) return { key };
+      } catch {}
     }
-    const target = path.join(localStorageDir, key);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    const buffer = Buffer.from(
-      body instanceof ReadableStream ? await new Response(body).arrayBuffer() :
-      body instanceof Blob ? await body.arrayBuffer() : (body as ArrayBuffer)
-    );
-    fs.writeFileSync(target, buffer);
+    const targetPath = path.join(localUploadsDir, key);
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    let buffer: Buffer;
+    if (Buffer.isBuffer(body)) {
+      buffer = body;
+    } else if (body instanceof ArrayBuffer) {
+      buffer = Buffer.from(body);
+    } else if (body instanceof Blob) {
+      buffer = Buffer.from(await body.arrayBuffer());
+    } else if (body instanceof ReadableStream) {
+      const arrayBuffer = await new Response(body).arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      buffer = Buffer.from(String(body));
+    }
+    fs.writeFileSync(targetPath, buffer);
     if (options?.httpMetadata?.contentType) {
-      fs.writeFileSync(`${target}.meta`, JSON.stringify(options.httpMetadata));
+      fs.writeFileSync(`${targetPath}.meta.json`, JSON.stringify(options.httpMetadata));
     }
+
+    // Also mirror to .local-storage for backwards compatibility
+    try {
+      const legacyTarget = path.join(localStorageDir, key);
+      fs.mkdirSync(path.dirname(legacyTarget), { recursive: true });
+      fs.writeFileSync(legacyTarget, buffer);
+    } catch {}
+
     return { key };
   }
+
   async get(key: string) {
     if (storage) {
-      const { data, error } = await storage.download(key);
-      if (error || !data) return null;
-      return { body: data.stream(), httpMetadata: { contentType: data.type }, size: data.size };
+      try {
+        const { data, error } = await storage.download(key);
+        if (!error && data) {
+          return {
+            body: data.stream(),
+            httpMetadata: { contentType: data.type },
+            httpEtag: `"${data.size}"`,
+            writeHttpMetadata: (headers: Headers) => {
+              if (data.type) headers.set("content-type", data.type);
+            },
+            size: data.size,
+          };
+        }
+      } catch {}
     }
-    const target = path.join(localStorageDir, key);
-    if (!fs.existsSync(target)) return null;
-    const stat = fs.statSync(target);
+
+    let targetPath = path.join(localUploadsDir, key);
+    if (!fs.existsSync(targetPath)) {
+      targetPath = path.join(localStorageDir, key);
+    }
+    if (!fs.existsSync(targetPath)) return null;
+
+    const stat = fs.statSync(targetPath);
     let contentType = "application/octet-stream";
-    const metaPath = `${target}.meta`;
+    const metaPath = fs.existsSync(`${targetPath}.meta.json`) ? `${targetPath}.meta.json` : `${targetPath}.meta`;
     if (fs.existsSync(metaPath)) {
       try {
-        const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
-        contentType = meta.contentType || contentType;
+        const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
+        if (meta.contentType) contentType = meta.contentType;
       } catch {}
     } else {
       const ext = path.extname(key).toLowerCase();
-      const mimeMap: Record<string, string> = {
-        ".pdf": "application/pdf",
-        ".png": "image/png",
+      const mimeTypes: Record<string, string> = {
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
+        ".png": "image/png",
         ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".pdf": "application/pdf",
         ".mp4": "video/mp4",
+        ".json": "application/json",
       };
-      contentType = mimeMap[ext] || contentType;
+      if (mimeTypes[ext]) contentType = mimeTypes[ext];
     }
-    const buffer = fs.readFileSync(target);
-    return { body: buffer, httpMetadata: { contentType }, size: stat.size };
+    const fileBuffer = fs.readFileSync(targetPath);
+    return {
+      body: fileBuffer,
+      httpMetadata: { contentType },
+      httpEtag: `"${stat.mtimeMs}-${stat.size}"`,
+      writeHttpMetadata: (headers: Headers) => {
+        headers.set("content-type", contentType);
+      },
+      size: stat.size,
+    };
   }
+
   async delete(key: string) {
     if (storage) {
-      const { error } = await storage.remove([key]);
-      if (error) throw error;
-      return;
+      try { await storage.remove([key]); } catch {}
     }
-    const target = path.join(localStorageDir, key);
-    if (fs.existsSync(target)) fs.unlinkSync(target);
-    if (fs.existsSync(`${target}.meta`)) fs.unlinkSync(`${target}.meta`);
+    const targetPath = path.join(localUploadsDir, key);
+    if (fs.existsSync(targetPath)) {
+      try { fs.unlinkSync(targetPath); } catch {}
+    }
+    const metaPath = `${targetPath}.meta.json`;
+    if (fs.existsSync(metaPath)) {
+      try { fs.unlinkSync(metaPath); } catch {}
+    }
+    const legacyTarget = path.join(localStorageDir, key);
+    if (fs.existsSync(legacyTarget)) {
+      try { fs.unlinkSync(legacyTarget); } catch {}
+    }
+    if (fs.existsSync(`${legacyTarget}.meta`)) {
+      try { fs.unlinkSync(`${legacyTarget}.meta`); } catch {}
+    }
   }
 }
 
