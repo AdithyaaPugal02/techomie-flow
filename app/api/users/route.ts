@@ -5,7 +5,7 @@ import { hashPassword, randomToken, requireUser } from "../../../lib/auth";
 
 export async function GET() {
   try {
-    await requireUser(["admin"]);
+    await requireUser(["admin", "crm", "sales", "technician"]);
     const rows = await getDb().select({
       id: users.id,
       name: users.name,

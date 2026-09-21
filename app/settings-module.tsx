@@ -31,6 +31,7 @@ const sections = [
   ["security", "Data Backup, Security and Audit Logs"],
   ["production", "Domain and Production Settings"],
   ["danger", "Advanced / Danger Zone"],
+  ["profile", "My Profile & Password"],
 ] as const;
 const labels: R = {
   legalName: "Company legal name",
@@ -103,11 +104,9 @@ export default function SettingsModule({
     setProfile(d.profile || {});
     setAudit(d.audit || []);
     setSystem(d.system || {});
-    if (role === "admin") {
-      const ur = await fetch("/api/users"),
-        ud = await ur.json();
-      if (ur.ok) setUsers(ud.users || []);
-    }
+    const ur = await fetch("/api/users"),
+      ud = await ur.json();
+    if (ur.ok) setUsers(ud.users || []);
   };
   useEffect(() => {
     load();
@@ -115,24 +114,31 @@ export default function SettingsModule({
   const save = async () => {
     setBusy(true);
     const body =
-        role === "admin"
-          ? { action: "save", key: active, value: settings[active] }
-          : {
-              action: "profile",
-              profile,
-              password: profile.password || undefined,
-            },
-      r = await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      }),
+      active === "profile"
+        ? {
+            action: "profile",
+            profile,
+            password: profile.password || undefined,
+          }
+        : { action: "save", key: active, value: settings[active] };
+    const r = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
       d = await r.json();
     setBusy(false);
     setNotice(
-      r.ok ? "Settings saved and applied" : d.error || "Unable to save",
+      r.ok
+        ? active === "profile"
+          ? "Profile and login credentials updated successfully"
+          : "Settings saved and applied"
+        : d.error || "Unable to save",
     );
-    if (r.ok) load();
+    if (r.ok) {
+      if (active === "profile") setProfile((p) => ({ ...p, password: "" }));
+      load();
+    }
   };
   const setValue = (key: string, value: any) =>
     setSettings({
@@ -148,110 +154,30 @@ export default function SettingsModule({
     if (r.ok) setValue(key, d.url);
     else setNotice(d.error || "Upload failed");
   };
-  if (role !== "admin")
-    return (
-      <div className="settingspage profile-settings">
-        <header>
-          <div>
-            <small>MY ACCOUNT</small>
-            <h1>Profile settings</h1>
-            <p>
-              Update your own profile, password and notification preference.
-            </p>
-          </div>
-          <button className="primary" onClick={save}>
-            Save profile
-          </button>
-        </header>
-        <div className="settingscard settingsform">
-          <Field label="Name">
-            <input
-              value={profile.name || ""}
-              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            />
-          </Field>
-          <Field label="Email">
-            <input disabled value={profile.email || currentEmail} />
-          </Field>
-          <Field label="Phone">
-            <input
-              value={profile.phone || ""}
-              onChange={(e) =>
-                setProfile({ ...profile, phone: e.target.value })
-              }
-            />
-          </Field>
-          <Field label="New password">
-            <input
-              type="password"
-              minLength={10}
-              value={profile.password || ""}
-              onChange={(e) =>
-                setProfile({ ...profile, password: e.target.value })
-              }
-              placeholder="Leave blank to keep current password"
-            />
-          </Field>
-          <Field label="Profile image">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                const fd = new FormData();
-                fd.append("image", f);
-                const r = await fetch("/api/uploads", {
-                    method: "POST",
-                    body: fd,
-                  }),
-                  d = await r.json();
-                if (r.ok) setProfile({ ...profile, profile_image: d.url });
-              }}
-            />
-          </Field>
-          <Field label="Notifications">
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={profile.notification_preferences?.inApp !== false}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    notification_preferences: {
-                      ...profile.notification_preferences,
-                      inApp: e.target.checked,
-                    },
-                  })
-                }
-              />{" "}
-              In-app reminders
-            </label>
-          </Field>
-          {notice && <p className="settingsnotice">{notice}</p>}
-        </div>
-      </div>
-    );
   const value = settings[active] || {};
   return (
     <div className="settingspage">
       <header>
         <div>
-          <small>ADMIN CONTROL CENTRE</small>
+          <small>{role === "admin" ? "ADMIN CONTROL CENTRE" : "COMPANY SETTINGS & PREFERENCES"}</small>
           <h1>Settings</h1>
           <p>
-            Company-wide rules, templates, access, security and production
-            controls.
+            Company-wide rules, templates, master items, access and profile controls.
           </p>
         </div>
-        {active !== "users" &&
+        {active === "profile" ? (
+          <button className="primary" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Save profile"}
+          </button>
+        ) : role === "admin" &&
+          active !== "users" &&
           active !== "security" &&
-          active !== "production" && (
-            <button className="primary" onClick={save} disabled={busy}>
-              {busy ? "Saving…" : "Save changes"}
-            </button>
-          )}
-        {active !== "users" && <button onClick={() => setActive("users")}>Manage employees</button>}
+          active !== "production" ? (
+          <button className="primary" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+        ) : null}
+        {active !== "users" && <button onClick={() => setActive("users")}>View employees</button>}
       </header>
       {notice && <div className="settingsnotice">{notice}</div>}
       <div className="settingslayout">
@@ -271,17 +197,89 @@ export default function SettingsModule({
           <div className="settingssectionhead">
             <h2>{sections.find((x) => x[0] === active)?.[1]}</h2>
             <span>
-              {active === "integrations"
-                ? "Credentials are stored only in server environment variables"
-                : "Database-backed · audited"}
+              {active === "profile"
+                ? "Your personal account profile and password"
+                : role === "admin"
+                  ? active === "integrations"
+                    ? "Credentials are stored only in server environment variables"
+                    : "Database-backed · audited"
+                  : "Company-wide master configuration · view access"}
             </span>
           </div>
-          {active === "users" ? (
+          {active === "profile" ? (
+            <div className="settingscard settingsform">
+              <Field label="Name">
+                <input
+                  value={profile.name || ""}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                />
+              </Field>
+              <Field label="Email">
+                <input disabled value={profile.email || currentEmail} />
+              </Field>
+              <Field label="Phone">
+                <input
+                  value={profile.phone || ""}
+                  onChange={(e) =>
+                    setProfile({ ...profile, phone: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="New password">
+                <input
+                  type="password"
+                  minLength={10}
+                  value={profile.password || ""}
+                  onChange={(e) =>
+                    setProfile({ ...profile, password: e.target.value })
+                  }
+                  placeholder="Leave blank to keep current password (min 10 characters)"
+                />
+              </Field>
+              <Field label="Profile image">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const fd = new FormData();
+                    fd.append("image", f);
+                    const r = await fetch("/api/uploads", {
+                        method: "POST",
+                        body: fd,
+                      }),
+                      d = await r.json();
+                    if (r.ok) setProfile({ ...profile, profile_image: d.url });
+                  }}
+                />
+              </Field>
+              <Field label="Notifications">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={profile.notification_preferences?.inApp !== false}
+                    onChange={(e) =>
+                      setProfile({
+                        ...profile,
+                        notification_preferences: {
+                          ...profile.notification_preferences,
+                          inApp: e.target.checked,
+                        },
+                      })
+                    }
+                  />{" "}
+                  In-app reminders
+                </label>
+              </Field>
+            </div>
+          ) : active === "users" ? (
             <Users
               users={users}
               currentEmail={currentEmail}
               reload={load}
               notice={setNotice}
+              isAdmin={role === "admin"}
             />
           ) : active === "security" ? (
             <Security
@@ -574,11 +572,13 @@ function Users({
   currentEmail,
   reload,
   notice,
+  isAdmin = true,
 }: {
   users: R[];
   currentEmail: string;
   reload: () => void;
   notice: (s: string) => void;
+  isAdmin?: boolean;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<R | null>(null);
@@ -766,12 +766,16 @@ function Users({
             {users.length} Employee Accounts
           </b>
           <span style={{ fontSize: "12px", color: "#64748b" }}>
-            Manage staff profiles, assign roles, update contact info, and set login passwords.
+            {isAdmin
+              ? "Manage staff profiles, assign roles, update contact info, and set login passwords."
+              : "Company staff directory and team contact details."}
           </span>
         </div>
-        <button className="primary" onClick={openAdd}>
-          ＋ Add employee
-        </button>
+        {isAdmin && (
+          <button className="primary" onClick={openAdd}>
+            ＋ Add employee
+          </button>
+        )}
       </div>
 
       <div className="settingstable">
@@ -884,59 +888,83 @@ function Users({
                   flexWrap: "wrap",
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => openEdit(u)}
-                  title="Edit employee details and password"
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    borderRadius: "6px",
-                    border: "1px solid #cbd5e1",
-                    background: "#ffffff",
-                    color: "#0f172a",
-                    cursor: "pointer",
-                  }}
-                >
-                  ✎ Edit Details & Password
-                </button>
+                {isAdmin ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(u)}
+                      title="Edit employee details and password"
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        borderRadius: "6px",
+                        border: "1px solid #cbd5e1",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✎ Edit Details & Password
+                    </button>
 
-                <button
-                  type="button"
-                  disabled={isMe}
-                  onClick={() => toggle(u)}
-                  title={u.active ? "Deactivate employee" : "Activate employee"}
-                  style={{
-                    padding: "6px 10px",
-                    fontSize: "12px",
-                    borderRadius: "6px",
-                    border: "1px solid #e2e8f0",
-                    background: u.active ? "#fef2f2" : "#f0fdf4",
-                    color: u.active ? "#dc2626" : "#16a34a",
-                    cursor: isMe ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {u.active ? "Deactivate" : "Activate"}
-                </button>
+                    <button
+                      type="button"
+                      disabled={isMe}
+                      onClick={() => toggle(u)}
+                      title={u.active ? "Deactivate employee" : "Activate employee"}
+                      style={{
+                        padding: "6px 10px",
+                        fontSize: "12px",
+                        borderRadius: "6px",
+                        border: "1px solid #e2e8f0",
+                        background: u.active ? "#fef2f2" : "#f0fdf4",
+                        color: u.active ? "#dc2626" : "#16a34a",
+                        cursor: isMe ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {u.active ? "Deactivate" : "Activate"}
+                    </button>
 
-                {!isMe && (
+                    {!isMe && (
+                      <button
+                        type="button"
+                        onClick={() => deleteEmployee(u)}
+                        title="Delete employee account"
+                        style={{
+                          padding: "6px 8px",
+                          fontSize: "12px",
+                          borderRadius: "6px",
+                          border: "1px solid #fecaca",
+                          background: "#fff",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                        }}
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </>
+                ) : isMe ? (
                   <button
                     type="button"
-                    onClick={() => deleteEmployee(u)}
-                    title="Delete employee account"
+                    onClick={() => openEdit(u)}
+                    title="Edit my details and password"
                     style={{
-                      padding: "6px 8px",
+                      padding: "6px 12px",
                       fontSize: "12px",
+                      fontWeight: 600,
                       borderRadius: "6px",
-                      border: "1px solid #fecaca",
-                      background: "#fff",
-                      color: "#dc2626",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#0f172a",
                       cursor: "pointer",
                     }}
                   >
-                    ×
+                    ✎ Edit My Details
                   </button>
+                ) : (
+                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>Team member</span>
                 )}
               </div>
             </div>

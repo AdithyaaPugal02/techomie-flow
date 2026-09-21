@@ -355,23 +355,11 @@ export async function GET(req: Request) {
   try {
     const u = await requireUser(),
       x = new URL(req.url);
-    if (u.role !== "admin") {
-      const profile = await env.DB.prepare(
-        "SELECT name,email,phone,profile_image,notification_preferences FROM users WHERE id=?",
-      )
-        .bind(u.id)
-        .first<R>();
-      return Response.json({
-        admin: false,
-        profile: {
-          ...profile,
-          notification_preferences: parse(profile?.notification_preferences, {
-            inApp: true,
-            email: false,
-          }),
-        },
-      });
-    }
+    const profile = await env.DB.prepare(
+      "SELECT name,email,phone,profile_image,notification_preferences FROM users WHERE id=?",
+    )
+      .bind(u.id)
+      .first<R>();
     const rows = (
         await env.DB.prepare("SELECT * FROM settings ORDER BY key").all<R>()
       ).results,
@@ -383,7 +371,7 @@ export async function GET(req: Request) {
         : saved;
     }
     const auditRows =
-      x.searchParams.get("audit") === "1"
+      u.role === "admin" && x.searchParams.get("audit") === "1"
         ? (
             await env.DB.prepare(
               "SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.created_at DESC LIMIT 250",
@@ -391,7 +379,14 @@ export async function GET(req: Request) {
           ).results
         : [];
     return Response.json({
-      admin: true,
+      admin: u.role === "admin",
+      profile: {
+        ...profile,
+        notification_preferences: parse(profile?.notification_preferences, {
+          inApp: true,
+          email: false,
+        }),
+      },
       settings: values,
       audit: auditRows,
       system: {

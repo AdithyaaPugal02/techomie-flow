@@ -6,7 +6,7 @@ import InvoiceModule from "./invoice-module";
 import OverviewModule from "./overview-module";
 import LeadsModule from "./leads-module";
 import CustomersModule from "./customers-module";
-import ItemMasterModule from "./item-master-module";
+import ItemsModule from "./items-module";
 import ProjectsModule from "./projects-module";
 import SettingsModule from "./settings-module";
 import QuotationsModule from "./quotations-module";
@@ -465,19 +465,19 @@ export default function Home() {
   ];
   const allNavigation=[
     {icon:"⌂",name:"Overview",section:"CORE",roles:["admin","crm","sales","technician"]},
-    {icon:"◎",name:"Leads",label:"Leads",section:"CRM & SALES",roles:["admin","crm","sales"]},
+    {icon:"◎",name:"Leads",label:"Leads",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
     {icon:"⌖",name:"Site Visits",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
     {icon:"♙",name:"Customers",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
-    {icon:"✦",name:"Quotations",section:"CRM & SALES",roles:["admin","crm","sales"]},
+    {icon:"✦",name:"Quotations",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
     {icon:"◇",name:"Projects",label:"Projects",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
     {icon:"✓",name:"Tasks",label:"Tasks",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
-    {icon:"⚒",name:"Service",label:"Service & warranty",section:"OPERATIONS",roles:["admin","sales","technician"]},
+    {icon:"⚒",name:"Service",label:"Service & warranty",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
     {icon:"₹",name:"Invoices",section:"FINANCE",roles:["admin","crm","sales","technician"]},
-    {icon:"₹",name:"Payments",section:"FINANCE",roles:["admin","crm","sales"]},
-    {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",section:"FINANCE",roles:["admin","sales","technician"]},
+    {icon:"₹",name:"Payments",section:"FINANCE",roles:["admin","crm","sales","technician"]},
+    {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",section:"FINANCE",roles:["admin","crm","sales","technician"]},
     {icon:"◫",name:"Items",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
-    {icon:"⌑",name:"Procurement",section:"CATALOG & ADMIN",roles:["admin"]},
-    {icon:"▤",name:"Reports",section:"CATALOG & ADMIN",roles:["admin"]},
+    {icon:"⌑",name:"Procurement",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
+    {icon:"▤",name:"Reports",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
     {icon:"⚙",name:"Settings",section:"CATALOG & ADMIN",roles:["admin","crm","sales","technician"]},
   ].filter(x=>x.roles.includes(role));
   const moduleHref=(target:string)=>`/?module=${encodeURIComponent(target)}`;
@@ -493,11 +493,11 @@ export default function Home() {
     window.history.pushState(null,"",moduleHref(target));
   };
   const quickActions=[
-    {icon:"◎",label:"New lead",module:"Leads",roles:["admin","crm","sales"]},
-    {icon:"⌖",label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales"]},
-    {icon:"♙",label:"New customer",module:"Customers",roles:["admin","crm","sales"]},
-    {icon:"✦",label:"New quotation",module:"Quotations",roles:["admin","crm","sales"]},
-    {icon:"◇",label:"New project",module:"Projects",roles:["admin","sales"]},
+    {icon:"◎",label:"New lead",module:"Leads",roles:["admin","crm","sales","technician"]},
+    {icon:"⌖",label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales","technician"]},
+    {icon:"♙",label:"New customer",module:"Customers",roles:["admin","crm","sales","technician"]},
+    {icon:"✦",label:"New quotation",module:"Quotations",roles:["admin","crm","sales","technician"]},
+    {icon:"◇",label:"New project",module:"Projects",roles:["admin","crm","sales","technician"]},
     {icon:"₹",label:"New invoice",module:"Invoices",roles:["admin","crm","sales"]},
     {icon:"₹",label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},
     {icon:"◫",label:"Add item",module:"Items",roles:["admin"]},
@@ -939,7 +939,7 @@ export default function Home() {
             total={total}
           />
         ) : module === "Items" ? (
-          <ItemMasterModule isAdmin={auth.user.role === "admin"} />
+          <ItemsModule isAdmin={auth.user.role === "admin"} />
         ) : module === "Expenses" ? (
           <ExpensesModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : module === "Site Visits" ? (
@@ -1011,7 +1011,7 @@ function LegacyItemsModule({
   products,
   isAdmin,
 }: {
-  products: typeof products;
+  products: any[];
   isAdmin: boolean;
 }) {
   const [q, setQ] = useState(""),
