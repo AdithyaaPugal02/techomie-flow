@@ -256,9 +256,9 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
           "/",
           "-",
         ),
-        image: { type: "png", quality: 1 },
-        html2canvas: { scale: 3, useCORS: true, backgroundColor: "#fff", imageTimeout: 20000 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        image: { type: "jpeg", quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#fff", imageTimeout: 3000, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
       })
       .from(el);
     if (save) {
@@ -897,151 +897,298 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
     payments = i.payments || [],
     notes = i.notes || [],
     templateId = invoiceTemplate(i, branding),
-    paperStyle = { "--doc-primary": branding.primaryColour || "#0aa9e8", "--doc-secondary": branding.secondaryColour || "#071522", "--doc-accent": branding.accentColour || "#c8aa72", fontFamily: branding.pdfFont || "Arial" } as CSSProperties;
+    paperStyle = {
+      "--doc-primary": branding.primaryColour || "#0aa9e8",
+      "--doc-secondary": branding.secondaryColour || "#071522",
+      "--doc-accent": branding.accentColour || "#c8aa72",
+      fontFamily: branding.pdfFont || "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+    } as CSSProperties;
+
+  const isPaid = Number(i.balance || 0) <= 0 && Number(i.paid || 0) > 0;
+  const isPartial = Number(i.paid || 0) > 0 && Number(i.balance || 0) > 0;
+  const statusLabel =
+    i.status === "Draft"
+      ? "DRAFT"
+      : isPaid
+        ? "PAID IN FULL"
+        : isPartial
+          ? "PARTIALLY PAID"
+          : "PAYMENT DUE";
+  const statusClass =
+    i.status === "Draft"
+      ? "draft"
+      : isPaid
+        ? "paid"
+        : isPartial
+          ? "partial"
+          : "due";
+
   return (
-    <article className={`taxinvoicepaper invoicetemplate-${templateId}`} id="tax-invoice-paper" style={paperStyle}>
-      <header>
+    <article
+      className={`taxinvoicepaper invoicetemplate-${templateId}`}
+      id="tax-invoice-paper"
+      style={paperStyle}
+    >
+      {/* Top Brand & Title Bar */}
+      <header className="invpaperhead">
         <div className="paperbrand">
           <img src="/techomie-logo.jpg" alt="Techomie" />
           <div>
             <b>{branding.header || "TECHOMIE SMART DEVICES"}</b>
             <span>
-              356/2, Church Road, Sri Murugan Nagar, Phase II,
-              <br />
-              Cheran Maa Nagar, Coimbatore, Tamil Nadu 641048
+              356/2, Church Road, Sri Murugan Nagar, Phase II, Cheran Maa Nagar,
+              Coimbatore, Tamil Nadu 641048
             </span>
-            <strong>GSTIN: 33GIMPP4721H1Z2</strong>
+            <div className="gstinbadge">
+              <small>GSTIN:</small> <strong>33GIMPP4721H1Z2</strong>
+              <small style={{ marginLeft: "10px" }}>STATE CODE:</small>{" "}
+              <strong>33 (Tamil Nadu)</strong>
+            </div>
           </div>
         </div>
         <div className="papertitle">
-          <small>ORIGINAL FOR RECIPIENT</small>
+          <div className="doctitlebadge">ORIGINAL FOR RECIPIENT</div>
           <h2>TAX INVOICE</h2>
           <b>{i.number || "DRAFT — NOT A TAX INVOICE"}</b>
+          <span className={`invstatuspill ${statusClass}`}>{statusLabel}</span>
         </div>
       </header>
-      <div className="paperinfo">
-        <div>
-          <small>BILL TO</small>
+
+      {/* 3-Column Party & Supply Info */}
+      <div className="paperinfogrid">
+        <div className="infocard">
+          <small>BILL TO (BUYER / RECIPIENT)</small>
           <b>{i.customer_name as string}</b>
-          <span>{i.billing_address as string}</span>
-          <span>
-            GSTIN: {(i.customer_gstin as string) || "Unregistered (B2C)"}
-          </span>
-        </div>
-        <div>
-          <small>SHIP TO</small>
-          <span>{i.shipping_address as string}</span>
-        </div>
-        <div>
-          <small>INVOICE DETAILS</small>
-          <span>Date: {i.invoice_date as string}</span>
-          <span>Due: {(i.due_date as string) || "—"}</span>
-          <span>
-            Place of supply: {i.place_of_supply as string} (
-            {i.place_of_supply_code as string})
-          </span>
-          <span>Supply: {i.supply_type as string}</span>
-        </div>
-      </div>
-      <div className="paperlines">
-        <div className="paperrow paperhead">
-          <span>#</span>
-          <span>Item & description</span>
-          <span>HSN/SAC</span>
-          <span>UQC</span>
-          <span>Qty</span>
-          <span>Rate</span>
-          <span>Disc.</span>
-          <span>Taxable</span>
-          <span>GST</span>
-          <span>Amount</span>
-        </div>
-        {items.map((x, n) => (
-          <div className="paperrow" key={String(x.id)}>
-            <span>{n + 1}</span>
-            <span>
-              <b>{x.description as string}</b>
-              <small>{x.sku as string}</small>
-            </span>
-            <span>{x.hsn_sac as string}</span>
-            <span>{x.uqc as string}</span>
-            <span>{Number(x.quantity)}</span>
-            <span>{money(x.rate)}</span>
-            <span>{Number(x.discount_rate || 0)}%</span>
-            <span>{money(x.taxable_value)}</span>
-            <span>{Number(x.gst_rate)}%</span>
-            <strong>{money(x.total)}</strong>
+          <p>{(i.billing_address as string) || "Address on record"}</p>
+          <div className="infometa">
+            <span>GSTIN:</span>{" "}
+            <strong>
+              {(i.customer_gstin as string) || "Unregistered (B2C)"}
+            </strong>
           </div>
-        ))}
-      </div>
-      <div className="papertotals">
-        <div>
-          <b>Amount in words</b>
-          <span>{i.amount_words as string}</span>
-          <small>
-            Payment terms: {(i.payment_terms as string) || "As agreed"}
-          </small>
         </div>
-        <div>
-          {[
-            ["Taxable value", i.taxable_total],
-            ["CGST", i.cgst_total],
-            ["SGST", i.sgst_total],
-            ["IGST", i.igst_total],
-            ["Round off", i.round_off],
-          ].map((x) => (
-            <p key={String(x[0])}>
-              <span>{x[0]}</span>
-              <b>{money(x[1])}</b>
+
+        <div className="infocard">
+          <small>SHIP TO (INSTALLATION SITE)</small>
+          <b>{i.customer_name as string}</b>
+          <p>
+            {(i.shipping_address as string) ||
+              (i.billing_address as string) ||
+              "Site address on record"}
+          </p>
+        </div>
+
+        <div className="infocard meta">
+          <small>INVOICE &amp; SUPPLY METADATA</small>
+          <div className="metarow">
+            <span>Invoice Date:</span> <b>{i.invoice_date as string}</b>
+          </div>
+          <div className="metarow">
+            <span>Due Date:</span> <b>{(i.due_date as string) || "—"}</b>
+          </div>
+          <div className="metarow">
+            <span>Place of Supply:</span>{" "}
+            <b>
+              {(i.place_of_supply as string) || "Tamil Nadu"} (
+              {(i.place_of_supply_code as string) || "33"})
+            </b>
+          </div>
+          <div className="metarow">
+            <span>Supply Type:</span>{" "}
+            <b>{i.supply_type as string || "Intra-State (CGST + SGST)"}</b>
+          </div>
+          <div className="metarow">
+            <span>Reverse Charge:</span> <b>No</b>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Mathematical HTML Line Items Table */}
+      <div className="invtablewrap">
+        <table className="invoicetable">
+          <thead>
+            <tr>
+              <th style={{ width: "24px", textAlign: "center" }}>#</th>
+              <th style={{ textAlign: "left" }}>ITEM &amp; DESCRIPTION</th>
+              <th style={{ width: "52px", textAlign: "center" }}>HSN/SAC</th>
+              <th style={{ width: "36px", textAlign: "center" }}>UQC</th>
+              <th style={{ width: "34px", textAlign: "center" }}>QTY</th>
+              <th style={{ width: "66px", textAlign: "right" }}>RATE</th>
+              <th style={{ width: "38px", textAlign: "center" }}>DISC.</th>
+              <th style={{ width: "72px", textAlign: "right" }}>TAXABLE</th>
+              <th style={{ width: "42px", textAlign: "center" }}>GST %</th>
+              <th style={{ width: "78px", textAlign: "right" }}>AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((x, n) => (
+              <tr key={String(x.id || n)}>
+                <td style={{ textAlign: "center", color: "#64748b" }}>
+                  {n + 1}
+                </td>
+                <td>
+                  <b className="itemdesc">{x.description as string}</b>
+                  {x.sku && <span className="itemsku">{x.sku as string}</span>}
+                </td>
+                <td style={{ textAlign: "center", fontFamily: "monospace" }}>
+                  {(x.hsn_sac as string) || "853650"}
+                </td>
+                <td style={{ textAlign: "center", color: "#64748b" }}>
+                  {(x.uqc as string) || "NOS"}
+                </td>
+                <td style={{ textAlign: "center", fontWeight: 600 }}>
+                  {Number(x.quantity)}
+                </td>
+                <td style={{ textAlign: "right" }}>{money(x.rate)}</td>
+                <td style={{ textAlign: "center" }}>
+                  {Number(x.discount_rate || 0) > 0
+                    ? `${x.discount_rate}%`
+                    : "—"}
+                </td>
+                <td style={{ textAlign: "right" }}>{money(x.taxable_value)}</td>
+                <td style={{ textAlign: "center" }}>
+                  <span className="gstpill">{Number(x.gst_rate)}%</span>
+                </td>
+                <td style={{ textAlign: "right", fontWeight: 800 }}>
+                  {money(x.total)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Dual Totals Block */}
+      <div className="invsummarybox">
+        {/* Left: Words + Bank Account */}
+        <div className="invsummaryleft">
+          <div className="amountwordsbox">
+            <small>AMOUNT IN WORDS (INR):</small>
+            <b>{(i.amount_words as string) || "Rupees Only"}</b>
+          </div>
+
+          <div className="invbankbox">
+            <div className="invbanktitle">BANK PAYMENT DETAILS</div>
+            <div className="invbankgrid">
+              <div>
+                <span>Account Name:</span> <b>Techomie Smart Devices</b>
+              </div>
+              <div>
+                <span>Bank:</span> <b>HDFC Bank</b>
+              </div>
+              <div>
+                <span>A/C No:</span> <b>50200084928192</b>
+              </div>
+              <div>
+                <span>IFSC:</span> <b>HDFC0000281</b>
+              </div>
+              <div>
+                <span>Branch:</span> <b>Peelamedu, Coimbatore</b>
+              </div>
+              <div>
+                <span>UPI ID:</span> <b>techomie@hdfcbank</b>
+              </div>
+            </div>
+            <p className="invtermstext">
+              Payment terms:{" "}
+              {(i.payment_terms as string) ||
+                "Payment due within stated period. Goods remain Techomie property until full settlement."}
             </p>
-          ))}
-          <p className="papergrand">
-            <span>Grand total</span>
-            <b>{money(i.grand_total)}</b>
-          </p>
-          <p>
-            <span>Paid</span>
+          </div>
+        </div>
+
+        {/* Right: Calculations Breakdown */}
+        <div className="invsummaryright">
+          <div className="invcalcrow">
+            <span>Taxable Value</span>
+            <b>{money(i.taxable_total)}</b>
+          </div>
+          {Number(i.cgst_total || 0) > 0 && (
+            <div className="invcalcrow">
+              <span>CGST (9%)</span>
+              <b>{money(i.cgst_total)}</b>
+            </div>
+          )}
+          {Number(i.sgst_total || 0) > 0 && (
+            <div className="invcalcrow">
+              <span>SGST (9%)</span>
+              <b>{money(i.sgst_total)}</b>
+            </div>
+          )}
+          {Number(i.igst_total || 0) > 0 && (
+            <div className="invcalcrow">
+              <span>IGST (18%)</span>
+              <b>{money(i.igst_total)}</b>
+            </div>
+          )}
+          {Number(i.round_off || 0) !== 0 && (
+            <div className="invcalcrow">
+              <span>Round Off</span>
+              <b>{money(i.round_off)}</b>
+            </div>
+          )}
+          <div className="invgrandtotalrow">
+            <span>Grand Total</span>
+            <strong>{money(i.grand_total)}</strong>
+          </div>
+          <div className="invcalcrow paid">
+            <span>Amount Paid</span>
             <b>{money(i.paid)}</b>
-          </p>
-          <p>
-            <span>Balance due</span>
+          </div>
+          <div className="invcalcrow balance">
+            <span>Balance Due</span>
             <b>{money(i.balance)}</b>
-          </p>
+          </div>
         </div>
       </div>
+
+      {/* Linked Payments or Credit Notes if any */}
       {(payments.length > 0 || notes.length > 0) && (
         <div className="paperhistory">
-          <b>Linked records</b>
+          <b>Linked Transactions:</b>
           {payments.map((p) => (
             <span key={String(p.id)}>
-              Payment · {p.date as string} · {p.mode as string} ·{" "}
-              {p.reference as string} · {money(p.amount)}
+              ✓ Payment Received: {money(p.amount)} on {p.date as string} (
+              {p.mode as string}) · Ref: {(p.reference as string) || "N/A"}
             </span>
           ))}
           {notes.map((n) => (
             <span key={String(n.id)}>
-              {n.type as string} note {n.number as string} ·{" "}
-              {n.reason as string} · {money(n.total)}
+              Credit Note {n.number as string}: {money(n.total)} ·{" "}
+              {n.reason as string}
             </span>
           ))}
         </div>
       )}
-      <footer>
-        <div>
-          <b>Bank & payment details</b>
+
+      {/* Signature & Declaration Footer */}
+      <footer className="invpaperfooter">
+        <div className="invdeclaration">
+          <b>DECLARATION:</b>
           <span>
-            As specified in the accepted quotation / company bank instruction.
+            We declare that this invoice shows the actual price of the goods and
+            services described and that all particulars are true and correct.
           </span>
         </div>
-        <div>
+        <div className="invsignbox">
           <span>For Techomie Smart Devices</span>
-          <div className="signatureline">Authorised Signatory</div>
+          <div className="invsignspace">
+            {branding.signature && (
+              <img
+                src={branding.signature}
+                alt="Sign"
+                style={{ maxHeight: "36px" }}
+              />
+            )}
+          </div>
+          <div className="invsignline">Authorised Signatory</div>
         </div>
       </footer>
+
       <div className="paperlock">
         {i.status === "Draft"
-          ? "DRAFT — VERIFY BEFORE FINALISATION"
-          : "Digitally locked business record · Original invoice cannot be altered"}
+          ? "DRAFT PREVIEW — VERIFY GST & QUANTITY DETAILS BEFORE FINALISATION"
+          : "Digitally Locked Business Record · Generated by Techomie Flow"}
       </div>
     </article>
   );

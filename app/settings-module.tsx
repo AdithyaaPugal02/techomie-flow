@@ -1,5 +1,18 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import {
+  CompanyProfileManager,
+  TermsTemplatesManager,
+  PaymentTermsManager,
+  WarrantyTemplatesManager,
+  TaxRulesManager,
+  NumberingRulesManager,
+  MastersSettingsManager,
+  WorkflowSettingsManager,
+  NotificationSettingsManager,
+  IntegrationSettingsManager,
+  DangerZoneManager,
+} from "./settings-visual-editors";
 type R = Record<string, any>;
 const sections = [
   ["company", "Company Profile"],
@@ -287,6 +300,62 @@ export default function SettingsModule({
             />
           ) : active === "branding" ? (
             <DocumentTemplates value={value} change={setValue} />
+          ) : active === "company" ? (
+            <CompanyProfileManager
+              value={value}
+              change={setValue}
+              upload={upload}
+            />
+          ) : active === "terms" ? (
+            <TermsTemplatesManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, terms: newVal })}
+            />
+          ) : active === "paymentTerms" ? (
+            <PaymentTermsManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, paymentTerms: newVal })}
+            />
+          ) : active === "warranty" ? (
+            <WarrantyTemplatesManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, warranty: newVal })}
+            />
+          ) : active === "tax" ? (
+            <TaxRulesManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, tax: newVal })}
+            />
+          ) : active === "numbering" ? (
+            <NumberingRulesManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, numbering: newVal })}
+            />
+          ) : active === "masters" ? (
+            <MastersSettingsManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, masters: newVal })}
+            />
+          ) : active === "workflows" ? (
+            <WorkflowSettingsManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, workflows: newVal })}
+            />
+          ) : active === "notifications" ? (
+            <NotificationSettingsManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, notifications: newVal })}
+            />
+          ) : active === "integrations" ? (
+            <IntegrationSettingsManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, integrations: newVal })}
+            />
+          ) : active === "danger" ? (
+            <DangerZoneManager
+              value={value}
+              change={(newVal) => setSettings({ ...settings, danger: newVal })}
+            />
           ) : (
             <Editor value={value} change={setValue} upload={upload} />
           )}

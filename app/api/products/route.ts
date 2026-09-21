@@ -48,9 +48,8 @@ export async function GET(req: Request) {
       return Response.json({ item: safe(item, admin), variants, usage });
     }
     const p = Math.max(1, Number(x.searchParams.get("page") || 1)),
-      limit = [25, 50, 100].includes(Number(x.searchParams.get("limit")))
-        ? Number(x.searchParams.get("limit"))
-        : 25,
+      reqLimit = Number(x.searchParams.get("limit")),
+      limit = reqLimit > 0 ? Math.min(1000, reqLimit) : 25,
       where = ["1=1"],
       args: unknown[] = [];
     for (const [k, col] of [
@@ -87,8 +86,24 @@ export async function GET(req: Request) {
     }
     const technology = x.searchParams.get("technology");
     if (technology) {
+      if (/remote/i.test(technology)) {
+        where.push("v.attributes LIKE ?");
+        args.push("%Remote%");
+      } else if (/zig/i.test(technology)) {
+        where.push("v.attributes LIKE ?");
+        args.push("%Zig%");
+      } else if (/wifi|wi-fi/i.test(technology)) {
+        where.push("(v.attributes LIKE ? OR v.attributes LIKE ?)");
+        args.push("%Wi-Fi%", "%WiFi%");
+      } else {
+        where.push("v.attributes LIKE ?");
+        args.push(`%${technology}%`);
+      }
+    }
+    const material = x.searchParams.get("material");
+    if (material) {
       where.push("v.attributes LIKE ?");
-      args.push(`%${technology}%`);
+      args.push(`%${material}%`);
     }
     const type = x.searchParams.get("type");
     if (type) {
@@ -130,6 +145,73 @@ export async function GET(req: Request) {
     const filters = await env.DB.prepare(
       "SELECT DISTINCT category,subcategory,brand FROM products ORDER BY category,subcategory,brand",
     ).all();
+
+    if (x.searchParams.get("grouped") === "1" || x.searchParams.get("grouped") === "true") {
+      const modelsMap = new Map<string, R>();
+      for (const r of rows) {
+        let attrs: Record<string, any> = {};
+        try { attrs = typeof r.attributes === "string" ? JSON.parse(r.attributes) : (r.attributes || {}); } catch {}
+        const mod = attrs.module || "std";
+        const key = `${r.name}__${r.series || ""}__${mod}`;
+        if (!modelsMap.has(key)) {
+          modelsMap.set(key, {
+            key,
+            product_id: r.product_id,
+            name: r.name,
+            category: r.category,
+            subcategory: r.subcategory,
+            brand: r.brand,
+            series: r.series,
+            module: attrs.module || "",
+            short_description: r.short_description,
+            description: r.description,
+            unit: r.unit || "Nos",
+            default_tax: r.default_tax,
+            default_warranty: r.default_warranty,
+            image_key: r.image_key,
+            variants: [],
+          });
+        }
+        const model = modelsMap.get(key)!;
+        if (!model.image_key && r.image_key) model.image_key = r.image_key;
+        let tech = attrs.technology || "";
+        if (/wifi|wi-fi/i.test(tech)) tech = "Wi-Fi";
+        else if (/zigbee/i.test(tech)) tech = "Zigbee";
+        else if (/remote/i.test(tech)) tech = "Remote based";
+
+        let mat = attrs.material || attrs.finish || "";
+        if (/glass/i.test(mat)) mat = "Glass";
+        else if (/acrylic/i.test(mat)) mat = "Acrylic";
+
+        model.variants.push({
+          variant_id: r.variant_id,
+          product_id: r.product_id,
+          sku: r.sku,
+          variant_name: r.variant_name,
+          technology: tech,
+          material: mat,
+          selling_price: Number(r.selling_price),
+          purchase_cost: Number(r.purchase_cost || 0),
+          margin: Number(r.margin || 0),
+          tax_rate: Number(r.tax_rate || r.default_tax || 18),
+          warranty: r.warranty || r.default_warranty || "",
+          image_key: r.image_key,
+          attributes: attrs,
+        });
+      }
+      return Response.json({
+        items: rows,
+        models: Array.from(modelsMap.values()),
+        pagination: {
+          page: p,
+          limit,
+          total: count?.total || 0,
+          pages: Math.ceil((count?.total || 0) / limit),
+        },
+        filters: filters.results,
+      });
+    }
+
     return Response.json({
       items: rows,
       pagination: {

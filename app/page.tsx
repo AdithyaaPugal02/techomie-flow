@@ -294,7 +294,7 @@ export default function Home() {
     try {
       const html2pdf = (await import("html2pdf.js")).default;
       const filename = `Techomie-${quoteDetails.customer || "Quotation"}-${quoteDetails.site || "Proposal"}`.replace(/[^a-z0-9-]+/gi, "-") + ".pdf";
-      await html2pdf().set({ margin: [8, 8, 8, 8], filename, image: { type: "jpeg", quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }, pagebreak: { mode: ["css", "legacy"] } }).from(workspace).save();
+      await html2pdf().set({ margin: [8, 8, 8, 8], filename, image: { type: "jpeg", quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 3000, logging: false }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true }, pagebreak: { mode: ["css", "legacy"] } }).from(workspace).save();
       setNotice("PDF downloaded");
     } catch {
       setNotice("Unable to download PDF");

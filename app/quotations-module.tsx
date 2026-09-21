@@ -61,6 +61,34 @@ const scopeSectionLabels: Record<string, string> = {
   handover: "Handover and training",
   support: "After-sales support",
 };
+
+const SMART_SWITCH_TECHNOLOGIES = [
+  { id: "Remote based", label: "Remote based", icon: "📡", match: /remote/i },
+  { id: "Wi-Fi", label: "Wi-Fi", icon: "📶", match: /wifi|wi-fi/i },
+  { id: "Zigbee", label: "Zigbee", icon: "⚡", match: /zig/i },
+];
+
+const SMART_SWITCH_MATERIALS = [
+  { id: "Acrylic", label: "Acrylic", icon: "🪟", match: /acrylic/i },
+  { id: "Glass", label: "Glass", icon: "💎", match: /glass/i },
+];
+
+function normalizeSwitchTech(raw?: string): string {
+  if (!raw) return "";
+  for (const t of SMART_SWITCH_TECHNOLOGIES) {
+    if (t.match.test(raw)) return t.id;
+  }
+  return raw;
+}
+
+function normalizeSwitchMat(raw?: string): string {
+  if (!raw) return "";
+  for (const m of SMART_SWITCH_MATERIALS) {
+    if (m.match.test(raw)) return m.id;
+  }
+  return raw;
+}
+
 export default function QuotationsModule({ role }: { role: string }) {
   const [view, setView] = useState<"list" | "quote">("list"),
     [rows, setRows] = useState<R[]>([]),
@@ -355,12 +383,13 @@ function QuoteWorkspace({
       ],
       projectItems: [],
       paymentPlan: [
-        { name: "Advance", percent: 20, condition: "Order confirmation" },
-        { name: "Procurement", percent: 60, condition: "Before procurement" },
-        { name: "Handover", percent: 20, condition: "Customer handover" },
+        { name: "Advance", percent: 50, condition: "Order confirmation & procurement" },
+        { name: "Inception of Installation", percent: 20, condition: "On arrival of hardware at site" },
+        { name: "On Handover", percent: 20, condition: "After system testing & commissioning" },
+        { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
       ],
       terms: "",
-      warranty: "",
+      warranty: "Standard Products: 2 Years Full Replacement + 4 Years Service Warranty\nRoyal Edge Series: 5 Years Full Replacement + 5 Years Service Warranty",
       taxMode: "GST",
     }),
     [tab, setTab] = useState(initialTab),
@@ -375,7 +404,8 @@ function QuoteWorkspace({
     [siteId, setSiteId] = useState(""),
     [salesId, setSalesId] = useState(""),
     [creating, setCreating] = useState(false),
-    [branding, setBranding] = useState<R>({});
+    [branding, setBranding] = useState<R>({}),
+    [pdfGenerating, setPdfGenerating] = useState(false);
   const timer = useRef<any>(null);
   const customers = filters.customers || [],
     sites = (filters.sites || []).filter(
@@ -513,16 +543,27 @@ function QuoteWorkspace({
     await load();
   };
   const pdf = async (download = false) => {
+    if (pdfGenerating) return;
     clearTimeout(timer.current);
     await persist();
     setTab("Preview & Send");
+    if (download) {
+      setPdfGenerating(true);
+      notify("Preparing PDF proposal…");
+    }
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
     );
     const el = document.querySelector(".qpaper") as HTMLElement | null;
-    if (!el) return notify("PDF preview could not be prepared");
-    await document.fonts?.ready;
-    await Promise.all(
+    if (!el) {
+      if (download) setPdfGenerating(false);
+      return notify("PDF preview could not be prepared");
+    }
+    await Promise.race([
+      document.fonts?.ready,
+      new Promise((r) => setTimeout(r, 1000)),
+    ]);
+    const waitImages = Promise.all(
       Array.from(el.querySelectorAll("img")).map(
         (image) =>
           image.complete
@@ -533,7 +574,11 @@ function QuoteWorkspace({
               }),
       ),
     );
+    await Promise.race([waitImages, new Promise((r) => setTimeout(r, 1500))]);
+
     if (download) {
+      try {
+        notify("Rendering PDF pages…");
         const html2pdf = (await import("html2pdf.js")).default;
         const filename =
           `${quote?.number || "Quotation"}-Rev-${quote?.revision || 0}-${quote?.customer_name || "Customer"}.pdf`.replace(
@@ -544,15 +589,37 @@ function QuoteWorkspace({
           .set({
             filename,
             margin: 0,
-            image: { type: "png", quality: 1 },
-            html2canvas: { scale: 3, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 20000 },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-            // Every proposal section is already an exact A4 canvas. Applying
-            // an additional CSS break after it creates an empty PDF page.
-            pagebreak: { mode: [] },
+            image: { type: "jpeg", quality: 0.95 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: "#ffffff",
+              imageTimeout: 3000,
+              logging: false,
+              scrollX: 0,
+              scrollY: 0,
+            },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+            pagebreak: { mode: ["css", "legacy"] },
           })
           .from(el)
           .outputPdf("blob");
+
+        // 1. Immediately trigger browser download for the user without waiting for server upload
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 2000);
+
+        notify("PDF downloaded successfully!");
+
+        // 2. Perform background file archiving to server without blocking the user
         const form = new FormData();
         form.set("quotationId", String(quote.id));
         form.set("revision", String(quote.revision || 0));
@@ -566,19 +633,23 @@ function QuoteWorkspace({
           "file",
           new File([blob], filename, { type: "application/pdf" }),
         );
-        const saved = await fetch("/api/quotations/files", {
+        fetch("/api/quotations/files", {
           method: "POST",
           body: form,
-        });
-        if (!saved.ok)
-          notify("PDF downloaded, but permanent file storage failed");
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        await load();
-    } else window.print();
+        })
+          .then((saved) => {
+            if (saved.ok) load();
+          })
+          .catch((err) => console.warn("Background PDF archival error:", err));
+      } catch (err: any) {
+        console.error("PDF generation error:", err);
+        notify("Failed to generate PDF: " + (err?.message || "Unknown error"));
+      } finally {
+        setPdfGenerating(false);
+      }
+    } else {
+      window.print();
+    }
   };
   if (newMode)
     return (
@@ -690,8 +761,17 @@ function QuoteWorkspace({
                 ))}
             </select>
           </label>
-          <button onClick={() => pdf(false)}>Preview</button>
-          <button onClick={() => pdf(true)}>Download PDF</button>
+          <button onClick={() => pdf(false)} title="Print or Save vector PDF using browser print">
+            Preview / Print
+          </button>
+          <button
+            onClick={() => pdf(true)}
+            disabled={pdfGenerating}
+            className={pdfGenerating ? "loading" : ""}
+            title="Download formatted A4 PDF proposal directly"
+          >
+            {pdfGenerating ? "⏳ Generating PDF…" : "Download PDF"}
+          </button>
           {!locked && <button onClick={persist}>Save draft</button>}
           <button onClick={() => window.location.href = `/quotations/${quote.id}/revisions`}>More actions</button>
           {quote.status === "Draft" && (
@@ -1351,7 +1431,12 @@ function Builder({ snap, set, locked, openPicker }: R) {
                     <div className="qitem">
                       <img src={x.image || "/techomie-logo.jpg"} alt="" />
                       <span>
-                        <b>{x.name}</b>
+                        <b>
+                          {x.name}
+                          {x.technology && <span className="item-pill-badge tech">{x.technology}</span>}
+                          {x.material && <span className="item-pill-badge mat">{x.material}</span>}
+                          {x.module && <span className="item-pill-badge mod">{x.module}M</span>}
+                        </b>
                         <small>
                           {x.brand} · {x.sku} · {x.variantSummary || ""}
                         </small>
@@ -1417,6 +1502,85 @@ function Builder({ snap, set, locked, openPicker }: R) {
                       )}
                     </div>
                     {editingItem === itemKey && <div className="qitemedit">
+                      {Array.isArray(x.availableVariants) && x.availableVariants.length > 1 && (
+                        <div className="qitemeditvariantbox">
+                          <h4>Switch Variant Selection (Technology & Material)</h4>
+                          <div className="qitemeditvariantrows">
+                            <div className="variantgroup">
+                              <span className="variantgrouplabel">Technology</span>
+                              <div className="variantpills">
+                                {SMART_SWITCH_TECHNOLOGIES.map(t => {
+                                  const isAvail = x.availableVariants.some((v: R) => v.technology === t.id);
+                                  const isSelected = x.technology === t.id;
+                                  return (
+                                    <button
+                                      key={t.id}
+                                      type="button"
+                                      className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                      disabled={!isAvail}
+                                      onClick={() => {
+                                        const match = x.availableVariants.find((v: R) => v.technology === t.id && v.material === x.material)
+                                                   || x.availableVariants.find((v: R) => v.technology === t.id);
+                                        if (match) {
+                                          mut((n) => {
+                                            const it = n.floors[fi].rooms[ri].items[ii];
+                                            it.variantId = match.variantId;
+                                            it.productId = match.productId || it.productId;
+                                            it.sku = match.sku;
+                                            it.price = match.price;
+                                            it.purchaseCost = match.purchaseCost;
+                                            it.technology = match.technology;
+                                            it.material = match.material;
+                                            it.variantSummary = `${match.technology} · ${match.material}${it.module ? ` · ${it.module} Module` : ""}`;
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {t.icon} {t.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            <div className="variantgroup">
+                              <span className="variantgrouplabel">Material</span>
+                              <div className="variantpills">
+                                {SMART_SWITCH_MATERIALS.map(m => {
+                                  const isAvail = x.availableVariants.some((v: R) => v.material === m.id);
+                                  const isSelected = x.material === m.id;
+                                  return (
+                                    <button
+                                      key={m.id}
+                                      type="button"
+                                      className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                      disabled={!isAvail}
+                                      onClick={() => {
+                                        const match = x.availableVariants.find((v: R) => v.material === m.id && v.technology === x.technology)
+                                                   || x.availableVariants.find((v: R) => v.material === m.id);
+                                        if (match) {
+                                          mut((n) => {
+                                            const it = n.floors[fi].rooms[ri].items[ii];
+                                            it.variantId = match.variantId;
+                                            it.productId = match.productId || it.productId;
+                                            it.sku = match.sku;
+                                            it.price = match.price;
+                                            it.purchaseCost = match.purchaseCost;
+                                            it.technology = match.technology;
+                                            it.material = match.material;
+                                            it.variantSummary = `${match.technology} · ${match.material}${it.module ? ` · ${it.module} Module` : ""}`;
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {m.icon} {m.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <label><span>Item title</span><input value={x.name || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].name = e.target.value)} /></label>
                       <label><span>Unit</span><input value={x.unit || "Nos"} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].unit = e.target.value)} /></label>
                       <label><span>GST rate %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
@@ -1553,43 +1717,144 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   const [q, setQ] = useState(""),
     [items, setItems] = useState<R[]>([]),
     [loading, setLoading] = useState(false),
-    [category, setCategory] = useState(""),
+    [category, setCategory] = useState("Smart switches"),
     [model, setModel] = useState(""),
     [technology, setTechnology] = useState(""),
     [material, setMaterial] = useState(""),
     [added, setAdded] = useState(0),
     [showCustom, setShowCustom] = useState(false),
-    [custom, setCustom] = useState<R>({ name: "", description: "", qty: 1, unit: "Nos", price: 0, discount: 0, gst: 18, warranty: "", note: "" });
+    [custom, setCustom] = useState<R>({ name: "", description: "", qty: 1, unit: "Nos", price: 0, discount: 0, gst: 18, warranty: "", note: "" }),
+    [modelSelections, setModelSelections] = useState<Record<string, { technology?: string; material?: string; qty?: number }>>({});
+
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
-      const query = encodeURIComponent(q), [masterResponse, legacyResponse] = await Promise.all([
+      const query = encodeURIComponent(q);
+      const catParam = category ? `&category=${encodeURIComponent(category)}` : "";
+      const limitParam = category === "Smart switches" ? 1000 : 500;
+      try {
+        const [masterResponse, legacyResponse] = await Promise.all([
           fetch(`/api/item-master?view=quotation&q=${query}`),
-          fetch(`/api/products?q=${query}&page=1&limit=100&active=active`),
-        ]), [master, legacy] = await Promise.all([masterResponse.json(), legacyResponse.json()]);
-      const authoritative = masterResponse.ok ? master.items || [] : [], existing = legacyResponse.ok ? legacy.items || [] : [];
-      setItems([...authoritative, ...existing.filter((item: R) => !authoritative.some((current: R) => current.sku === item.sku))]);
-      setLoading(false);
+          fetch(`/api/products?q=${query}${catParam}&page=1&limit=${limitParam}&active=active`),
+        ]);
+        const [master, legacy] = await Promise.all([
+          masterResponse.ok ? masterResponse.json() : { items: [] },
+          legacyResponse.ok ? legacyResponse.json() : { items: [] },
+        ]);
+        const authoritative = master.items || [];
+        const existing = legacy.items || [];
+        setItems([...authoritative, ...existing.filter((item: R) => !authoritative.some((current: R) => current.sku === item.sku))]);
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setLoading(false);
+      }
     }, 200);
     return () => clearTimeout(t);
-  }, [q]);
-  const parsed = items.map((item) => ({
+  }, [q, category]);
+
+  const parsed = items.map((item) => {
+    let attrs: R = {};
+    try {
+      attrs = typeof item.attributes === "string" ? JSON.parse(item.attributes || "{}") : (item.attributes || {});
+    } catch {
+      attrs = {};
+    }
+    const normTech = normalizeSwitchTech(attrs.technology);
+    const normMat = normalizeSwitchMat(attrs.material || attrs.finish);
+    return {
       ...item,
-      parsedAttributes: typeof item.attributes === "string" ? JSON.parse(item.attributes || "{}") : item.attributes || {},
-    })),
-    categories = [...new Set(parsed.map((item) => item.category).filter(Boolean))].sort(),
-    categoryItems = parsed.filter((item) => !category || item.category === category),
-    models = [...new Map(categoryItems.map((item) => [String(item.product_id), { id: String(item.product_id), name: item.name }])).values()].sort((a, b) => String(a.name).localeCompare(String(b.name))),
-    modelItems = categoryItems.filter((item) => !model || String(item.product_id) === model),
-    technologies = [...new Set(modelItems.map((item) => item.parsedAttributes.technology).filter(Boolean))].sort(),
-    materials = [...new Set(modelItems.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish]).filter(Boolean))].sort(),
-    visibleItems = parsed.filter((item) =>
-      (!category || item.category === category) &&
-      (!model || String(item.product_id) === model) &&
-      (!technology || item.parsedAttributes.technology === technology) &&
-      (!material || item.parsedAttributes.material === material || item.parsedAttributes.finish === material),
-    );
+      parsedAttributes: attrs,
+      normTech,
+      normMat,
+    };
+  });
+
+  const categories = [
+    "Smart switches",
+    "Smart doorlocks",
+    "Security system",
+    "Gate automation",
+    "Smart curtains",
+    "Others",
+  ];
+
+  const switchModelsMap = new Map<string, R>();
+  const regularItems: R[] = [];
+
+  for (const item of parsed) {
+    const isSwitch = item.category === "Smart switches";
+    if (!isSwitch) {
+      regularItems.push(item);
+      continue;
+    }
+    const mod = item.parsedAttributes.module || "std";
+    const key = `${item.name}__${item.series || ""}__${mod}`;
+    if (!switchModelsMap.has(key)) {
+      const displayName = /^noviq\s/i.test(item.name)
+        ? item.name
+        : (item.brand === "Noviq" || item.brand === "Noviq OEM" ? `Noviq ${item.name}` : item.name);
+      switchModelsMap.set(key, {
+        key,
+        productId: item.product_id,
+        name: displayName,
+        rawName: item.name,
+        brand: item.brand,
+        category: item.category,
+        series: item.series,
+        module: item.parsedAttributes.module || "",
+        shortDescription: item.short_description || item.description,
+        description: item.description,
+        unit: item.unit || "Nos",
+        defaultTax: item.tax_rate || item.default_tax || 18,
+        defaultWarranty: item.warranty || item.default_warranty || "",
+        image: item.image_key,
+        variants: [],
+      });
+    }
+    const m = switchModelsMap.get(key)!;
+    if (!m.image && item.image_key) m.image = item.image_key;
+    m.variants.push(item);
+  }
+
+  const allSwitchModels = Array.from(switchModelsMap.values());
+
+  const modelOptions = category === "Smart switches"
+    ? allSwitchModels.map((m) => ({ id: m.key, name: `${m.name}${m.module ? ` (${m.module}M)` : ""}` }))
+    : [...new Map(regularItems.map((item) => [String(item.product_id), { id: String(item.product_id), name: item.name }])).values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+  const techOptions = category === "Smart switches"
+    ? SMART_SWITCH_TECHNOLOGIES.map((t) => t.id)
+    : [...new Set(regularItems.map((item) => item.parsedAttributes.technology || item.normTech).filter(Boolean))].sort();
+
+  const matOptions = category === "Smart switches"
+    ? SMART_SWITCH_MATERIALS.map((m) => m.id)
+    : [...new Set(regularItems.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish, item.normMat]).filter(Boolean))].sort();
+
+  const filteredSwitchModels = allSwitchModels.filter((m) => {
+    if (category && category !== "Smart switches") return false;
+    if (model && m.key !== model && String(m.productId) !== model) return false;
+    if (technology) {
+      const hasTech = m.variants.some((v: R) => v.normTech === technology);
+      if (!hasTech) return false;
+    }
+    if (material) {
+      const hasMat = m.variants.some((v: R) => v.normMat === material);
+      if (!hasMat) return false;
+    }
+    return true;
+  });
+
+  const filteredRegularItems = regularItems.filter((item) => {
+    if (category && item.category !== category) return false;
+    if (model && String(item.product_id) !== model) return false;
+    if (technology && item.normTech !== technology && item.parsedAttributes.technology !== technology) return false;
+    if (material && item.normMat !== material && item.parsedAttributes.material !== material && item.parsedAttributes.finish !== material) return false;
+    return true;
+  });
+
   const addAndContinue = (item: R) => { add(item); setAdded((count) => count + 1); };
+
   return (
     <div className="modalback">
       <div className="itemdrawer">
@@ -1598,105 +1863,303 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
             <small>ITEMS MASTER</small>
             <h2>Add item to selected room</h2>
           </div>
-          <div className="itemdrawerclose"><span>{added ? `${added} item${added === 1 ? "" : "s"} added` : "Add multiple items, then close"}</span><button onClick={close}>Done ×</button></div>
+          <div className="itemdrawerclose">
+            <span>{added ? `${added} item${added === 1 ? "" : "s"} added` : "Add multiple items, then close"}</span>
+            <button onClick={close}>Done ×</button>
+          </div>
         </header>
+
         <input
           className="itemsearch"
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search product, brand, model, SKU, category or technology"
+          placeholder="Search switch model, gang size, brand, SKU or category..."
         />
+
         <div className="itempickerfilters">
-          <select value={category} onChange={(e) => {setCategory(e.target.value);setModel("");setTechnology("");setMaterial("")}}><option value="">1. Select category</option>{categories.map((value) => <option key={value}>{value}</option>)}</select>
-          <select value={model} disabled={!category} onChange={(e) => {setModel(e.target.value);setTechnology("");setMaterial("")}}><option value="">2. All models</option>{models.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</select>
-          <select value={technology} disabled={!category} onChange={(e) => setTechnology(e.target.value)}><option value="">3. All technologies</option>{technologies.map((value) => <option key={value}>{value}</option>)}</select>
-          <select value={material} disabled={!category} onChange={(e) => setMaterial(e.target.value)}><option value="">4. All materials / finishes</option>{materials.map((value) => <option key={value}>{value}</option>)}</select>
+          <select value={category} onChange={(e) => { setCategory(e.target.value); setModel(""); setTechnology(""); setMaterial(""); }}>
+            <option value="">All categories</option>
+            {categories.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+          <select value={model} onChange={(e) => { setModel(e.target.value); }}>
+            <option value="">All models ({modelOptions.length})</option>
+            {modelOptions.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
+          </select>
+          <select value={technology} onChange={(e) => setTechnology(e.target.value)}>
+            <option value="">All technologies</option>
+            {techOptions.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
+          <select value={material} onChange={(e) => setMaterial(e.target.value)}>
+            <option value="">All materials</option>
+            {matOptions.map((value) => <option key={value} value={value}>{value}</option>)}
+          </select>
           <button className="primary" onClick={() => setShowCustom((value) => !value)}>＋ Custom item</button>
         </div>
-        {showCustom && <div className="customquoteitem">
-          <h3>Add an item not in Items Master</h3>
-          <label><span>Item name *</span><input value={custom.name} onChange={(e) => setCustom({...custom,name:e.target.value})} /></label>
-          <label><span>Quantity</span><input type="number" min="1" step="1" value={wholeQty(custom.qty)} onChange={(e) => setCustom({...custom,qty:wholeQty(e.target.value)})} /></label>
-          <label><span>Unit</span><input value={custom.unit} onChange={(e) => setCustom({...custom,unit:e.target.value})} /></label>
-          <label><span>Rate</span><input type="number" min="0" value={custom.price} onChange={(e) => setCustom({...custom,price:Number(e.target.value)})} /></label>
-          <label><span>Discount %</span><input type="number" min="0" max="100" value={custom.discount} onChange={(e) => setCustom({...custom,discount:Number(e.target.value)})} /></label>
-          <label><span>GST %</span><input type="number" disabled={taxMode === "Non-GST"} value={custom.gst} onChange={(e) => setCustom({...custom,gst:Number(e.target.value)})} /></label>
-          <label className="wide"><span>Description / specification</span><textarea value={custom.description} onChange={(e) => setCustom({...custom,description:e.target.value})} /></label>
-          <label><span>Warranty</span><input value={custom.warranty} onChange={(e) => setCustom({...custom,warranty:e.target.value})} /></label>
-          <label><span>Line note</span><input value={custom.note} onChange={(e) => setCustom({...custom,note:e.target.value})} /></label>
-          <button className="primary" disabled={!custom.name.trim()} onClick={() => {addAndContinue({...custom,id:crypto.randomUUID(),custom:true,brand:"Custom",sku:"CUSTOM",taxMode});setCustom({...custom,name:"",description:"",note:""})}}>Add custom item</button>
-        </div>}
+
+        {showCustom && (
+          <div className="customquoteitem">
+            <h3>Add an item not in Items Master</h3>
+            <label><span>Item name *</span><input value={custom.name} onChange={(e) => setCustom({ ...custom, name: e.target.value })} /></label>
+            <label><span>Quantity</span><input type="number" min="1" step="1" value={wholeQty(custom.qty)} onChange={(e) => setCustom({ ...custom, qty: wholeQty(e.target.value) })} /></label>
+            <label><span>Unit</span><input value={custom.unit} onChange={(e) => setCustom({ ...custom, unit: e.target.value })} /></label>
+            <label><span>Rate</span><input type="number" min="0" value={custom.price} onChange={(e) => setCustom({ ...custom, price: Number(e.target.value) })} /></label>
+            <label><span>Discount %</span><input type="number" min="0" max="100" value={custom.discount} onChange={(e) => setCustom({ ...custom, discount: Number(e.target.value) })} /></label>
+            <label><span>GST %</span><input type="number" disabled={taxMode === "Non-GST"} value={custom.gst} onChange={(e) => setCustom({ ...custom, gst: Number(e.target.value) })} /></label>
+            <label className="wide"><span>Description / specification</span><textarea value={custom.description} onChange={(e) => setCustom({ ...custom, description: e.target.value })} /></label>
+            <label><span>Warranty</span><input value={custom.warranty} onChange={(e) => setCustom({ ...custom, warranty: e.target.value })} /></label>
+            <label><span>Line note</span><input value={custom.note} onChange={(e) => setCustom({ ...custom, note: e.target.value })} /></label>
+            <button className="primary" disabled={!custom.name.trim()} onClick={() => { addAndContinue({ ...custom, id: crypto.randomUUID(), custom: true, brand: "Custom", sku: "CUSTOM", taxMode }); setCustom({ ...custom, name: "", description: "", note: "" }); }}>Add custom item</button>
+          </div>
+        )}
+
         <div className="pickeritems">
           {loading ? (
-            <p>Searching Items…</p>
+            <p style={{ padding: "20px", color: "#667085" }}>Searching Items…</p>
           ) : (
-            visibleItems.map((x) => {
-              const attrs = x.parsedAttributes,
-                name = /^noviq\s/i.test(x.name)
-                  ? x.name
-                  : x.brand === "Noviq" || x.brand === "Noviq OEM"
-                    ? `Noviq ${x.name}`
-                    : x.name;
-              return (
-                <article key={x.variant_id}>
-                  <img src={x.image_key || "/techomie-logo.jpg"} alt="" />
-                  <div>
-                    <small>
-                      {x.brand} · {x.category}
-                    </small>
-                    <b>{name}</b>
-                    <span>
-                      {x.variant_name} · {x.sku}
-                    </span>
-                    <em>
-                      {Object.entries(attrs)
-                        .filter(([, v]) => v)
-                        .map(([k, v]) => `${k}: ${v}`)
-                        .join(" · ")}
-                    </em>
-                  </div>
-                  <div>
-                    <strong>{money(x.selling_price)}</strong>
-                    {role === "admin" && (
+            <>
+              {/* Render Smart Switch models with interactive Technology & Material option pills */}
+              {filteredSwitchModels.map((m) => {
+                const curSel = modelSelections[m.key] || {};
+                const chosenTech = curSel.technology || technology || "Wi-Fi";
+                const chosenMat = curSel.material || material || "Acrylic";
+
+                const availableTechs = new Set(m.variants.map((v: R) => v.normTech));
+                const availableMats = new Set(m.variants.map((v: R) => v.normMat));
+
+                let activeVariant = m.variants.find((v: R) => v.normTech === chosenTech && v.normMat === chosenMat);
+                if (!activeVariant) activeVariant = m.variants.find((v: R) => v.normTech === chosenTech);
+                if (!activeVariant) activeVariant = m.variants.find((v: R) => v.normMat === chosenMat);
+                if (!activeVariant) activeVariant = m.variants[0];
+
+                const qty = curSel.qty || 1;
+                const currentPrice = Number(activeVariant.selling_price || 0);
+                const currentCost = Number(activeVariant.purchase_cost || 0);
+
+                return (
+                  <article key={m.key} className="switchmodelcard">
+                    <div className="switchmodelhead">
+                      <img src={activeVariant.image_key || m.image || "/techomie-logo.jpg"} alt={m.name} />
+                      <div className="switchmodeldetails">
+                        <small>{m.brand} · {m.category}{m.series ? ` · ${m.series}` : ""}</small>
+                        <b>{m.name}</b>
+                        {m.module && <span className="modulebadge">{m.module} Module Panel</span>}
+                        {m.shortDescription && <p>{m.shortDescription}</p>}
+                      </div>
+                    </div>
+
+                    <div className="variantoptionscontainer">
+                      <div className="variantgroup">
+                        <span className="variantgrouplabel">Technology Option</span>
+                        <div className="variantpills">
+                          {SMART_SWITCH_TECHNOLOGIES.map((t) => {
+                            const isAvail = availableTechs.has(t.id);
+                            const isSelected = activeVariant.normTech === t.id;
+                            return (
+                              <button
+                                key={t.id}
+                                type="button"
+                                className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                disabled={!isAvail}
+                                onClick={() =>
+                                  setModelSelections((prev) => ({
+                                    ...prev,
+                                    [m.key]: { ...(prev[m.key] || {}), technology: t.id },
+                                  }))
+                                }
+                              >
+                                <span>{t.icon}</span>
+                                <span>{t.label}</span>
+                                {!isAvail && <small>(N/A)</small>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="variantgroup">
+                        <span className="variantgrouplabel">Material Option</span>
+                        <div className="variantpills">
+                          {SMART_SWITCH_MATERIALS.map((mat) => {
+                            const isAvail = availableMats.has(mat.id);
+                            const isSelected = activeVariant.normMat === mat.id;
+                            return (
+                              <button
+                                key={mat.id}
+                                type="button"
+                                className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                disabled={!isAvail}
+                                onClick={() =>
+                                  setModelSelections((prev) => ({
+                                    ...prev,
+                                    [m.key]: { ...(prev[m.key] || {}), material: mat.id },
+                                  }))
+                                }
+                              >
+                                <span>{mat.icon}</span>
+                                <span>{mat.label}</span>
+                                {!isAvail && <small>(N/A)</small>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="switchcardfooter">
+                      <div className="switchpricing">
+                        <strong>{money(currentPrice)}</strong>
+                        {role === "admin" && (
+                          <small>
+                            Cost {money(currentCost)} · Margin {money(currentPrice - currentCost)}
+                          </small>
+                        )}
+                        <span className="skuinfo">{activeVariant.sku}</span>
+                      </div>
+
+                      <div className="switchcardcontrols">
+                        <div className="switchqtywrap">
+                          <span>Qty</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={qty}
+                            onChange={(e) => {
+                              const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                              setModelSelections((prev) => ({
+                                ...prev,
+                                [m.key]: { ...(prev[m.key] || {}), qty: val },
+                              }));
+                            }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="addbtn"
+                          onClick={() =>
+                            addAndContinue({
+                              variantId: activeVariant.variant_id,
+                              productId: activeVariant.product_id,
+                              name: m.name,
+                              brand: m.brand,
+                              category: m.category,
+                              sku: activeVariant.sku,
+                              image: activeVariant.image_key || m.image,
+                              description: m.shortDescription || m.description || m.name,
+                              technicalNotes: "",
+                              technology: activeVariant.normTech,
+                              material: activeVariant.normMat,
+                              module: m.module,
+                              variantSummary: `${activeVariant.normTech} · ${activeVariant.normMat}${m.module ? ` · ${m.module} Module` : ""}`,
+                              availableVariants: m.variants.map((v: R) => ({
+                                variantId: v.variant_id,
+                                productId: v.product_id,
+                                sku: v.sku,
+                                technology: v.normTech,
+                                material: v.normMat,
+                                price: Number(v.selling_price),
+                                purchaseCost: Number(v.purchase_cost || 0),
+                                taxRate: Number(v.tax_rate || 18),
+                                warranty: v.warranty || "",
+                                image: v.image_key,
+                              })),
+                              qty,
+                              unit: m.unit || "Nos",
+                              price: currentPrice,
+                              purchaseCost: currentCost,
+                              discount: 0,
+                              gst: Number(activeVariant.tax_rate || 18),
+                              taxMode,
+                              warranty: activeVariant.warranty || m.defaultWarranty || "",
+                              optional: false,
+                              note: "",
+                            })
+                          }
+                        >
+                          Add item
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {/* Render regular non-switch items */}
+              {filteredRegularItems.map((x) => {
+                const attrs = x.parsedAttributes,
+                  name = /^noviq\s/i.test(x.name)
+                    ? x.name
+                    : x.brand === "Noviq" || x.brand === "Noviq OEM"
+                      ? `Noviq ${x.name}`
+                      : x.name;
+                return (
+                  <article key={x.variant_id}>
+                    <img src={x.image_key || "/techomie-logo.jpg"} alt="" />
+                    <div>
                       <small>
-                        Cost {money(x.purchase_cost)} · Margin {money(x.margin)}
+                        {x.brand} · {x.category}
                       </small>
-                    )}
-                    <button
-                      onClick={() =>
-                        addAndContinue({
-                          variantId: x.variant_id,
-                          productId: x.product_id,
-                          name,
-                          brand: x.brand,
-                          sku: x.sku,
-                          image: x.image_key,
-                          description:
-                            x.short_description || x.description || name,
-                          technicalNotes: "",
-                          variantSummary: Object.values(attrs)
-                            .filter(Boolean)
-                            .join(" · "),
-                          qty: 1,
-                          unit: x.unit || "Nos",
-                          price: Number(x.selling_price),
-                          purchaseCost: Number(x.purchase_cost || 0),
-                          discount: 0,
-                          gst: Number(x.tax_rate || 18),
-                          taxMode,
-                          warranty: x.warranty || x.default_warranty || "",
-                          optional: false,
-                          note: "",
-                        })
-                      }
-                    >
-                      Add item
-                    </button>
-                  </div>
-                </article>
-              );
-            })
+                      <b>{name}</b>
+                      <span>
+                        {x.variant_name} · {x.sku}
+                      </span>
+                      <em>
+                        {Object.entries(attrs)
+                          .filter(([, v]) => v)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(" · ")}
+                      </em>
+                    </div>
+                    <div>
+                      <strong>{money(x.selling_price)}</strong>
+                      {role === "admin" && (
+                        <small>
+                          Cost {money(x.purchase_cost)} · Margin {money(x.margin)}
+                        </small>
+                      )}
+                      <button
+                        onClick={() =>
+                          addAndContinue({
+                            variantId: x.variant_id,
+                            productId: x.product_id,
+                            name,
+                            brand: x.brand,
+                            sku: x.sku,
+                            image: x.image_key,
+                            description:
+                              x.short_description || x.description || name,
+                            technicalNotes: "",
+                            variantSummary: Object.values(attrs)
+                              .filter(Boolean)
+                              .join(" · "),
+                            qty: 1,
+                            unit: x.unit || "Nos",
+                            price: Number(x.selling_price),
+                            purchaseCost: Number(x.purchase_cost || 0),
+                            discount: 0,
+                            gst: Number(x.tax_rate || 18),
+                            taxMode,
+                            warranty: x.warranty || x.default_warranty || "",
+                            optional: false,
+                            note: "",
+                          })
+                        }
+                      >
+                        Add item
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {filteredSwitchModels.length === 0 && filteredRegularItems.length === 0 && (
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#667085" }}>
+                  <p style={{ fontSize: "16px", fontWeight: 600 }}>No items found</p>
+                  <p style={{ fontSize: "13px" }}>Try clearing your search or adjusting the technology / material filters.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -1992,50 +2455,192 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
       <span>{quote.number}</span>
     </footer>
   );
+function inWords(num: number): string {
+  const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const n = Math.round(num);
+  if (n === 0) return "Zero Rupees Only";
+  const formatSection = (val: number): string => {
+    let str = "";
+    if (val >= 100) {
+      str += a[Math.floor(val / 100)] + " Hundred ";
+      val %= 100;
+    }
+    if (val >= 20) {
+      str += b[Math.floor(val / 10)] + (val % 10 !== 0 ? " " + a[val % 10] : "") + " ";
+    } else if (val > 0) {
+      str += a[val] + " ";
+    }
+    return str;
+  };
+  let crore = Math.floor(n / 10000000);
+  let lakh = Math.floor((n % 10000000) / 100000);
+  let thousand = Math.floor((n % 100000) / 1000);
+  let remainder = n % 1000;
+  let res = "";
+  if (crore) res += formatSection(crore) + "Crore ";
+  if (lakh) res += formatSection(lakh) + "Lakh ";
+  if (thousand) res += formatSection(thousand) + "Thousand ";
+  if (remainder) res += formatSection(remainder);
+  return res.trim() + " Rupees Only";
+}
+
+function getRoomCapabilities(room: R): string[] {
+  const items = room.items || [];
+  const text = items
+    .map((i: R) => `${i.name || ""} ${i.category || ""} ${i.description || ""}`)
+    .join(" ")
+    .toLowerCase();
+  const caps: string[] = [];
+
+  if (text.includes("curtain")) {
+    caps.push("Motorized Curtain Schedules");
+  }
+  if (text.includes("dimmer") || text.includes("dimming")) {
+    caps.push("Ambient Lighting Scenes");
+  }
+  if (text.includes("fan")) {
+    caps.push("Step-less Fan Speed");
+  }
+  if (text.includes("lock")) {
+    caps.push("Keyless Digital Access");
+  }
+  if (text.includes("gate") || text.includes("barrier")) {
+    caps.push("Motorized Gate Access");
+  }
+  if (text.includes("switch") || items.length > 0) {
+    if (!caps.includes("Ambient Lighting Scenes")) caps.push("Scene & Mood Controls");
+    caps.push("App & Voice Control");
+  }
+  if (
+    room.name?.toLowerCase().includes("bed") ||
+    room.name?.toLowerCase().includes("master")
+  ) {
+    caps.push("Bedside Master All-Off");
+  }
+  return caps.slice(0, 3);
+}
+
+function getItemFeatureTag(item: R): string | null {
+  const name = (item.name || "").toLowerCase();
+  const desc = (item.description || "").toLowerCase();
+  const cat = (item.category || "").toLowerCase();
+  const full = `${name} ${desc} ${cat}`;
+
+  if (full.includes("dimmer") || full.includes("dimming"))
+    return "Smooth Dimming & Mood Control";
+  if (full.includes("curtain")) return "Auto Open/Close & Timers";
+  if (full.includes("fan")) return "5-Speed Hum-Free Regulation";
+  if (full.includes("lock")) return "Biometric, PIN & App Access";
+  if (full.includes("gate") || full.includes("barrier"))
+    return "Remote & App Gate Operation";
+  if (full.includes("gateway") || full.includes("hub"))
+    return "High-Speed Mesh Central Hub";
+  if (
+    full.includes("motion") ||
+    full.includes("radar") ||
+    full.includes("sensor")
+  )
+    return "Presence-Based Auto-Trigger";
+  if (
+    full.includes("vdp") ||
+    full.includes("doorbell") ||
+    full.includes("intercom")
+  )
+    return "Two-Way Video & Remote Door Release";
+  if (full.includes("switch")) return "Touch, Mobile App & Voice Control";
+  return null;
+}
+
   const paginateFloor = (floor: R) => {
-    // Detailed catalogue descriptions vary in height. Three rows leave a
-    // reliable footer reserve even for the tallest approved product cards.
-    const pageCapacity = 3.7,
-      roomHeadingCost = 0.7,
-      pages: R[] = [];
-    let page: R = { rooms: [], used: 0 };
-    const pushPage = () => {
-      if (page.rooms.length) pages.push(page);
-      page = { rooms: [], used: 0 };
+    const pages: R[] = [];
+    let currentPageRooms: R[] = [];
+    let currentUsed = 0;
+    // Guaranteed 148mm room budget: preserves 25mm clearance before footer on all pages
+    const getBudget = (isFirst: boolean) => 148;
+
+    const pushCurrentPage = () => {
+      if (currentPageRooms.length) {
+        pages.push({ rooms: currentPageRooms, hasFloorSummary: false });
+        currentPageRooms = [];
+        currentUsed = 0;
+      }
     };
-    for (const room of floor.rooms || []) {
-      const roomItems = room.items || [];
-      if (!roomItems.length) {
-        if (page.used + roomHeadingCost > pageCapacity) pushPage();
-        page.rooms.push({ ...room, items: [], originalItemCount: 0, continued: false });
-        page.used += roomHeadingCost;
+
+    const rooms = floor.rooms || [];
+    for (let rIdx = 0; rIdx < rooms.length; rIdx++) {
+      const room = rooms[rIdx];
+      const items = room.items || [];
+      const budget = getBudget(pages.length === 0);
+
+      if (!items.length) {
+        const cost = 24;
+        if (currentUsed + cost > budget) pushCurrentPage();
+        currentPageRooms.push({
+          ...room,
+          items: [],
+          originalItemCount: 0,
+          continued: false,
+          isChunkEnd: true,
+          startSno: 1,
+        });
+        currentUsed += cost;
         continue;
       }
-      let itemIndex = 0,
-        chunkIndex = 0;
-      while (itemIndex < roomItems.length) {
-        if (page.used + roomHeadingCost + 1 > pageCapacity) pushPage();
-        const availableRows = Math.max(
-            1,
-            Math.floor(pageCapacity - page.used - roomHeadingCost),
-          ),
-          chunk = roomItems.slice(itemIndex, itemIndex + availableRows);
-        page.rooms.push({
+
+      let itemIdx = 0;
+      let chunkIdx = 0;
+      while (itemIdx < items.length) {
+        const curBudget = getBudget(pages.length === 0);
+        // Room header (14mm) + table thead (9mm) + subtotal (8mm) + margin (4mm) = 35mm (chunk 0)
+        // Continued chunk: banner (12mm) + thead (9mm) + subtotal (8mm) + margin (4mm) = 30mm
+        const overhead = chunkIdx === 0 ? 35 : 30;
+        const itemHeight = 22; // Height for large product photo + description
+
+        // If starting a new room and remaining space cannot hold overhead + at least 1 item,
+        // break to next page immediately so the room starts cleanly at the top of the next page!
+        if (chunkIdx === 0 && currentUsed > 0 && (curBudget - currentUsed < overhead + itemHeight)) {
+          pushCurrentPage();
+          continue;
+        }
+
+        const available = curBudget - currentUsed - overhead;
+        let count = Math.floor(available / itemHeight);
+        if (count < 1) {
+          pushCurrentPage();
+          continue;
+        }
+        const slice = items.slice(itemIdx, itemIdx + count);
+        const isEnd = itemIdx + slice.length >= items.length;
+        currentPageRooms.push({
           ...room,
-          items: chunk,
-          originalItemCount: roomItems.length,
-          continued: chunkIndex > 0,
-          chunkIndex,
+          items: slice,
+          originalItemCount: items.length,
+          continued: chunkIdx > 0,
+          chunkIndex: chunkIdx,
+          isChunkEnd: isEnd,
+          startSno: itemIdx + 1,
         });
-        page.used += roomHeadingCost + chunk.length;
-        itemIndex += chunk.length;
-        chunkIndex += 1;
-        if (itemIndex < roomItems.length) pushPage();
+        currentUsed += overhead + slice.length * itemHeight;
+        itemIdx += slice.length;
+        chunkIdx++;
       }
     }
-    pushPage();
-    return pages.length ? pages : [{ rooms: [], used: 0 }];
+
+    const floorSummaryCost = 36;
+    const finalBudget = getBudget(pages.length === 0);
+    if (currentPageRooms.length && currentUsed + floorSummaryCost <= finalBudget) {
+      pages.push({ rooms: currentPageRooms, hasFloorSummary: true });
+    } else {
+      if (currentPageRooms.length) {
+        pages.push({ rooms: currentPageRooms, hasFloorSummary: false });
+      }
+      pages.push({ rooms: [], hasFloorSummary: true });
+    }
+
+    return pages.length ? pages : [{ rooms: [], hasFloorSummary: true }];
   };
+
   const scopePages = floors.flatMap((floor: R, floorIndex: number) => {
     const pages = paginateFloor(floor);
     return pages.map((page: R, pageIndex: number) => ({
@@ -2044,13 +2649,16 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
       pageIndex,
       pageCount: pages.length,
       rooms: page.rooms,
+      hasFloorSummary: page.hasFloorSummary,
     }));
   });
+
   return (
     <article
       className={`qpaper qpaperpremium ${designClass} qformat-${pdfFormat} qtemplate-${templateId} ${branding.showStandardImages === false ? "qhideimages" : ""}`}
       style={templateStyle}
     >
+      {/* PAGE 1: PROJECT COVER + CUSTOMER DETAILS */}
       <section className="qcover">
         <div className="qcoverglow" />
         <header>
@@ -2069,213 +2677,673 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
         </div>
         <div className="qcovermeta">
           <span>
-            <small>PROPOSAL</small>
-            <b>{quote.number}</b>
+            <small>PROPOSAL NUMBER</small>
+            <b>{quote.number} · REV {quote.revision || 0}</b>
           </span>
           <span>
-            <small>REVISION</small>
-            <b>{quote.revision || 0}</b>
+            <small>DATE OF ISSUE</small>
+            <b>{snap.details?.quoteDate || quote.quote_date || new Date().toLocaleDateString("en-IN")}</b>
           </span>
           <span>
-            <small>PROJECT / SITE</small>
+            <small>PROJECT / SITE LOCATION</small>
             <b>
-              {siteName}, {quote.city}
+              {siteName}, {quote.city || "Tamil Nadu"}
             </b>
           </span>
           <span>
-            <small>VALID UNTIL</small>
+            <small>PROPOSAL VALIDITY</small>
             <b>{validity}</b>
           </span>
+        </div>
+        <div className="qcoverproposed">
+          <small>PROPOSED AUTOMATION SCOPE</small>
+          <div className="qcoverscopetags">
+            {floors.map((f: R, i: number) => (
+              <span key={i} className="qcoverscopetag">
+                ✓ {f.name}
+              </span>
+            ))}
+            <span className="qcoverscopetag">✓ Mobile App & Voice Assistant</span>
+            <span className="qcoverscopetag">✓ Testing & Commissioning</span>
+          </div>
         </div>
         <footer>
           <span>TECHOMIE</span>
           <small>SMART HOME | SECURITY | AUTOMATION</small>
         </footer>
       </section>
-      {detailed && <section className="qintro">
-        {head("PROPOSAL OVERVIEW")}
-        <div className="qintrohero">
-          <small>DESIGNED AROUND YOUR SPACE</small>
-          <h2>
-            A smarter property,
-            <br />
-            <span>thoughtfully designed.</span>
-          </h2>
-          <p>{snap.details?.introduction}</p>
-        </div>
-        <div className="qpdfcards">
-          <article>
-            <small>CLIENT</small>
-            <b>{customerName}</b>
-            <span>
-              {snap.details?.contactName || quote.phone || quote.contact_phone || "Contact on record"}
-            </span>
-          </article>
-          <article>
-            <small>PROJECT / SITE</small>
-            <b>{siteName}</b>
-            <span>
-              {snap.details?.installationAddress || [quote.site_address, quote.city, quote.state, quote.pincode].filter(Boolean).join(", ")}
-            </span>
-          </article>
-          <article>
-            <small>PROPOSAL VALIDITY</small>
-            <b>{validity}</b>
-            <span>
-              {snap.details?.quoteType || "Smart automation proposal"}
-            </span>
-          </article>
-        </div>
-        <div className="qscopebrief">
-          <div>
-            <b>{floors.length}</b>
-            <span>Floors</span>
+
+      {/* PAGE 2: PROJECT OVERVIEW + SYSTEM SUMMARY */}
+      {detailed && (
+        <section className="qintro">
+          {head("PROPOSAL OVERVIEW")}
+          <div className="qintrohero">
+            <small>DESIGNED AROUND YOUR SPACE</small>
+            <h2>
+              A smarter property,
+              <br />
+              <span>thoughtfully designed.</span>
+            </h2>
+            <p>
+              {snap.details?.introduction ||
+                "Techomie delivers premium modular automation engineered for seamless control, elegance, and peace of mind. Every room is custom-configured with dedicated touch interfaces, scene logic, and responsive lighting control."}
+            </p>
           </div>
-          <div>
-            <b>{rooms.length}</b>
-            <span>Rooms</span>
+          <div className="qpdfcards">
+            <article>
+              <small>CLIENT DETAILS</small>
+              <b>{customerName}</b>
+              <span>
+                {snap.details?.contactName || quote.phone || quote.contact_phone || "Contact on record"}
+              </span>
+            </article>
+            <article>
+              <small>PROJECT / SITE ADDRESS</small>
+              <b>{siteName}</b>
+              <span>
+                {snap.details?.installationAddress ||
+                  [quote.site_address, quote.city, quote.state, quote.pincode]
+                    .filter(Boolean)
+                    .join(", ")}
+              </span>
+            </article>
+            <article>
+              <small>SYSTEM HIGHLIGHTS</small>
+              <b>{snap.details?.quoteType || "Complete Home Automation"}</b>
+              <span>
+                {floors.length} Floors · {rooms.length} Automated Areas
+              </span>
+            </article>
           </div>
-          <div>
-            <b>{items.length}</b>
-            <span>Configured items</span>
-          </div>
-          <div>
-            <b>{money(totals.grand)}</b>
-            <span>Proposal value</span>
-          </div>
-        </div>
-        <div className="qnextstep">
-          <b>What happens next?</b>
-          <span>
-            Review the room-wise scope, confirm selections and payment
-            milestones, then approve the proposal for project execution.
-          </span>
-        </div>
-        {foot("Proposal overview")}
-      </section>}
-      {scopePages.map((scope: R) => (
-        <section className="qpaperscope" key={`${scope.floor.name}-${scope.pageIndex}`}>
-          {head("ROOM-WISE SCOPE")}
-          <div className="qsectiontitle">
-            <small>
-              SCOPE {String(scope.floorIndex + 1).padStart(2, "0")}
-              {scope.pageCount > 1 ? ` · CONTINUED ${scope.pageIndex + 1}/${scope.pageCount}` : ""}
-            </small>
-            <h2>{scope.floor.name}</h2>
-            <span>{(scope.floor.rooms || []).length} rooms</span>
-          </div>
-          {scope.rooms.map((room: R) => (
-            <div className="qpdfroom" key={`${room.name}-${room.chunkIndex || 0}`}>
-              <h3>
-                {room.name}{room.continued ? " (continued)" : ""}
-                <span>
-                  {room.note || `${room.originalItemCount} configured items`}
-                </span>
-              </h3>
-              <div className="qpapercolumns">
-                <span>PRODUCT / CONFIGURATION</span>
-                <span>QTY</span>
-                <span>UNIT</span>
-                <span>RATE</span>
-                <span>DISC.</span>
-                <span>AMOUNT</span>
-              </div>
-              {(room.items || []).map((item: R, index: number) => (
-                <div className="qpaperline" key={index}>
-                  <img src={item.image || logo} alt="" />
-                  <span>
-                    <b>
-                      {item.name}
-                      {item.optional ? " (Optional)" : ""}
-                    </b>
-                    <small>{item.description}</small>
-                    <em>
-                      {[item.sku, item.variantSummary, item.warranty]
-                        .filter(Boolean)
-                        .join(" | ")}
-                    </em>
-                  </span>
-                  <i>
-                    {wholeQty(item.qty)}
-                  </i>
-                  <i>{item.unit}</i>
-                  <i>{money(item.price)}</i>
-                  <i>{Number(item.discount || 0)}%</i>
-                  <strong>{money(line(item).total)}</strong>
-                </div>
-              ))}
+          <div className="qscopebrief">
+            <div>
+              <b>{floors.length}</b>
+              <span>Floors</span>
             </div>
-          ))}
-          {foot(`${scope.floor.name} scope${scope.pageCount > 1 ? ` · ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`)}
+            <div>
+              <b>{rooms.length}</b>
+              <span>Rooms / Areas</span>
+            </div>
+            <div>
+              <b>{items.length}</b>
+              <span>Configured Points</span>
+            </div>
+            <div>
+              <b>{money(totals.grand)}</b>
+              <span>Proposal Value</span>
+            </div>
+          </div>
+          <div className="qnextstep">
+            <b>Proposed Automation Scope Summary</b>
+            <span>
+              {floors
+                .map(
+                  (f: R) =>
+                    `${f.name} (${(f.rooms || []).map((r: R) => r.name).join(", ")})`,
+                )
+                .join(" · ")}
+            </span>
+          </div>
+          {foot("Proposal overview")}
         </section>
-      ))}
+      )}
+
+      {/* PAGE 3: SMART LIVING EXPERIENCE & WHAT YOU CAN DO */}
+      {detailed && (
+        <section className="qpaperexperience">
+          {head("SMART LIVING EXPERIENCE")}
+          <div className="qsectiontitle">
+            <small>LIFESTYLE &amp; SYSTEM CAPABILITIES</small>
+            <h2>What You Can Do With Your Techomie Smart Home</h2>
+            <span>Everyday convenience, intelligent automation &amp; effortless control</span>
+          </div>
+
+          <div className="qexperiencegrid">
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">01</span>
+                <div>
+                  <b>Worldwide Mobile App Control</b>
+                  <small>Techomie Smart Life (iOS &amp; Android)</small>
+                </div>
+              </div>
+              <p>
+                Control any light, fan, curtain, or appliance from anywhere in the world. Turn on the bedroom AC or geyser 15 minutes before reaching home, or verify all lights are off from bed or while traveling.
+              </p>
+              <div className="qexpactions">
+                <span>Multi-user family sharing</span>
+                <span>•</span>
+                <span>Real-time feedback</span>
+                <span>•</span>
+                <span>Anywhere cloud access</span>
+              </div>
+            </article>
+
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">02</span>
+                <div>
+                  <b>Hands-Free Voice Automation</b>
+                  <small>Amazon Alexa &amp; Google Assistant</small>
+                </div>
+              </div>
+              <p>
+                Control rooms without lifting a finger: <i>&ldquo;Alexa, turn on Movie Mode&rdquo;</i> dims lights and closes curtains. <i>&ldquo;Hey Google, Good Night&rdquo;</i> turns off all floor lights without leaving bed.
+              </p>
+              <div className="qexpactions">
+                <span>Echo &amp; Nest compatible</span>
+                <span>•</span>
+                <span>Natural speech recognition</span>
+                <span>•</span>
+                <span>Hands-free comfort</span>
+              </div>
+            </article>
+
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">03</span>
+                <div>
+                  <b>Personalized Mood Scenes</b>
+                  <small>Capacitive Wall Panels &amp; Mobile Presets</small>
+                </div>
+              </div>
+              <p>
+                Switch between tailored lighting ambiances with a single touch on the wall panel or mobile app. Create predefined scenes for Dinner, Party, Reading, Focus, or Relaxing evenings with smooth dimming.
+              </p>
+              <div className="qexpactions">
+                <span>4 custom scene buttons per room</span>
+                <span>•</span>
+                <span>Warm cove &amp; chandelier dimming</span>
+              </div>
+            </article>
+
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">04</span>
+                <div>
+                  <b>Astronomical Timers &amp; Schedules</b>
+                  <small>Automated Astronomical Clock</small>
+                </div>
+              </div>
+              <p>
+                Outdoor gate, façade, and garden lights automatically illuminate at sunset and switch off at dawn. Geysers automatically shut off after 20 minutes to conserve power and prevent burnout.
+              </p>
+              <div className="qexpactions">
+                <span>Dusk-to-dawn exterior automation</span>
+                <span>•</span>
+                <span>Scheduled morning wake-up curtains</span>
+              </div>
+            </article>
+
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">05</span>
+                <div>
+                  <b>Central Master &ldquo;All-Off&rdquo; &amp; Away</b>
+                  <small>Whole-Home Central Efficiency</small>
+                </div>
+              </div>
+              <p>
+                A single tap on the exit switch near the main entrance powers down all non-essential lights, fans, and ACs across all floors. Bedside master switch lets you put the home to sleep without walking around.
+              </p>
+              <div className="qexpactions">
+                <span>Main entrance one-touch exit</span>
+                <span>•</span>
+                <span>Bedside master all-off switch</span>
+              </div>
+            </article>
+
+            <article className="qexpcard">
+              <div className="qexphead">
+                <span className="qexpnum">06</span>
+                <div>
+                  <b>Offline Reliability &amp; Zero Rewiring</b>
+                  <small>Local Wireless Mesh &amp; Retrofit</small>
+                </div>
+              </div>
+              <p>
+                Directly retrofits into standard backboxes without cutting walls or repainting. If home Wi-Fi or broadband is temporarily down, physical touch panels and local scenes continue functioning 100% locally.
+              </p>
+              <div className="qexpactions">
+                <span>100% manual touch fallback</span>
+                <span>•</span>
+                <span>Zero plaster cutting or rewiring</span>
+              </div>
+            </article>
+          </div>
+
+          <div className="qscenesbanner">
+            <div className="qsceneshead">
+              <b>DAY IN THE LIFE: PRE-CONFIGURED LIFESTYLE AUTOMATIONS INCLUDED</b>
+              <span>Tailored and programmed by Techomie during commissioning</span>
+            </div>
+            <div className="qscenesgrid">
+              <div className="qscenecol">
+                <b>07:00 AM · Good Morning</b>
+                <p>Curtains glide open to natural sunlight, water heater powers on, and warm kitchen lights turn on automatically.</p>
+              </div>
+              <div className="qscenecol">
+                <b>09:30 AM · Departure / Away</b>
+                <p>One touch on the main entrance panel shuts off all lights, fans, and ACs across all floors and locks gates securely.</p>
+              </div>
+              <div className="qscenecol">
+                <b>07:30 PM · Evening / Relax</b>
+                <p>Living room lights dim to warm cove, motorized curtains close, and television media socket turns on.</p>
+              </div>
+              <div className="qscenecol">
+                <b>11:00 PM · Goodnight</b>
+                <p>Bedside switch turns off all interior lights while keeping exterior security lights and boundary radars active.</p>
+              </div>
+            </div>
+          </div>
+
+          {foot("Smart Living Experience & Capabilities")}
+        </section>
+      )}
+
+      {/* PAGES 3+: FLOOR-WISE & ROOM-WISE BOQ */}
+      {scopePages.map((scope: R, pIdx: number) => {
+        const floorTotal = (scope.floor.rooms || []).reduce(
+          (fAcc: number, r: R) =>
+            fAcc +
+            (r.items || []).reduce(
+              (rAcc: number, it: R) => rAcc + (it.optional ? 0 : line(it).total),
+              0,
+            ),
+          0,
+        );
+
+        return (
+          <section
+            className="qpaperscope"
+            key={`${scope.floor.name}-${scope.pageIndex}-${pIdx}`}
+          >
+            {head("ROOM-WISE SCOPE")}
+            <div className="qsectiontitle">
+              <small>
+                SCOPE {String(scope.floorIndex + 1).padStart(2, "0")}
+                {scope.pageIndex > 0
+                  ? ` · CONTINUED (PAGE ${scope.pageIndex + 1} OF ${scope.pageCount})`
+                  : scope.pageCount > 1
+                    ? ` · (PAGE 1 OF ${scope.pageCount})`
+                    : ""}
+              </small>
+              <h2>{scope.floor.name}</h2>
+              <span>{(scope.floor.rooms || []).length} areas configured</span>
+            </div>
+
+            {/* Room mini-map / navigation pills */}
+            <div className="qfloormap">
+              <small>AREAS IN THIS FLOOR:</small>
+              <div className="qfloormaptext">
+                {(scope.floor.rooms || [])
+                  .filter((r: R) => (r.items || []).length > 0)
+                  .map((r: R) => `${r.name} (${(r.items || []).length})`)
+                  .join("  ·  ")}
+              </div>
+            </div>
+
+            {/* Room items tables */}
+            {scope.rooms.map((room: R, rIndex: number) => {
+              const roomSubtotal = (room.items || []).reduce(
+                (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
+                0,
+              );
+
+              return (
+                <div
+                  className="qpdfroom"
+                  key={`${room.name}-${room.chunkIndex || 0}-${rIndex}`}
+                >
+                  <div className="qroombanner">
+                    <div>
+                      <b>
+                        {room.name}
+                        {room.continued ? " (continued)" : ""}
+                      </b>
+                      <div className="qroomcaps">
+                        {getRoomCapabilities(room).map((cap: string, cIdx: number) => (
+                          <span key={cIdx} className="qroomcap-tag">
+                            ✓ {cap}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <span>
+                      {room.note ||
+                        `${room.originalItemCount || (room.items || []).length} configured items`}
+                    </span>
+                  </div>
+                  <table className="qboqtable">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "28px", textAlign: "center" }}>S.NO</th>
+                        <th style={{ width: "82px", textAlign: "center" }}>PHOTO</th>
+                        <th style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
+                        <th style={{ width: "36px", textAlign: "center" }}>QTY</th>
+                        <th style={{ width: "38px", textAlign: "center" }}>UNIT</th>
+                        <th style={{ width: "72px", textAlign: "right" }}>RATE</th>
+                        <th style={{ width: "42px", textAlign: "center" }}>DISC.</th>
+                        <th style={{ width: "82px", textAlign: "right" }}>AMOUNT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(room.items || []).map((item: R, index: number) => {
+                        const sno = (room.startSno || 1) + index;
+                        return (
+                          <tr key={index} className="qboqrow">
+                            <td className="td-sno">{sno}</td>
+                            <td className="td-img">
+                              <img src={item.image || logo} alt="" />
+                            </td>
+                            <td className="td-details">
+                              <b>
+                                {item.name} {item.optional ? "(Optional)" : ""}
+                              </b>
+                              {item.description &&
+                                item.description.trim() !== item.name.trim() && (
+                                  <small>{item.description}</small>
+                                )}
+                              <div className="qitem-pills">
+                                {item.technology && (
+                                  <span className="item-pill-badge tech">
+                                    {item.technology}
+                                  </span>
+                                )}
+                                {item.material && (
+                                  <span className="item-pill-badge mat">
+                                    {item.material}
+                                  </span>
+                                )}
+                                {item.module && (
+                                  <span className="item-pill-badge mod">
+                                    {item.module}
+                                  </span>
+                                )}
+                                {getItemFeatureTag(item) && (
+                                  <span className="item-pill-badge feature">
+                                    ✦ {getItemFeatureTag(item)}
+                                  </span>
+                                )}
+                                {item.sku && <span className="qitemsku">{item.sku}</span>}
+                              </div>
+                            </td>
+                            <td className="td-qty">{wholeQty(item.qty)}</td>
+                            <td className="td-unit">{item.unit || "Nos"}</td>
+                            <td className="td-rate">{money(item.price)}</td>
+                            <td className="td-disc">
+                              {Number(item.discount || 0) > 0 ? `${item.discount}%` : "—"}
+                            </td>
+                            <td className="td-amt">{money(line(item).total)}</td>
+                          </tr>
+                        );
+                      })}
+                      {room.isChunkEnd && (
+                        <tr className="qboqsubtotalrow">
+                          <td
+                            colSpan={7}
+                            style={{
+                              textAlign: "right",
+                              fontWeight: 700,
+                              color: "#334155",
+                              paddingRight: "8px",
+                            }}
+                          >
+                            {room.name} Total:
+                          </td>
+                          <td style={{ textAlign: "right", fontWeight: 800 }}>
+                            <strong>{money(roomSubtotal)}</strong>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+            {/* Floor Summary Card placed on the final page of this floor */}
+            {scope.hasFloorSummary && (
+              <div className="qfloorsummarybox">
+                <div className="qfloorsummaryhead">
+                  <span>{scope.floor.name.toUpperCase()} AREA / ROOM BREAKDOWN</span>
+                  <span>AMOUNT (INR)</span>
+                </div>
+                {(scope.floor.rooms || []).map((r: R, rIdx: number) => {
+                  const rTot = (r.items || []).reduce(
+                    (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
+                    0,
+                  );
+                  return (
+                    <div className="qfloorsummaryrow" key={rIdx}>
+                      <span>
+                        {r.name} ({(r.items || []).length} configured items)
+                      </span>
+                      <b>{money(rTot)}</b>
+                    </div>
+                  );
+                })}
+                <div className="qfloorsummarytotal">
+                  <span>{scope.floor.name} Total</span>
+                  <strong>{money(floorTotal)}</strong>
+                </div>
+              </div>
+            )}
+
+            {foot(
+              `${scope.floor.name} scope${scope.pageCount > 1 ? ` · Page ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`,
+            )}
+          </section>
+        );
+      })}
+
+      {/* FLOOR-WISE INVESTMENT SUMMARY PAGE */}
       <section className="qpaperfinance">
-        {head("COMMERCIALS")}
+        {head("COMMERCIAL SUMMARY")}
         <div className="qsectiontitle">
-          <small>INVESTMENT</small>
-          <h2>Commercial summary</h2>
+          <small>INVESTMENT OVERVIEW</small>
+          <h2>Floor-Wise Investment Summary</h2>
           <span>All values in INR</span>
         </div>
-        <div className="qtotalhero">
-          <small>TOTAL PROPOSAL VALUE</small>
-          <strong>{money(totals.grand)}</strong>
-          <span>Inclusive of applicable GST</span>
+
+        <div className="qfloortablebox">
+          <table className="qfloortable">
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left" }}>Area / Scope Description</th>
+                <th style={{ width: "60px", textAlign: "center" }}>Rooms</th>
+                <th style={{ width: "60px", textAlign: "center" }}>Items</th>
+                <th style={{ width: "110px", textAlign: "right" }}>Investment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {floors.map((f: R, fIdx: number) => {
+                const fTotal = (f.rooms || []).reduce(
+                  (fAcc: number, r: R) =>
+                    fAcc +
+                    (r.items || []).reduce(
+                      (rAcc: number, it: R) => rAcc + (it.optional ? 0 : line(it).total),
+                      0,
+                    ),
+                  0,
+                );
+                const fItemCount = (f.rooms || []).reduce(
+                  (acc: number, r: R) => acc + (r.items || []).length,
+                  0,
+                );
+                return (
+                  <tr key={fIdx}>
+                    <td>
+                      <b>{f.name}</b>
+                      <small>
+                        {(f.rooms || []).map((r: R) => r.name).join(", ")}
+                      </small>
+                    </td>
+                    <td style={{ textAlign: "center" }}>{(f.rooms || []).length}</td>
+                    <td style={{ textAlign: "center" }}>{fItemCount}</td>
+                    <td style={{ textAlign: "right" }}>
+                      <b>{money(fTotal)}</b>
+                    </td>
+                  </tr>
+                );
+              })}
+              {snap.projectItems && snap.projectItems.length > 0 && (
+                <tr>
+                  <td>
+                    <b>Project-Level Items & Gate Automation</b>
+                    <small>Shared controllers, gateways, and outdoor items</small>
+                  </td>
+                  <td style={{ textAlign: "center" }}>—</td>
+                  <td style={{ textAlign: "center" }}>{snap.projectItems.length}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <b>
+                      {money(
+                        snap.projectItems.reduce(
+                          (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
+                          0,
+                        ),
+                      )}
+                    </b>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        <div className="qcommercialgrid">
-          <div>
-            <p>
-              <span>Product and service subtotal</span>
+
+        <div className="qcommercialbreakdown">
+          <div className="qcalcrows">
+            <div className="qcalcrow">
+              <span>Product & System Subtotal</span>
               <b>{money(totals.subtotal)}</b>
-            </p>
-            <p>
-              <span>Item discounts</span>
-              <b>- {money(totals.discount)}</b>
-            </p>
-            <p className="taxable">
-              <span>Taxable value</span>
+            </div>
+            {totals.discount > 0 && (
+              <div className="qcalcrow qdiscountrow">
+                <span>Special Project Discount</span>
+                <b>- {money(totals.discount)}</b>
+              </div>
+            )}
+            <div className="qcalcrow qtaxablerow">
+              <span>Net Taxable Value</span>
               <b>{money(totals.taxable)}</b>
-            </p>
-            <p>
-              <span>CGST</span>
-              <b>{money(totals.tax / 2)}</b>
-            </p>
-            <p>
-              <span>SGST</span>
-              <b>{money(totals.tax / 2)}</b>
-            </p>
+            </div>
+            {snap.taxMode !== "Non-GST" && (
+              <>
+                <div className="qcalcrow">
+                  <span>CGST (9%)</span>
+                  <b>{money(totals.tax / 2)}</b>
+                </div>
+                <div className="qcalcrow">
+                  <span>SGST (9%)</span>
+                  <b>{money(totals.tax / 2)}</b>
+                </div>
+              </>
+            )}
+            <div className="qcalcrow qgrandtotalrow">
+              <div>
+                <span>Grand Total (All Inclusive)</span>
+                <small>
+                  {snap.taxMode === "Non-GST"
+                    ? "Non-GST Commercial Total"
+                    : "Includes 18% GST"}
+                </small>
+              </div>
+              <strong>{money(totals.grand)}</strong>
+            </div>
+            <div className="qwordsamount">
+              <span>AMOUNT IN WORDS: </span>
+              {inWords(totals.grand)}
+            </div>
           </div>
-          <aside>
-            <small>COMMERCIAL NOTES</small>
-            <p>
-              Prices apply to the exact configurations and quantities listed in
-              this proposal.
-            </p>
-            <p>
-              Changes to scope, finish, technology or site conditions may
-              require a revised quotation.
-            </p>
-            <p>
-              Execution begins after written confirmation and receipt of the
-              applicable advance.
-            </p>
+
+          <aside className="qcommercialnotes">
+            <small>COMMERCIAL ASSURANCES</small>
+            <ul>
+              <li>Prices apply to the exact configurations, modules, and quantities listed in this proposal.</li>
+              <li>GST input tax credit is claimable against valid GSTIN invoice provided prior to dispatch.</li>
+              <li>Changes to scope, finishes, technology, or site conditions will be formalized in a revised quotation.</li>
+              <li>Execution commences upon written confirmation and receipt of the applicable project advance.</li>
+            </ul>
           </aside>
         </div>
-        <div className="qgrandbar">
-          <span>Grand total</span>
-          <b>{money(totals.grand)}</b>
-        </div>
-        {foot("Commercial summary")}
+        {foot("Floor-Wise Investment Summary")}
       </section>
-      <section className="qpaperterms">
-        {head("PAYMENT & TERMS")}
+
+      {/* INSTALLATION & SCOPE PAGE */}
+      <section className="qpaperscope">
+        {head("INSTALLATION & SCOPE")}
         <div className="qsectiontitle">
-          <small>CONFIRMATION</small>
-          <h2>Payment schedule</h2>
-          <span>Milestone based</span>
+          <small>STANDARDS & EXECUTION</small>
+          <h2>Installation, Commissioning & Scope</h2>
+          <span>Standard Operating Procedures</span>
         </div>
+
+        <div className="qpolicybox">
+          <div className="qpolicyicon">🔧</div>
+          <div>
+            <b>Installation & Commissioning Policy</b>
+            <p>
+              {snap.details?.installationScope ||
+                "Installation, configuration, testing and commissioning of the quoted automation products shall be carried out by Techomie. Product-wise installation will be coordinated room-wise and floor-wise. Gate automation installation includes motor mounting and commissioning, with required welding support to be arranged at site. Smart lock installation will be coordinated with the client's carpenter."}
+            </p>
+          </div>
+        </div>
+
+        <div className="qscopetwocol">
+          <article className="qscopebox">
+            <small>TECHOMIE SCOPE OF WORK</small>
+            <ul>
+              <li>Supply of genuine smart touch switches, gateways, sensors, and controllers.</li>
+              <li>Precision retrofitting and termination in existing or new switch backboxes.</li>
+              <li>Wireless mesh (Zigbee / Wi-Fi) pairing for zero-latency point response.</li>
+              <li>Setup of Techomie Mobile App on client smartphones (iOS & Android).</li>
+              <li>Integration with voice assistants (Amazon Alexa & Google Home).</li>
+              <li>Programming smart routines: Morning Wakeup, Cinema Mode, All-Off & Away.</li>
+              <li>Full system live demonstration, handover, and user guidance.</li>
+            </ul>
+          </article>
+
+          <article className="qscopebox">
+            <small>CLIENT SITE PREREQUISITES</small>
+            <ul>
+              <li>Standard metal or PVC switch backboxes with adequate depth.</li>
+              <li><b>Mandatory Neutral Line:</b> Neutral wire must be present in every switchboard.</li>
+              <li>Continuous, stable 2.4 GHz Wi-Fi broadband router powered on at the premises.</li>
+              <li>Carpenter coordination for wooden door mortise preparation for smart locks.</li>
+              <li>Welding / fabricator support on site for gate motor bracket mounting and alignment.</li>
+              <li>Uninterrupted AC power supply during installation and testing phases.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div className="qexclusionbar">
+          <small>EXCLUSIONS:</small>
+          <span>Civil masonry, conduit chasing, repainting, structural wall cutting, or main electrical meter wiring.</span>
+        </div>
+
+        {foot("Installation & Scope")}
+      </section>
+
+      {/* PAYMENT & WARRANTY PAGE */}
+      <section className="qpaperterms">
+        {head("PAYMENT & WARRANTY")}
+        <div className="qsectiontitle">
+          <small>COMMERCIAL TERMS</small>
+          <h2>Payment Milestones & Warranty Assurance</h2>
+          <span>Clear & Transparent Terms</span>
+        </div>
+
         <div className="qmilestones">
-          {(snap.paymentPlan || []).map((m: R, index: number) => (
-            <article key={m.name}>
+          {(snap.paymentPlan && snap.paymentPlan.length
+            ? snap.paymentPlan
+            : [
+                { name: "Advance", percent: 50, condition: "Order confirmation & procurement" },
+                { name: "Inception of Installation", percent: 20, condition: "On arrival of hardware at site" },
+                { name: "On Handover", percent: 20, condition: "After system testing & commissioning" },
+                { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
+              ]
+          ).map((m: R, index: number) => (
+            <article key={m.name || index}>
               <i>{String(index + 1).padStart(2, "0")}</i>
               <span>
                 <small>{m.percent}% MILESTONE</small>
@@ -2288,40 +3356,126 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
             </article>
           ))}
         </div>
-        <div className="qtermgrid">
-          <article>
-            <small>WARRANTY</small>
-            <h3>Product assurance</h3>
-            <p>
-              {snap.warranty ||
-                "Standard manufacturer warranty applies from the date of supply or commissioning, as applicable."}
-            </p>
+
+        <div className="qwarrantygrid">
+          <article className="qwarrantycard">
+            <div className="qwarrantybadge">2Y + 4Y</div>
+            <div>
+              <small>STANDARD SMART PRODUCTS</small>
+              <b>2 Years Full Replacement + 4 Years Service Warranty</b>
+              <p>
+                Covers smart touch switches, dimmers, fan controllers, curtain modules, and gateway hubs against manufacturing and electronic defects.
+              </p>
+            </div>
           </article>
-          <article>
-            <small>TERMS & CONDITIONS</small>
-            <h3>Important terms</h3>
-            <p>
-              {snap.terms ||
-                "Prices remain valid until the stated validity date. Site readiness, access and uninterrupted power are the customer's responsibility."}
-            </p>
+
+          <article className="qwarrantycard gold">
+            <div className="qwarrantybadge">5Y + 5Y</div>
+            <div>
+              <small>ROYAL EDGE / TOUCH SERIES</small>
+              <b>5 Years Full Replacement + 5 Years Service Warranty</b>
+              <p>
+                Exclusive warranty for Royal Edge CNC panels and color touch glass switches with complimentary priority onsite service visits.
+              </p>
+            </div>
           </article>
         </div>
-        <div className="qacceptance">
-          <div>
-            <span>For {company}</span>
-            <b>Authorised Signatory</b>
+
+        <div className="qcommercialtermsbox">
+          <small>TERMS & CONDITIONS</small>
+          <p>
+            {snap.terms ||
+              "1. Quotation validity is 30 calendar days from the date of issue. 2. Delivery lead time is 2 to 3 weeks upon receipt of confirmed advance. 3. Taxes are charged in accordance with Indian GST regulations. 4. Techomie reserves the right to revise commercial quotes if the floor plan or room switchboard point count changes during execution."}
+          </p>
+        </div>
+
+        {foot("Payment & Warranty")}
+      </section>
+
+      {/* BANK DETAILS, CUSTOMER ACCEPTANCE & SIGN-OFF PAGE */}
+      <section className="qpaperterms qpaperclosing">
+        {head("ACCEPTANCE & SIGN-OFF")}
+        <div className="qsectiontitle">
+          <small>PROJECT CONFIRMATION</small>
+          <h2>Bank Details & Customer Sign-Off</h2>
+          <span>Official Authorization</span>
+        </div>
+
+        <div className="qbankcard">
+          <div className="qbankhead">
+            <b>TECHOMIE OFFICIAL BANK ACCOUNT</b>
+            <span>For RTGS / NEFT / IMPS / Net Banking Remittances</span>
           </div>
-          <div>
-            <span>Customer acceptance</span>
-            <b>Name, signature and date</b>
+          <div className="qbankgrid">
+            <div>
+              <small>ACCOUNT NAME</small>
+              <b>{snap.company?.bankAccountName || snap.company?.displayName || "Techomie Smart Devices"}</b>
+            </div>
+            <div>
+              <small>BANK NAME</small>
+              <b>{snap.company?.bankName || "HDFC Bank"}</b>
+            </div>
+            <div>
+              <small>ACCOUNT NUMBER</small>
+              <b>{snap.company?.bankAccountNumber || "50200084928192"}</b>
+            </div>
+            <div>
+              <small>IFSC CODE</small>
+              <b>{snap.company?.bankIfsc || "HDFC0000281"}</b>
+            </div>
+            <div>
+              <small>BRANCH</small>
+              <b>{snap.company?.bankBranch || "Peelamedu, Coimbatore"}</b>
+            </div>
+            <div>
+              <small>UPI ID</small>
+              <b>{snap.company?.upiId || "techomie@hdfcbank"}</b>
+            </div>
           </div>
         </div>
-        <div className="qthankyou">
+
+        <div className="qacceptanceblock">
+          <div className="qsignbox">
+            <div className="qsigntitle">FOR TECHOMIE SMART DEVICES</div>
+            <p className="qacceptancetext">
+              Issued on behalf of Techomie Smart Devices for execution upon order confirmation and milestone schedule.
+            </p>
+            <div className="qsignspace">
+              {branding.signature && (
+                <img src={branding.signature} alt="Sign" style={{ maxHeight: "36px" }} />
+              )}
+            </div>
+            <div className="qsignline">
+              <b>Authorised Signatory</b>
+              <span>Techomie Smart Devices</span>
+            </div>
+          </div>
+
+          <div className="qsignbox">
+            <div className="qsigntitle">CUSTOMER ACCEPTANCE & APPROVAL</div>
+            <p className="qacceptancetext">
+              "I / We hereby accept and approve Quotation <b>{quote.number}</b> (Revision {quote.revision || 0}) for <b>{money(totals.grand)}</b> and agree to the room-wise scope, payment schedule, and terms outlined above."
+            </p>
+            <div className="qsignspace" />
+            <div className="qsignline">
+              <b>{customerName}</b>
+              <span>Signature & Date</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="qclosingbanner">
           <small>THANK YOU FOR CHOOSING TECHOMIE</small>
-          <b>Let's make your space smarter.</b>
+          <h2>Let's make your space smarter.</h2>
+          <p>Smart Home Automation · Digital Security · Gate Automation · Motorized Shades</p>
         </div>
-        <div className="qpreparedby"><small>QUOTATION PREPARED BY</small><b>{snap.details?.quotationByName || quote.sales_name || quote.created_name || "Techomie Sales Team"}</b></div>
-        {foot("Payment and terms")}
+
+        <div className="qpreparedbyfoot">
+          <span><b>Consultant:</b> {snap.details?.quotationByName || quote.sales_name || quote.created_name || "Techomie Sales Team"}</span>
+          <span><b>Helpline:</b> +91 90470 12345 · <b>Web:</b> www.techomie.com</span>
+        </div>
+
+        {foot("Acceptance & Sign-off")}
       </section>
     </article>
   );

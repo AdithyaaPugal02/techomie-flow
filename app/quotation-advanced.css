@@ -3,3 +3,1621 @@
 .qitemcard{border-bottom:1px solid #eaecf0}.qitemcard .qitem{grid-template-columns:44px minmax(180px,1fr) 58px 90px 70px 90px 150px}.qitemactions{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.qitemactions button{min-width:0;padding:6px 4px!important}.qitemedit{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:12px;margin:0 0 10px;background:#f8fafc;border:1px solid #e4e7ec;border-radius:9px}.qitemedit label,.customquoteitem label{display:flex;flex-direction:column;gap:5px}.qitemedit label span,.customquoteitem label span{font-size:10px;font-weight:700;color:#475467}.qitemedit input,.qitemedit textarea,.customquoteitem input,.customquoteitem textarea{border:1px solid #d0d5dd;border-radius:7px;padding:8px;font:inherit}.qitemedit .wide,.customquoteitem .wide{grid-column:1/-1}.qitemedit textarea{min-height:62px}.qitemedit .qitemcheck{flex-direction:row;align-items:center}.qitemedit .qitemcheck input{width:auto}.itemdrawer{width:min(960px,96vw)}.itemdrawer header button{font-size:15px}.itemdrawerclose{display:flex;align-items:center;gap:10px}.itemdrawerclose span{font-size:11px;color:#067647}.itemdrawerclose button{border:1px solid #d0d5dd!important;border-radius:7px!important;padding:8px 10px!important}.itemsearch{margin-bottom:8px}.itempickerfilters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:7px;padding:0 14px 10px}.itempickerfilters select,.itempickerfilters button{min-width:0;border:1px solid #d0d5dd;border-radius:7px;padding:9px;background:#fff}.itempickerfilters select:disabled{background:#f2f4f7;color:#98a2b3}.customquoteitem{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 14px 12px;padding:14px;border:1px solid #b2ddff;background:#eff8ff;border-radius:10px}.customquoteitem h3{grid-column:1/-1;margin:0}.customquoteitem>button{align-self:end}
 @media(max-width:900px){.qitemcard .qitem{grid-template-columns:40px 1fr 55px 80px}.qitemactions{grid-column:2/-1;grid-row:2}.qitemedit,.customquoteitem{grid-template-columns:1fr 1fr}.itempickerfilters{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.qitemedit,.customquoteitem,.itempickerfilters{grid-template-columns:1fr}.itemdrawerclose span{display:none}.qtaxmodebar{align-items:stretch;flex-direction:column}.qtaxmodebar select{width:100%}}
+
+/* Smart switch card and variant selector options */
+.switchmodelcard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.switchmodelcard:hover {
+  border-color: #b2ddff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.06);
+}
+.switchmodelhead {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.switchmodelhead img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e4e7ec;
+  background: #fff;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.switchmodeldetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.switchmodeldetails small {
+  font-size: 11px;
+  color: #667085;
+}
+.switchmodeldetails b {
+  font-size: 14px;
+  color: #101828;
+}
+.switchmodeldetails .modulebadge {
+  display: inline-block;
+  font-size: 10px;
+  background: #f2f4f7;
+  color: #344054;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-weight: 600;
+  width: fit-content;
+  margin-top: 2px;
+}
+.switchmodeldetails p {
+  font-size: 11px;
+  color: #475467;
+  margin: 2px 0 0;
+}
+.variantoptionscontainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+}
+.variantgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.variantgrouplabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #344054;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.variantpills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.variantpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.variantpill:hover:not(:disabled) {
+  border-color: #1769ff;
+  color: #1769ff;
+  background: #f0f6ff;
+}
+.variantpill.active {
+  background: #1769ff;
+  color: #fff;
+  border-color: #1769ff;
+  box-shadow: 0 1px 4px rgba(23, 105, 255, 0.35);
+}
+.variantpill.active span {
+  color: #fff;
+}
+.variantpill.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f9fafb;
+  border-style: dashed;
+}
+.variantpill small {
+  font-size: 10px;
+  opacity: 0.75;
+}
+.switchcardfooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid #f2f4f7;
+}
+.switchpricing {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.switchpricing strong {
+  font-size: 16px;
+  color: #101828;
+}
+.switchpricing small {
+  font-size: 10px;
+  color: #667085;
+}
+.switchpricing .skuinfo {
+  font-size: 11px;
+  font-family: monospace;
+  color: #475467;
+  background: #f2f4f7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.switchcardcontrols {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.switchqtywrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #475467;
+  font-weight: 600;
+}
+.switchqtywrap input {
+  width: 55px;
+  padding: 6px 8px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 700;
+}
+.switchcardcontrols button.addbtn {
+  border: 0;
+  background: #1769ff;
+  color: #fff;
+  border-radius: 7px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.switchcardcontrols button.addbtn:hover {
+  background: #0050e6;
+}
+
+/* Room Item badges and inline edit */
+.item-pill-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.item-pill-badge.tech {
+  background: #eff8ff;
+  color: #175cd3;
+  border: 1px solid #b2ddff;
+}
+.item-pill-badge.mat {
+  background: #fdf2fa;
+  color: #c11574;
+  border: 1px solid #fccd5d33;
+}
+.item-pill-badge.mod {
+  background: #f4f3ff;
+  color: #5925dc;
+}
+.qitemeditvariantbox {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qitemeditvariantbox h4 {
+  margin: 0;
+  font-size: 12px;
+  color: #344054;
+}
+.qitemeditvariantrows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .variantoptionscontainer {
+    grid-template-columns: 1fr;
+  }
+  .switchcardfooter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .switchcardcontrols {
+    justify-content: space-between;
+  }
+}
+
+.qactions button.loading {
+  background: #f2f4f7 !important;
+  color: #475467 !important;
+  border-color: #d0d5dd !important;
+  cursor: wait !important;
+  opacity: 0.85;
+  animation: pdfpulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes pdfpulse {
+  0% { opacity: 0.7; transform: scale(0.99); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Floor Plan & Room Map Text */
+.qfloormap {
+  margin: -2.5mm 0 5.5mm;
+  padding: 2.5mm 4mm;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qfloormap small {
+  color: #475569;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.qfloormaptext {
+  font-size: 7.5px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+/* Room Banner Header */
+.qroombanner {
+  margin-top: 3.5mm;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 6px 6px 0 0;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.qroombanner b {
+  font-size: 9.5px;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+.qroombanner span {
+  font-size: 7px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* 100% Mathematically Aligned BOQ Table */
+.qboqtable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 3.5mm;
+  font-size: 7.5px;
+  border: 1px solid #e2e8f0;
+  border-top: 0;
+}
+.qboqtable thead tr {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+.qboqtable th {
+  padding: 4px 5px;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 0;
+  white-space: nowrap;
+}
+.qboqtable td {
+  padding: 4px 5px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  font-size: 7.5px;
+  color: #334155;
+}
+.qboqrow:nth-child(even) td {
+  background: #fbfcfe;
+}
+.qboqtable td.td-sno {
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+.qboqtable td.td-img {
+  width: 82px;
+  text-align: center;
+  padding: 5px 3px;
+}
+.qboqtable td.td-img img {
+  width: 72px;
+  height: 72px;
+  max-width: 72px;
+  max-height: 72px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 3px;
+  display: block;
+  margin: auto;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+.qboqtable td.td-details b {
+  display: block;
+  font-size: 8.5px;
+  color: #0f172a;
+  line-height: 1.25;
+}
+.qboqtable td.td-details small {
+  display: block;
+  font-size: 6.8px;
+  color: #64748b;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+.qboqtable td.td-qty {
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.qboqtable td.td-unit {
+  text-align: center;
+  color: #64748b;
+  white-space: nowrap;
+}
+.qboqtable td.td-rate {
+  text-align: right;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.qboqtable td.td-disc {
+  text-align: center;
+  color: #475569;
+  white-space: nowrap;
+}
+.qboqtable td.td-amt {
+  text-align: right;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+.qboqtable .qitem-pills {
+  display: block !important;
+  margin-top: 3px !important;
+  line-height: 1.3 !important;
+}
+.qboqtable .item-pill-badge {
+  display: inline-block !important;
+  font-size: 6.5px !important;
+  line-height: 1.2 !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+  margin: 0 4px 2px 0 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  vertical-align: middle !important;
+}
+.qboqtable .qitemsku {
+  display: inline-block !important;
+  font-size: 6.5px !important;
+  line-height: 1.2 !important;
+  color: #64748b !important;
+  font-family: inherit !important;
+  background: #f1f5f9 !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+  border: 1px solid #e2e8f0 !important;
+  margin: 0 4px 2px 0 !important;
+  vertical-align: middle !important;
+}
+.qboqsubtotalrow td {
+  background: #f1f5f9 !important;
+  border-top: 1.5px solid #cbd5e1;
+  border-bottom: 1.5px solid #cbd5e1;
+  padding: 5px 7px;
+  font-size: 8px;
+}
+.qboqsubtotalrow td strong {
+  color: #0284c7;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* Prevent footer overlap and ensure strict page containment */
+.qpaperpremium > section.qpaperscope {
+  height: 295.5mm !important;
+  min-height: 295.5mm !important;
+  max-height: 295.5mm !important;
+  padding: 14mm 16mm 22mm 16mm !important;
+  box-sizing: border-box !important;
+  page-break-after: always;
+  break-after: page;
+  position: relative;
+  overflow: hidden !important;
+}
+
+.qpaperpremium .qpdfroom {
+  margin-bottom: 5mm;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+.qpaperpremium .qboqtable tr,
+.qpaperpremium .qboqrow,
+.qpaperpremium .qboqsubtotalrow {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Floor Summary Card */
+.qfloorsummarybox {
+  margin-top: 6mm;
+  background: #ffffff;
+  border: 1.5px solid #0284c7;
+  border-radius: 8px;
+  overflow: hidden;
+  break-inside: avoid;
+}
+.qfloorsummaryhead {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.qfloorsummaryrow {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 8.5px;
+  color: #334155;
+}
+.qfloorsummaryrow:nth-child(even) {
+  background: #f8fafc;
+}
+.qfloorsummarytotal {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f0f9ff;
+  border-top: 1.5px solid #0284c7;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #0369a1;
+}
+
+/* Floor-Wise Investment Table */
+.qfloortablebox {
+  margin: 6mm 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.qfloortable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 8.5px;
+}
+.qfloortable th {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  text-align: left;
+}
+.qfloortable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+}
+.qfloortable td small {
+  display: block;
+  font-size: 7px;
+  color: #64748b;
+  margin-top: 1px;
+}
+.qfloortable td:last-child b {
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+  font-size: 9px;
+}
+.qfloortable tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+/* Commercial Breakdown */
+.qcommercialbreakdown {
+  display: grid;
+  grid-template-columns: 1.35fr 0.95fr;
+  gap: 6mm;
+  margin-top: 5mm;
+  align-items: start;
+}
+.qcalcrows {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.qcalcrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 9px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 8.5px;
+  color: #334155;
+}
+.qcalcrow b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #0f172a;
+}
+.qcalcrow.qdiscountrow {
+  color: #16a34a;
+  font-weight: 600;
+}
+.qcalcrow.qtaxablerow {
+  background: #f8fafc;
+  font-weight: 700;
+}
+.qcalcrow.qgrandtotalrow {
+  padding: 8px 10px;
+  background: #0284c7;
+  color: #ffffff;
+  border: 0;
+  align-items: center;
+}
+.qcalcrow.qgrandtotalrow span {
+  font-size: 11px;
+  font-weight: 800;
+}
+.qcalcrow.qgrandtotalrow small {
+  display: block;
+  font-size: 6.5px;
+  color: #bae6fd;
+}
+.qcalcrow.qgrandtotalrow strong {
+  font-size: 16px;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.qwordsamount {
+  padding: 4px 9px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #bbf7d0;
+  font-size: 7.5px;
+  font-weight: 600;
+  color: #15803d;
+}
+.qcommercialnotes {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5mm;
+}
+.qcommercialnotes small {
+  color: #0284c7;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.qcommercialnotes ul {
+  margin: 3mm 0 0 4mm;
+  padding: 0;
+  font-size: 7.5px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+/* Installation & Scope */
+.qpolicybox {
+  display: flex;
+  gap: 12px;
+  padding: 5mm;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  margin-bottom: 5mm;
+}
+.qpolicyicon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.qpolicybox b {
+  display: block;
+  font-size: 9.5px;
+  color: #1e3a8a;
+  margin-bottom: 2px;
+}
+.qpolicybox p {
+  margin: 0;
+  font-size: 8px;
+  color: #1e40af;
+  line-height: 1.5;
+}
+.qscopetwocol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  margin-bottom: 5mm;
+}
+.qscopebox {
+  padding: 5mm;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.qscopebox small {
+  display: block;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #0284c7;
+  margin-bottom: 3mm;
+}
+.qscopebox ul {
+  margin: 0 0 0 4mm;
+  padding: 0;
+  font-size: 7.5px;
+  color: #334155;
+  line-height: 1.55;
+}
+.qexclusionbar {
+  padding: 3mm 4mm;
+  background: #fff1f2;
+  border-left: 3px solid #e11d48;
+  font-size: 7.5px;
+  color: #9f1239;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.qexclusionbar small {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+/* Warranty Grid */
+.qwarrantygrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  margin: 5mm 0;
+}
+.qwarrantycard {
+  display: flex;
+  gap: 12px;
+  padding: 5mm;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+}
+.qwarrantycard.gold {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+.qwarrantybadge {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  height: fit-content;
+  white-space: nowrap;
+}
+.qwarrantycard.gold .qwarrantybadge {
+  background: #d97706;
+}
+.qwarrantycard small {
+  color: #64748b;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.qwarrantycard b {
+  display: block;
+  font-size: 9px;
+  color: #0f172a;
+  margin: 1px 0 2px;
+}
+.qwarrantycard p {
+  margin: 0;
+  font-size: 7.5px;
+  color: #475569;
+  line-height: 1.45;
+}
+.qcommercialtermsbox {
+  padding: 4mm 5mm;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 4mm;
+}
+.qcommercialtermsbox small {
+  color: #0284c7;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.qcommercialtermsbox p {
+  margin: 2mm 0 0;
+  font-size: 7.5px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+/* Bank Account Card */
+.qbankcard {
+  padding: 4mm 5mm;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-bottom: 5mm;
+}
+.qbankhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 2mm;
+  margin-bottom: 3mm;
+}
+.qbankhead b {
+  font-size: 8.5px;
+  color: #0f172a;
+  letter-spacing: 0.05em;
+}
+.qbankhead span {
+  font-size: 7px;
+  color: #64748b;
+}
+.qbankgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+}
+.qbankgrid div {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 3mm 4mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.qbankgrid div small {
+  display: block;
+  font-size: 6.5px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.qbankgrid div b {
+  font-size: 8.5px;
+  color: #0f172a;
+}
+
+/* Acceptance Block */
+.qacceptanceblock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6mm;
+  margin: 5mm 0;
+}
+.qsignbox {
+  padding: 4.5mm 5mm;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 48mm;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.qsigntitle {
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0284c7;
+  margin-bottom: 2mm;
+}
+.qacceptancetext {
+  margin: 0;
+  font-size: 7px;
+  color: #475569;
+  line-height: 1.45;
+  min-height: 10mm;
+}
+.qsignspace {
+  height: 18mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qsignline {
+  border-top: 1px dashed #94a3b8;
+  padding-top: 2mm;
+  display: flex;
+  flex-direction: column;
+}
+.qsignline b {
+  font-size: 8.5px;
+  color: #0f172a;
+}
+.qsignline span {
+  font-size: 6.5px;
+  color: #64748b;
+}
+.qclosingbanner {
+  padding: 4mm;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 3mm;
+}
+.qclosingbanner small {
+  color: #38bdf8;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+.qclosingbanner h2 {
+  margin: 1.5mm 0;
+  font-size: 14px;
+  color: #ffffff;
+}
+.qclosingbanner p {
+  margin: 0;
+  font-size: 7px;
+  color: #94a3b8;
+}
+.qpreparedbyfoot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3mm;
+  padding-top: 2mm;
+  border-top: 1px solid #e2e8f0;
+  font-size: 7px;
+  color: #64748b;
+}
+
+/* ==========================================================
+   EXECUTIVE PROPOSAL COVER PAGE LUXURY STYLING
+   ========================================================== */
+.qpaperpremium .qcover {
+  position: relative;
+  min-height: 297mm;
+  padding: 18mm 16mm 16mm 16mm;
+  box-sizing: border-box;
+  background: 
+    radial-gradient(circle at 85% 18%, rgba(18, 174, 230, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 15% 82%, rgba(200, 170, 114, 0.12) 0%, transparent 35%),
+    linear-gradient(145deg, #040c16 0%, #071522 45%, #0b253a 100%) !important;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.qpaperpremium .qcoverglow {
+  position: absolute;
+  width: 130mm;
+  height: 130mm;
+  border-radius: 50%;
+  right: -40mm;
+  top: -30mm;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.18) 0%, rgba(14, 165, 233, 0) 70%);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 50px rgba(14, 165, 233, 0.15);
+  pointer-events: none;
+}
+
+.qpaperpremium .qcover > header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6mm;
+}
+
+.qpaperpremium .qcover > header img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.qpaperpremium .qcover > header span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.qpaperpremium .qcover > header b {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.qpaperpremium .qcover > header small {
+  font-size: 7px;
+  letter-spacing: 0.22em;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.qpaperpremium .qcoverbody {
+  margin: 12mm 0 6mm;
+  position: relative;
+  z-index: 2;
+}
+
+.qpaperpremium .qcoverbody > small {
+  display: inline-block;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #c8aa72;
+  text-transform: uppercase;
+  margin-bottom: 3mm;
+}
+
+.qpaperpremium .qcoverbody h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.15;
+  margin: 0 0 3mm;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.qpaperpremium .qcoverbody p {
+  font-size: 13px;
+  font-weight: 300;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.qpaperpremium .qcovermeta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3.5mm;
+  background: rgba(7, 21, 34, 0.75);
+  border: 1px solid rgba(200, 170, 114, 0.4);
+  border-radius: 8px;
+  padding: 4mm 5mm;
+  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 4mm;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.qpaperpremium .qcovermeta > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding-right: 3mm;
+}
+
+.qpaperpremium .qcovermeta > span:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.qpaperpremium .qcovermeta small {
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #c8aa72;
+  text-transform: uppercase;
+}
+
+.qpaperpremium .qcovermeta b {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.qpaperpremium .qcoverproposed {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 4mm 5mm;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 6mm;
+}
+
+.qpaperpremium .qcoverproposed small {
+  display: block;
+  font-size: 6.8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #38bdf8;
+  text-transform: uppercase;
+  margin-bottom: 3mm;
+}
+
+.qpaperpremium .qcoverscopetags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.qpaperpremium .qcoverscopetag {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(14, 165, 233, 0.12);
+  color: #e0f2fe;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 7.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.qpaperpremium .qcover > footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(200, 170, 114, 0.3);
+  padding-top: 5mm;
+  position: relative;
+  z-index: 2;
+}
+
+.qpaperpremium .qcover > footer span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: #ffffff;
+}
+
+.qpaperpremium .qcover > footer small {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #c8aa72;
+  text-transform: uppercase;
+}
+
+/* ==========================================================
+   PROPOSAL OVERVIEW (PAGE 2) LUXURY STYLING
+   ========================================================== */
+.qpaperpremium .qintrohero {
+  padding: 4mm 0 6mm;
+  border-bottom: 1px solid #e2e8f0;
+}
+.qpaperpremium .qintrohero > small {
+  color: #0284c7;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  display: block;
+  margin-bottom: 2mm;
+}
+.qpaperpremium .qintrohero h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: #0f172a;
+  line-height: 1.15;
+  margin: 0 0 3mm;
+}
+.qpaperpremium .qintrohero h2 span {
+  color: #0284c7;
+}
+.qpaperpremium .qintrohero p {
+  max-width: 160mm;
+  margin: 0;
+  color: #475569;
+  font-size: 8.5px;
+  line-height: 1.6;
+}
+.qpaperpremium .qpdfcards {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 4mm;
+  margin: 6mm 0;
+}
+.qpaperpremium .qpdfcards article {
+  min-height: 28mm;
+  padding: 4mm 5mm;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid #0284c7;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.qpaperpremium .qpdfcards article:nth-child(2) {
+  border-top: 3px solid #c8aa72;
+}
+.qpaperpremium .qpdfcards article:nth-child(3) {
+  border-top: 3px solid #0f172a;
+}
+.qpaperpremium .qpdfcards small {
+  color: #0284c7;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.qpaperpremium .qpdfcards article:nth-child(2) small {
+  color: #b45309;
+}
+.qpaperpremium .qpdfcards article:nth-child(3) small {
+  color: #475569;
+}
+.qpaperpremium .qpdfcards b {
+  font-size: 10px;
+  color: #0f172a;
+  font-weight: 700;
+}
+.qpaperpremium .qpdfcards span {
+  color: #64748b;
+  font-size: 7.5px;
+  line-height: 1.4;
+}
+
+/* KPI Counter Bar */
+.qpaperpremium .qscopebrief {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 1.1fr 1.3fr;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #071522 0%, #0d283e 100%);
+  border: 1px solid rgba(200, 170, 114, 0.3);
+  box-shadow: 0 10px 24px rgba(7, 21, 34, 0.15);
+  margin-bottom: 5mm;
+}
+.qpaperpremium .qscopebrief div {
+  min-height: 22mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3.5mm 5mm;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+.qpaperpremium .qscopebrief div:last-child {
+  border-right: 0;
+  background: rgba(14, 165, 233, 0.08);
+}
+.qpaperpremium .qscopebrief b {
+  font-size: 15px;
+  font-weight: 800;
+  color: #38bdf8;
+  font-variant-numeric: tabular-nums;
+}
+.qpaperpremium .qscopebrief div:last-child b {
+  color: #ffffff;
+}
+.qpaperpremium .qscopebrief span {
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 7px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.qpaperpremium .qnextstep {
+  margin-top: 5mm;
+  padding: 4mm 5mm;
+  border-left: 3px solid #c8aa72;
+  background: #fbf7ef;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.qpaperpremium .qnextstep b {
+  font-size: 8.5px;
+  color: #0f172a;
+  letter-spacing: 0.04em;
+}
+.qpaperpremium .qnextstep span {
+  color: #475569;
+  font-size: 7.5px;
+  line-height: 1.5;
+}
+
+/* Payment Milestones Luxury Polish */
+.qpaperpremium .qmilestones {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  margin: 5mm 0;
+}
+.qpaperpremium .qmilestones article {
+  display: grid;
+  grid-template-columns: 12mm 1fr auto;
+  align-items: center;
+  gap: 4mm;
+  padding: 3.5mm 4.5mm;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.qpaperpremium .qmilestones article > i {
+  width: 10mm;
+  height: 10mm;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #38bdf8;
+  font-size: 8px;
+  font-weight: 800;
+  font-style: normal;
+}
+.qpaperpremium .qmilestones article > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.qpaperpremium .qmilestones small {
+  color: #0284c7;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.qpaperpremium .qmilestones b {
+  font-size: 9.5px;
+  color: #0f172a;
+}
+.qpaperpremium .qmilestones em {
+  color: #64748b;
+  font-size: 7px;
+  font-style: normal;
+}
+.qpaperpremium .qmilestones strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Grand Total Luxury Hero Bar */
+.qpaperpremium .qcalcrow.qgrandtotalrow {
+  padding: 7px 10px;
+  background: linear-gradient(135deg, #071522 0%, #0f2742 100%);
+  color: #ffffff;
+  border-left: 4px solid #c8aa72;
+  border-bottom: 0;
+  align-items: center;
+}
+.qpaperpremium .qcalcrow.qgrandtotalrow span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+}
+.qpaperpremium .qcalcrow.qgrandtotalrow small {
+  display: block;
+  font-size: 6.5px;
+  color: #94a3b8;
+}
+.qpaperpremium .qcalcrow.qgrandtotalrow strong {
+  font-size: 15px;
+  color: #38bdf8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   SMART LIVING EXPERIENCE & CUSTOMER CAPABILITIES (PAGE 3)
+   Simple, Premium & Architectural Editorial Design
+   ========================================================== */
+.qpaperexperience {
+  min-height: 297mm;
+  padding: 14mm 16mm 14mm 16mm !important;
+  box-sizing: border-box !important;
+  page-break-after: always;
+}
+
+.qexperiencegrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4.5mm 5mm;
+  margin: 5mm 0 5.5mm;
+}
+
+.qexpcard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4.5mm 5mm;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  position: relative;
+}
+
+.qexphead {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.qexpnum {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c8aa72;
+  background: #fbfaf7;
+  border: 1px solid #ede8df;
+  border-radius: 6px;
+  padding: 3px 7px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.qexphead div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.qexphead b {
+  font-size: 10px;
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.qexphead small {
+  font-size: 7px;
+  font-weight: 600;
+  color: #0284c7;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qexpcard p {
+  margin: 0;
+  font-size: 7.5px;
+  color: #475467;
+  line-height: 1.55;
+}
+
+.qexpactions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 2.5mm;
+  border-top: 1px solid #f2f4f7;
+}
+
+.qexpactions span {
+  font-size: 7px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.qexpactions span:nth-child(even) {
+  color: #cbd5e1;
+  font-size: 6px;
+}
+
+/* Pre-Configured Lifestyle Automations Banner (Refined Architecture) */
+.qscenesbanner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3.5px solid #c8aa72;
+  border-radius: 8px;
+  padding: 4mm 5mm;
+  color: #0f172a;
+}
+
+.qsceneshead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 2mm;
+  margin-bottom: 2.5mm;
+}
+
+.qsceneshead b {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.08em;
+}
+
+.qsceneshead span {
+  font-size: 6.8px;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.qscenesgrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3.5mm;
+}
+
+.qscenecol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-right: 1px solid #e2e8f0;
+  padding-right: 2.5mm;
+}
+
+.qscenecol:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.qscenecol b {
+  font-size: 7.5px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.qscenecol p {
+  margin: 0;
+  font-size: 6.8px;
+  color: #475467;
+  line-height: 1.4;
+}
+
+/* Room Capability Tags in Room Banner */
+.qroomcaps {
+  display: block !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
+}
+
+.qroomcap-tag {
+  display: inline-block !important;
+  font-size: 6.8px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  color: #7dd3fc !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin-right: 8px !important;
+  vertical-align: middle !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Feature Badge on Line Items */
+.item-pill-badge.feature {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+}
+
+.qboqtable .item-pill-badge.feature {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+  font-size: 6.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+
+/* Section Title Header Layout (Zero Overlap Guaranteed) */
+.qpaperpremium .qsectiontitle {
+  position: relative;
+  margin-bottom: 5.5mm;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.qpaperpremium .qpdfhead::before,
+.qpaperpremium .qpdfhead::after,
+.qpaperpremium .qsectiontitle::before,
+.qpaperpremium .qsectiontitle::after {
+  display: none !important;
+  content: none !important;
+}
+
+.qpaperpremium .qsectiontitle > small {
+  display: block;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #0284c7;
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+
+.qpaperpremium .qsectiontitle h2 {
+  margin: 1mm 0 0;
+  border: 0;
+  padding: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  font-weight: 400;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.qpaperpremium .qsectiontitle > span {
+  position: static !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: block;
+  color: #64748b;
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+
+
+

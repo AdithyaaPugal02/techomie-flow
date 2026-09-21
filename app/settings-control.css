@@ -345,3 +345,348 @@
     font-size: 28px;
   }
 }
+
+/* Dedicated Visual Editors for Settings */
+.settingstemplatecard {
+  background: #ffffff;
+  border: 1px solid #e3e7ed;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.05);
+  transition: border-color 0.2s;
+}
+.settingstemplatecard:hover {
+  border-color: #b2ddff;
+}
+.settingstemplatecardhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f2f4f7;
+}
+.settingstemplatecardhead h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #101828;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settingstemplatecardhead .headcontrols {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.btn-delete-template {
+  border: 1px solid #fee4e2 !important;
+  background: #fef3f2 !important;
+  color: #d92d20 !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-delete-template:hover {
+  background: #fee4e2 !important;
+  color: #b42318 !important;
+}
+.btn-add-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1769ff;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s ease;
+}
+.btn-add-primary:hover {
+  background: #0050e6;
+}
+
+/* Milestone Builder Table */
+.milestonestable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.milestonestable thead tr {
+  background: #f8fafc;
+  border-bottom: 1px solid #e4e7ec;
+}
+.milestonestable th {
+  padding: 8px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #475467;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+.milestonestable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f2f4f7;
+  vertical-align: middle;
+}
+.milestonestable input {
+  padding: 6px 8px !important;
+  font-size: 12px !important;
+  height: 34px !important;
+}
+.milestonepercentwrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.milestonepercentwrap input {
+  width: 65px !important;
+  text-align: center;
+  font-weight: 700;
+}
+.milestonestable tfoot td {
+  background: #f8fafc;
+  padding: 8px 10px;
+  font-weight: 700;
+}
+.percentagebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.percentagebadge.valid {
+  background: #ecfdf3;
+  color: #027a48;
+  border: 1px solid #a6f4c5;
+}
+.percentagebadge.invalid {
+  background: #fef3f2;
+  color: #b42318;
+  border: 1px solid #fecdca;
+}
+
+/* Tag Manager & Pills */
+.taglistwrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tagpills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tagpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff8ff;
+  border: 1px solid #b2ddff;
+  color: #175cd3;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.tagpill button {
+  background: transparent;
+  border: 0;
+  color: #175cd3;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+.tagpill button:hover {
+  color: #b42318;
+}
+.tagaddform {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 380px;
+}
+.tagaddform input {
+  flex: 1;
+  padding: 7px 10px !important;
+  height: 36px !important;
+  font-size: 12px !important;
+}
+.tagaddform button {
+  padding: 7px 12px !important;
+  height: 36px !important;
+  font-size: 12px !important;
+  background: #f2f4f7;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tagaddform button:hover {
+  background: #eaecf0;
+}
+
+/* Service & Integration Cards */
+.integrationgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+.integrationcard {
+  background: #ffffff;
+  border: 1px solid #e3e7ed;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
+}
+.integrationcardhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.integrationcardhead .serviceidentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.serviceicon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f2f4f7;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+.serviceidentity b {
+  font-size: 14px;
+  color: #101828;
+}
+.statuspill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+.statuspill.connected {
+  background: #ecfdf3;
+  color: #027a48;
+}
+.statuspill.idle {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+/* Workflow Stage Pipelines */
+.pipelinegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.pipelinecard {
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pipelinecardhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #101828;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+.pipelinelist {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pipelinestage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 500;
+}
+.pipelinestage button {
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 12px;
+}
+.pipelinestage button:hover {
+  color: #ef4444;
+}
+
+/* Notification Switch Grid */
+.notificationgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.notificationswitchcard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  transition: all 0.15s ease;
+}
+.notificationswitchcard:hover {
+  border-color: #b2ddff;
+  background: #fff;
+}
+.notificationswitchcard .notificon {
+  font-size: 20px;
+  line-height: 1;
+}
+.notificationswitchcard .notifdetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.notificationswitchcard .notifdetails b {
+  font-size: 13px;
+  color: #101828;
+}
+.notificationswitchcard .notifdetails small {
+  font-size: 11px;
+  color: #667085;
+}

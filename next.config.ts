@@ -5,7 +5,7 @@ import webpack from "webpack";
 const nextConfig: NextConfig = {
   output: "standalone",
   typescript: { ignoreBuildErrors: true },
-  serverExternalPackages: ["postgres"],
+  serverExternalPackages: ["postgres", "node:sqlite"],
   webpack(config) {
     config.plugins.push(new webpack.NormalModuleReplacementPlugin(/^cloudflare:workers$/, path.resolve(process.cwd(), "lib/runtime-env.ts")));
     return config;

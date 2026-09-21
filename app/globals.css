@@ -96,14 +96,14 @@
 .qpdfhead { height:14mm; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #dce5ef; padding-bottom:4mm; margin-bottom:9mm; }
 .qpdfhead > span { display:flex; align-items:center; gap:8px; }
 .qpdfhead > span:last-child { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-.qpdfhead img { width:28px; height:28px; object-fit:contain; border-radius:6px; background:#fff; }
+.qpdfhead img { width:32px; height:32px; object-fit:contain; border-radius:6px; background:#fff; }
 .qpdfhead b { font-size:9px; letter-spacing:.04em; }
 .qpdfhead small { color:#168bd1; font-size:7px; font-weight:800; letter-spacing:.16em; }
 .qpdffoot { position:absolute; left:16mm; right:16mm; bottom:8mm; padding-top:3mm; border-top:1px solid #dce5ef; display:flex; justify-content:space-between; color:#7a8798; font-size:7px; text-transform:uppercase; letter-spacing:.08em; }
 .qpaperpremium .qcover { padding:18mm; background:linear-gradient(145deg,#071425 0%,#0c2744 58%,#0a5f8a 145%); color:#fff; display:flex; flex-direction:column; justify-content:flex-start; }
 .qcoverglow { position:absolute; width:125mm; height:125mm; border:1px solid #37b9ed55; border-radius:50%; right:-63mm; top:-38mm; box-shadow:0 0 0 24mm #37b9ed0d,0 0 0 48mm #37b9ed08; }
 .qpaperpremium .qcover > header { height:auto; padding:0; background:transparent; border:0; position:relative; display:flex; align-items:center; gap:12px; }
-.qpaperpremium .qcover > header img { width:48px; height:48px; margin:0; padding:5px; object-fit:contain; border-radius:10px; background:#fff; }
+.qpaperpremium .qcover > header img { width:56px; height:56px; margin:0; padding:5px; object-fit:contain; border-radius:10px; background:#fff; }
 .qpaperpremium .qcover > header span { display:flex; flex-direction:column; gap:3px; }
 .qpaperpremium .qcover > header b { font-size:14px; letter-spacing:.04em; }
 .qpaperpremium .qcover > header small { font-size:6px; letter-spacing:.2em; color:#77d7ff; }
@@ -137,9 +137,9 @@
 .qscopebrief span { margin-top:3px; color:#b9c9d8; font-size:7px; text-transform:uppercase; letter-spacing:.08em; }
 .qnextstep { margin-top:8mm; padding:5mm; border-left:3px solid #168bd1; background:#eef7fc; display:flex; flex-direction:column; gap:4px; }
 .qnextstep b { font-size:10px; }.qnextstep span { color:#586778; font-size:8px; line-height:1.5; }
-.qsectiontitle { position:relative; margin-bottom:7mm; }
-.qsectiontitle h2 { margin:2mm 0 0; border:0; padding:0; font-size:25px; letter-spacing:-.025em; }
-.qsectiontitle > span { position:absolute; right:0; bottom:2px; color:#788596; font-size:8px; }
+.qsectiontitle { position:relative; margin-bottom:6mm; display:flex; flex-direction:column; align-items:flex-start; gap:1px; }
+.qsectiontitle h2 { margin:1mm 0 0; border:0; padding:0; font-size:24px; letter-spacing:-.025em; line-height:1.2; }
+.qsectiontitle > span { position:static; display:block; color:#788596; font-size:8px; margin-top:2px; }
 .qpdfroom { margin-bottom:7mm; break-inside:avoid; }
 .qpdfroom h3 { margin:0; padding:3mm 4mm; background:#0b2138; color:#fff; border-radius:8px 8px 0 0; display:flex; justify-content:space-between; align-items:center; font-size:11px; }
 .qpdfroom h3 span { color:#8fdcff; font-size:7px; font-weight:500; }
@@ -263,47 +263,16 @@
   z-index:0;
   pointer-events:none;
 }
-.qpaperpremium > section:not(.qcover) > * { position:relative; z-index:1; }
-.qpaperpremium .qpdfhead { position:relative; }
-.qpaperpremium .qpdfhead::before {
-  content:"";
-  position:absolute;
-  left:0;
-  bottom:-1px;
-  width:27mm;
-  height:2px;
-  background:#08a9e6;
-}
+.qpaperpremium .qpdfhead { position:relative; border-bottom: 1px solid #e4e7ec; }
+.qpaperpremium .qpdfhead::before,
 .qpaperpremium .qpdfhead::after {
-  content:"";
-  position:absolute;
-  left:27mm;
-  bottom:-4px;
-  width:7px;
-  height:7px;
-  border:2px solid #08a9e6;
-  border-radius:50%;
-  background:#fff;
+  display: none !important;
+  content: none !important;
 }
-.qpaperpremium .qsectiontitle::before {
-  content:"";
-  position:absolute;
-  left:-16mm;
-  top:3mm;
-  width:11mm;
-  height:2px;
-  background:#08a9e6;
-}
+.qpaperpremium .qsectiontitle::before,
 .qpaperpremium .qsectiontitle::after {
-  content:"";
-  position:absolute;
-  left:-6mm;
-  top:1.5mm;
-  width:5px;
-  height:5px;
-  border:2px solid #08a9e6;
-  border-radius:50%;
-  background:#fff;
+  display: none !important;
+  content: none !important;
 }
 
 /* Luxury smart-home finish layered over the technical quotation system. */
@@ -379,9 +348,6 @@
 .qpaperpremium .qtermgrid article { background:linear-gradient(145deg,#fcfbf8,#f3f8fa); border-top-color:#c8aa72; }
 .qpaperpremium .qthankyou { background:radial-gradient(circle at 80% 0,#196b8c80,transparent 40%),#071522; border:1px solid #c8aa7244; }
 .qpaperpremium .qthankyou small { color:#c8aa72; }
-.qpaperpremium .qpdfhead::before { background:linear-gradient(90deg,#c8aa72,#08a9e6); }
-.qpaperpremium .qsectiontitle::before { background:#c8aa72; }
-.qpaperpremium .qsectiontitle::after { border-color:#c8aa72; }
 
 /* Extra-large product photography for quotation preview and PDF export. */
 .qpaperpremium .qpapercolumns,
@@ -656,7 +622,7 @@
 .qminimalsummary{margin-top:5mm;display:grid;grid-template-columns:1.25fr .9fr;border:1px solid #aeb4bb;min-height:65mm}.qminimalsummary>section{padding:4mm;border-right:1px solid #aeb4bb}.qminimalsummary>section small{font-size:7px;color:#667085}.qminimalsummary>section>b{display:block;margin:2mm 0 5mm;font-size:9px;font-style:italic}.qminimalsummary h3{margin:0 0 2mm;font-size:9px}.qminimalsummary>section p{margin:0!important;white-space:pre-line;font-size:7.5px!important;line-height:1.45!important;color:#4b5563}.qminimalsummary>aside{display:flex;flex-direction:column}.qminimalsummary>aside p{margin:0!important;padding:2.5mm 3mm;display:flex;justify-content:space-between;border-bottom:1px solid #d1d5d9;font-size:8px!important;line-height:1.2!important}.qminimalsummary>aside p span{color:#4b5563}.qminimalsummary>aside .qminimaltotal{font-size:11px!important;font-weight:700;background:#f1f3f4;border-top:1px solid #8f959b}.qminimalsummary>aside>div{margin-top:auto;padding:4mm;text-align:center;border-top:1px solid #aeb4bb;font-size:8px}
 .qminimalsummarytitle{margin:8mm 0 5mm}.qminimalsummarytitle small{font-size:7px;color:var(--doc-primary);font-weight:700}.qminimalsummarytitle h2{margin:2mm 0;font-size:18px}.qminimalsummarytitle p{margin:0;font-size:9px;color:#667085}
 .qminimalfoot{position:absolute!important;left:14mm!important;right:14mm!important;bottom:6mm!important;height:5mm!important;padding-top:2mm!important;border-top:1px solid #c8ccd0!important;display:grid!important;grid-template-columns:1fr 1fr 1fr!important;color:#667085!important;font-size:7px!important;text-transform:uppercase}.qminimalfoot span:nth-child(2){text-align:center}.qminimalfoot span:last-child{text-align:right}
-.qpaperpremium:not(.qminimal)>section{position:relative!important;width:210mm!important;height:297mm!important;min-height:297mm!important;box-sizing:border-box!important;padding-bottom:25mm!important;overflow:hidden!important}.qpaperpremium:not(.qminimal) .qgrandbar{margin-bottom:14mm!important}.qpaperpremium:not(.qminimal) .qpdffoot{position:absolute!important;left:16mm!important;right:16mm!important;bottom:8mm!important;margin:0!important;background:inherit;padding:3mm 0 1mm!important}
+.qpaperpremium:not(.qminimal)>section{position:relative!important;width:210mm!important;height:295.5mm!important;min-height:295.5mm!important;max-height:295.5mm!important;box-sizing:border-box!important;padding-bottom:25mm!important;overflow:hidden!important;page-break-after:always!important;break-after:page!important}.qpaperpremium:not(.qminimal)>section:last-child{page-break-after:avoid!important;break-after:avoid!important}.qpaperpremium:not(.qminimal) .qgrandbar{margin-bottom:14mm!important}.qpaperpremium:not(.qminimal) .qpdffoot{position:absolute!important;left:16mm!important;right:16mm!important;bottom:8mm!important;margin:0!important;background:inherit;padding:3mm 0 1mm!important}
 
 @media print{
   @page{size:A4 portrait;margin:0}
@@ -664,9 +630,9 @@
   body:has(.qpaper) *{visibility:hidden!important}
   body:has(.qpaper) .qpaper,body:has(.qpaper) .qpaper *{visibility:visible!important}
   body:has(.qpaper) .qpaper{position:absolute!important;inset:0 auto auto 0!important;width:210mm!important;margin:0!important;box-shadow:none!important}
-  body:has(.qpaper) .qpaper>section{width:210mm!important;min-height:297mm!important;height:297mm!important;break-after:page!important;page-break-after:always!important}
+  body:has(.qpaper) .qpaper>section{width:210mm!important;min-height:295.5mm!important;height:295.5mm!important;break-after:page!important;page-break-after:always!important}
   body:has(.qpaper) .qpaper>section:last-child{break-after:auto!important;page-break-after:auto!important}
-  body:has(.qminimal) .qminimal>section{height:296mm!important;min-height:296mm!important;padding:12mm 14mm 15mm!important;break-after:page!important;page-break-after:always!important}
+  body:has(.qminimal) .qminimal>section{height:295.5mm!important;min-height:295.5mm!important;padding:12mm 14mm 15mm!important;break-after:page!important;page-break-after:always!important}
   body:has(.qminimal) .qminimal>section:last-child{break-after:auto!important;page-break-after:auto!important}
 }
 

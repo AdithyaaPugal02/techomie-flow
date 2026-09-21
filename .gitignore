@@ -30,6 +30,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -44,3 +45,12 @@ yarn-error.log*
 /supabase/data-*.sql
 /supabase/.temp/
 /.migration-temp/
+
+# Local SQLite database & uploads
+.local-db*
+.local-storage/
+*.sqlite*
+
+# Scratch & temporary scripts
+/scratch/
+
