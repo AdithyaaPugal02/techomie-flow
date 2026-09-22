@@ -73,6 +73,10 @@
   font-size: 12px;
   cursor: pointer;
 }
+.qrow.admin {
+  grid-template-columns: 0.75fr 1.25fr 0.8fr 0.75fr 0.65fr 0.75fr 140px;
+  min-width: 1080px;
+}
 .qrow:hover {
   background: #f8faff;
 }
@@ -115,12 +119,30 @@
   font-weight: 800;
   cursor: default;
 }
+.qquick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .qquick button,
 .qpager button {
   border: 1px solid #d7dce4;
   background: #fff;
   border-radius: 7px;
   padding: 6px 8px;
+  cursor: pointer;
+}
+.qquick .qdelbtn {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.qquick .qdelbtn:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+  border-color: #dc2626 !important;
 }
 .qpager {
   display: flex;

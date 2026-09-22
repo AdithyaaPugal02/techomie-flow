@@ -183,6 +183,20 @@ export default function LeadsModule({
     load();
     return true;
   };
+  const deleteLead = async (id?: string) => {
+    const targetId = id || detail?.lead?.id;
+    if (!targetId) return;
+    if (!confirm(`Permanently delete lead ${targetId}? This action cannot be undone.`)) return;
+    const r = await fetch(`/api/leads?id=${encodeURIComponent(targetId)}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) {
+      setMessage(d.error || "Unable to delete lead");
+      return;
+    }
+    setMessage("Lead permanently deleted");
+    if (detail?.lead?.id === targetId) setDetail(null);
+    load();
+  };
   const addFollow = async (v: R) => {
     const r = await fetch("/api/leads/followups", {
         method: "POST",
@@ -452,7 +466,7 @@ export default function LeadsModule({
         <div className="leadloading">Loading CRM records…</div>
       ) : view === "list" ? (
         <div className="leadtable">
-          <div className="leadrow leadhead">
+          <div className={`leadrow leadhead ${role === "admin" ? "admin" : ""}`}>
             <span>Lead / Customer</span>
             <span>Site & Requirement</span>
             <span>Priority / Stage</span>
@@ -466,6 +480,8 @@ export default function LeadsModule({
               l={l}
               open={() => open(l.id)}
               communicate={communicate}
+              role={role}
+              onDelete={() => deleteLead(l.id)}
             />
           ))}
         </div>
@@ -543,6 +559,7 @@ export default function LeadsModule({
           close={() => setDetail(null)}
           role={role}
           patch={patch}
+          deleteLead={() => deleteLead(detail.lead.id)}
           follow={() =>
             setFollow({
               scheduledAt: dt(),
@@ -633,10 +650,10 @@ export default function LeadsModule({
   );
 }
 
-function LeadRow({ l, open }: { l: R; open: () => void; communicate: any }) {
+function LeadRow({ l, open, role, onDelete }: { l: R; open: () => void; communicate: any; role?: string; onDelete?: () => void }) {
   return (
     <div
-      className={`leadrow ${l.overdue ? "overdue" : ""} ${l.inactive ? "inactive" : ""}`}
+      className={`leadrow ${role === "admin" ? "admin" : ""} ${l.overdue ? "overdue" : ""} ${l.inactive ? "inactive" : ""}`}
     >
       <span>
         <b>{l.customer_name}</b>
@@ -685,8 +702,21 @@ function LeadRow({ l, open }: { l: R; open: () => void; communicate: any }) {
             : "No follow-up"}
         </small>
       </span>
-      <span>
+      <span className="leadactions" onClick={(e) => e.stopPropagation()}>
         <button onClick={open}>Open</button>
+        {role === "admin" && onDelete && (
+          <button
+            type="button"
+            className="delbtn"
+            title="Permanently delete lead"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            🗑 Delete
+          </button>
+        )}
       </span>
     </div>
   );
@@ -961,6 +991,7 @@ function Detail({
   communicate,
   convert,
   complete,
+  deleteLead,
 }: {
   data: R;
   tab: string;
@@ -968,6 +999,7 @@ function Detail({
   close: () => void;
   role: string;
   patch: (x: R) => void;
+  deleteLead?: () => void;
   follow: () => void;
   visit: () => void;
   communicate: (x: string) => void;
@@ -1006,6 +1038,15 @@ function Detail({
         <button className="primary" onClick={convert}>
           Create quotation
         </button>
+        {role === "admin" && deleteLead && (
+          <button
+            style={{ color: "#dc2626", borderColor: "#fecaca", background: "#fef2f2" }}
+            title="Permanently delete lead"
+            onClick={deleteLead}
+          >
+            🗑 Delete
+          </button>
+        )}
       </div>
       <nav>
         {tabs.map((x) => (
@@ -1183,16 +1224,27 @@ function Detail({
               </button>
             )}
             {role === "admin" && (
-              <button
-                className="danger"
-                onClick={() =>
-                  confirm(
-                    "Archive this lead? History will remain permanent.",
-                  ) && patch({ action: "archive", note: "Archived by Admin" })
-                }
-              >
-                Archive lead
-              </button>
+              <>
+                <button
+                  className="danger"
+                  onClick={() =>
+                    confirm(
+                      "Archive this lead? History will remain permanent.",
+                    ) && patch({ action: "archive", note: "Archived by Admin" })
+                  }
+                >
+                  Archive lead
+                </button>
+                {deleteLead && (
+                  <button
+                    className="danger"
+                    style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }}
+                    onClick={() => deleteLead()}
+                  >
+                    🗑 Permanently delete
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

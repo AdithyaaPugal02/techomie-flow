@@ -253,6 +253,27 @@ export default function ExpensesModule({
     }
   };
   const actionExpense = action;
+  const deleteExpense = async (id?: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const targetId = id || detail?.id;
+    if (!targetId) return;
+    if (!confirm(`Permanently delete expense ${targetId}? This action cannot be undone.`)) return;
+    setBusy(true);
+    const r = await fetch(`/api/expenses?id=${encodeURIComponent(targetId)}`, { method: "DELETE" });
+    const d = await r.json();
+    setBusy(false);
+    if (!r.ok) {
+      setMessage(d.error || "Unable to delete expense");
+      return;
+    }
+    setMessage("Expense permanently deleted");
+    if (detail?.id === targetId || selected?.id === targetId) {
+      setDetail(null);
+      setSelected(null);
+      setShowForm(false);
+    }
+    load(pagination.page);
+  };
   const exportCsv = () => {
     const p = new URLSearchParams({
       ...Object.fromEntries(
@@ -422,11 +443,11 @@ export default function ExpensesModule({
             </button>
           </div>
           <div className="expensetable">
-            <div className="expensehead">
+            <div className={`expensehead ${isAdmin ? "admin" : ""}`}>
               <span>Date</span>
-              <span>Category / Description</span>
-              <span>Project / Site</span>
-              {isAdmin && <span>Employee</span>}
+              <span>Category / Vendor</span>
+              <span>Project</span>
+              {isAdmin && <span>Staff</span>}
               <span>Amount</span>
               <span>Paid by</span>
               <span>Receipt</span>
@@ -434,9 +455,11 @@ export default function ExpensesModule({
               <span>Action</span>
             </div>
             {rows.map((x) => (
-              <button
-                className="expenserow"
+              <div
+                className={`expenserow ${isAdmin ? "admin" : ""}`}
                 key={x.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => open(x.id)}
               >
                 <span>{x.date}</span>
@@ -458,8 +481,20 @@ export default function ExpensesModule({
                     {x.status}
                   </em>
                 </span>
-                <span>Open →</span>
-              </button>
+                <span className="expenseactions" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="expenseopenbtn" onClick={() => open(x.id)}>Open</button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      className="expensedelbtn"
+                      title="Permanently delete expense"
+                      onClick={(e) => deleteExpense(x.id, e)}
+                    >
+                      🗑 Delete
+                    </button>
+                  )}
+                </span>
+              </div>
             ))}
             {!rows.length && !busy && (
               <div className="expenseempty">
@@ -519,6 +554,7 @@ export default function ExpensesModule({
                 edit={() => setShowForm(true)}
                 adminAction={adminAction}
                 action={action}
+                deleteExpense={deleteExpense}
               />
             ) : (
               <ExpenseForm
@@ -737,6 +773,7 @@ function ExpenseDetail({
   edit,
   adminAction,
   action,
+  deleteExpense,
 }: R) {
   return (
     <div className="expensedetail">
@@ -833,6 +870,14 @@ function ExpenseDetail({
         {isAdmin && x.status === "Reimbursement Pending" && (
           <button className="primary" onClick={() => adminAction("reimburse")}>
             Record reimbursement
+          </button>
+        )}
+        {isAdmin && (
+          <button
+            style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
+            onClick={() => deleteExpense?.(x.id)}
+          >
+            🗑 Delete expense
           </button>
         )}
       </div>

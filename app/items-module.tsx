@@ -126,6 +126,18 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
     setMsg("Item archived");
     load();
   };
+  const removeItem = async (v: R) => {
+    if (!confirm(`Permanently delete item "${v.name || v.procurement_name || v.customer_name || "this item"}"? This action cannot be undone.`)) return;
+    const r = await fetch(`/api/products?variantId=${v.variant_id}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) {
+      setMsg(d.error || "Unable to delete item");
+      return;
+    }
+    setDetail(null);
+    setMsg("Item permanently deleted");
+    load();
+  };
   const categories = [...new Set(opts.map((x) => x.category).filter(Boolean))],
     subs = [...new Set(opts.map((x) => x.subcategory).filter(Boolean))],
     brands = [...new Set(opts.map((x) => x.brand).filter(Boolean))];
@@ -239,10 +251,12 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
               ? JSON.parse(x.attributes || "{}")
               : x.attributes || {};
           return (
-            <button
+            <div
               key={x.variant_id}
               className={`itemsrow ${isAdmin ? "admin" : ""}`}
               onClick={() => open(x.variant_id)}
+              role="button"
+              tabIndex={0}
             >
               <span className="itemimage">
                 {x.image_key ? (
@@ -293,10 +307,44 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
                 <em>{x.active ? "Active" : "Inactive"}</em>
                 <small>{String(x.updated_at || "").slice(0, 10)}</small>
               </span>
-              <span>
-                <strong>Open →</strong>
+              <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    background: "#f8fafc",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => open(x.variant_id)}
+                >
+                  Open →
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="danger"
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "#dc2626",
+                      background: "#fef2f2",
+                      border: "1px solid #fca5a5",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                    }}
+                    title="Permanently delete item"
+                    onClick={() => removeItem(x)}
+                  >
+                    🗑 Delete
+                  </button>
+                )}
               </span>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -365,6 +413,7 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
             });
           }}
           archive={() => archive(detail.item)}
+          remove={() => removeItem(detail.item)}
         />
       )}{" "}
       {edit && (
@@ -385,12 +434,14 @@ function ItemDetail({
   close,
   edit,
   archive,
+  remove,
 }: {
   d: R;
   admin: boolean;
   close: () => void;
   edit: () => void;
   archive: () => void;
+  remove: () => void;
 }) {
   const x = d.item,
     a =
@@ -495,6 +546,12 @@ function ItemDetail({
       {admin && (
         <footer>
           <button onClick={archive}>Archive</button>
+          <button
+            style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
+            onClick={remove}
+          >
+            🗑 Delete
+          </button>
           <button className="primary" onClick={edit}>
             Edit item & variants
           </button>

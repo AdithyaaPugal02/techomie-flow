@@ -68,6 +68,7 @@ type Props = {
   tax: number;
   total: number;
   focusId?: string;
+  role?: string;
 };
 const money = (n: unknown) =>
   new Intl.NumberFormat("en-IN", {
@@ -100,7 +101,7 @@ const states = [
   ["23", "Madhya Pradesh"],
 ];
 
-export default function InvoiceModule({ rooms, details, focusId }: Props) {
+export default function InvoiceModule({ rooms, details, focusId, role }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([]),
     [customers, setCustomers] = useState<Customer[]>([]),
     [selected, setSelected] = useState<Invoice | null>(null),
@@ -383,6 +384,22 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
   const download = (format: string) => {
     window.location.href = `/api/invoices?format=${format}`;
   };
+  const deleteInvoice = async (id?: string) => {
+    const targetId = id || selected?.id;
+    if (!targetId) return;
+    if (!confirm(`Permanently delete invoice ${selected?.number || targetId}? This action cannot be undone.`)) return;
+    setBusy(true);
+    const r = await fetch(`/api/invoices?id=${targetId}`, { method: "DELETE" });
+    const d = await r.json();
+    setBusy(false);
+    if (!r.ok) {
+      setMessage(d.error || "Unable to delete invoice");
+      return;
+    }
+    setMessage("Invoice permanently deleted");
+    if (selected?.id === targetId) setSelected(null);
+    load();
+  };
   const totalOutstanding = invoices.reduce(
       (s, i) => s + Number(i.balance || 0),
       0,
@@ -448,26 +465,45 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
             </div>
           ) : (
             invoices.map((i) => (
-              <button
+              <div
                 key={i.id}
-                className={selected?.id === i.id ? "active" : ""}
+                role="button"
+                tabIndex={0}
+                className={`invoiceregistercard ${selected?.id === i.id ? "active" : ""}`}
                 onClick={() => openInvoice(i.id)}
               >
-                <span>
-                  <b>{i.number || "DRAFT"}</b>
-                  <small>
-                    {i.customer_name as string} · {i.invoice_date as string}
-                  </small>
-                </span>
-                <span>
-                  <strong>{money(i.grand_total)}</strong>
-                  <em
-                    className={`invstatus ${String(i.status).toLowerCase().replaceAll(" ", "-")}`}
-                  >
-                    {i.status}
-                  </em>
-                </span>
-              </button>
+                <div className="invoicemain">
+                  <span>
+                    <b>{i.number || "DRAFT"}</b>
+                    <small>
+                      {i.customer_name as string} · {i.invoice_date as string}
+                    </small>
+                  </span>
+                  <span>
+                    <strong>{money(i.grand_total)}</strong>
+                    <em
+                      className={`invstatus ${String(i.status).toLowerCase().replaceAll(" ", "-")}`}
+                    >
+                      {i.status}
+                    </em>
+                  </span>
+                </div>
+                {role === "admin" && (
+                  <div className="invoicecardactions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="invdelbtn"
+                      title="Permanently delete invoice"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteInvoice(i.id);
+                      }}
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             ))
           )}
         </aside>
@@ -518,19 +554,27 @@ export default function InvoiceModule({ rooms, details, focusId }: Props) {
                   <button onClick={() => generatePdf(true)}>
                     Download PDF
                   </button>
-                  {selected.pdf_key && (
-                    <button
-                      onClick={() =>
-                        window.open(
-                          `/api/invoices/pdf?id=${selected.id}`,
-                          "_blank",
-                        )
-                      }
-                    >
-                      Open archived PDF
-                    </button>
-                  )}
-                </div>
+                    {selected.pdf_key && (
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `/api/invoices/pdf?id=${selected.id}`,
+                            "_blank",
+                          )
+                        }
+                      >
+                        Open archived PDF
+                      </button>
+                    )}
+                    {role === "admin" && (
+                      <button
+                        style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
+                        onClick={() => deleteInvoice()}
+                      >
+                        🗑 Delete invoice
+                      </button>
+                    )}
+                  </div>
               </div>
               <InvoicePaper invoice={selected} branding={branding} />
             </>

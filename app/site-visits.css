@@ -113,9 +113,33 @@
   text-align: left;
   transition: background 0.14s ease;
 }
+.svrow.admin {
+  grid-template-columns: 0.7fr 1.3fr 1fr 0.8fr 1fr 0.55fr 100px;
+  min-width: 1150px;
+}
 .svrow:not(.head):hover {
   background: #f8faff;
   cursor: pointer;
+}
+.svrow .svactions {
+  display: flex;
+  justify-content: flex-end;
+}
+.svrow .svactions .svdelbtn {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.svrow .svactions .svdelbtn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
 }
 .svrow span b, .svrow span small {
   display: block;
@@ -360,6 +384,16 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+.svquick button.danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  margin-left: auto;
+}
+.svquick button.danger:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 .svhint {
   background: #eff6ff;

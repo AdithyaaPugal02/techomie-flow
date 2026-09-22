@@ -25,4 +25,27 @@ await activity(u.id,id,'Testing Updated',String(p.notes||'Testing checklist save
 await activity(u.id,id,'Handover Recorded',String(p.notes||'Customer handover recorded'));return Response.json({ok:true})}if(action==='variation'){if(u.role!=='admin')return Response.json({error:'Admin approval is required for confirmed scope changes'},{status:403});
 await env.DB.prepare("INSERT INTO scope_variations(id,project_id,reason,value_impact,payment_impact,status,quotation_revision,snapshot,created_by,approved_by,created_at,approved_at)VALUES(?,?,?,?,?,'Approved',?,?,?, ?,?,?)").bind(crypto.randomUUID(),id,p.reason,Number(p.valueImpact||0),p.paymentImpact||null,p.quotationRevision||null,JSON.stringify(p.snapshot||{}),u.id,u.id,t,t).run();
 await activity(u.id,id,'Scope Variation Approved',`${p.reason}; value impact ${p.valueImpact}`);return Response.json({ok:true})}return Response.json({error:'Unsupported action'},{status:400})}catch(e){return e instanceof Response?e:Response.json({error:e instanceof Error?e.message:'Unable to update project'},{status:500})}}
+
+export async function DELETE(req: Request) {
+  try {
+    const u = await requireUser(["admin"]);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Project ID is required" }, { status: 400 });
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM project_tasks WHERE project_id=?").bind(id),
+      env.DB.prepare("DELETE FROM project_materials WHERE project_id=?").bind(id),
+      env.DB.prepare("DELETE FROM project_team WHERE project_id=?").bind(id),
+      env.DB.prepare("DELETE FROM project_milestones WHERE project_id=?").bind(id),
+      env.DB.prepare("DELETE FROM scope_variations WHERE project_id=?").bind(id),
+      env.DB.prepare("DELETE FROM attachments WHERE entity_type='project' AND entity_id=?").bind(id),
+      env.DB.prepare("DELETE FROM activities WHERE entity_type='project' AND entity_id=?").bind(id),
+      env.DB.prepare("DELETE FROM projects WHERE id=?").bind(id),
+    ]);
+    await audit(u.id, "project_deleted", id);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to delete project" }, { status: 500 });
+  }
+}
+
 const defaultChecklist=()=>['Site access/permission confirmed','Electrical wiring/readiness checked','Neutral wire availability checked where required','Stable power confirmed','Wi-Fi/router/network readiness checked','Materials verified','Materials delivered to site','Products installed','Devices paired/configured','Mobile app configured','Alexa/Google integration tested','Customer training completed','Handover photos uploaded','Customer acceptance recorded'];const taskCategory=(x:string)=>x.includes('Material')?'Material Planning':x.includes('install')||x.includes('Products')?'Installation':x.includes('configured')||x.includes('app')?'Configuration':x.includes('tested')?'Testing':x.includes('training')?'Customer Training':x.includes('Handover')||x.includes('acceptance')?'Handover':'Electrical Check';

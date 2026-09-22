@@ -68,6 +68,7 @@ export default function CustomersModule({
     [noteContent, setNoteContent] = useState(""),
     [noteBusy, setNoteBusy] = useState(false),
     [siteBusy, setSiteBusy] = useState(false),
+    [createBusy, setCreateBusy] = useState(false),
     [siteForm, setSiteForm] = useState<R>({
       name: "",
       address: "",
@@ -109,20 +110,38 @@ export default function CustomersModule({
     } else setMsg(d.error);
   };
   const create = async (force = false) => {
-    const r = await fetch("/api/customers", {
+    setCreateBusy(true);
+    try {
+      const r = await fetch("/api/customers", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...form, allowDuplicate: force }),
-      }),
-      d = await r.json();
-    if (r.status === 409 && confirm(`${d.error}. Create anyway?`))
-      return create(true);
-    if (!r.ok) return setMsg(d.error);
-    setShow(false);
-    setForm(blank);
-    setMsg(`${d.customer.customerCode} created`);
-    load();
-    open(d.customer.id);
+      });
+      const d = await r.json();
+      if (r.status === 409 && confirm(`${d.error}. Create anyway?`)) {
+        setCreateBusy(false);
+        return create(true);
+      }
+      if (!r.ok) {
+        setMsg(d.error || "Failed to create customer");
+        return;
+      }
+      setShow(false);
+      setForm(blank);
+      setMsg(`${d.customer?.customerCode || d.customer?.customer_code || "Customer"} created successfully`);
+      if (d.detail) {
+        setDetail(d.detail);
+        setTab("Overview");
+      }
+      if (d.customer) {
+        setRows((prev) => [d.customer, ...prev.filter((x) => x.id !== d.customer.id)]);
+      }
+      load();
+    } catch (e: any) {
+      setMsg(e?.message || "Failed to create customer");
+    } finally {
+      setCreateBusy(false);
+    }
   };
   const action = async (p: R) => {
     const r = await fetch("/api/customers", {
@@ -218,6 +237,18 @@ export default function CustomersModule({
     setMsg("Document uploaded permanently");
     open(detail.customer.id);
   };
+  const deleteCustomer = async (id: number | string) => {
+    if (!confirm(`Permanently delete customer "${detail?.customer?.name || id}" and all associated data? This action cannot be undone.`)) return;
+    const r = await fetch(`/api/customers?id=${id}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) {
+      setMsg(d.error || "Unable to delete customer");
+      return;
+    }
+    setMsg("Customer permanently deleted");
+    setDetail(null);
+    load();
+  };
   return (
     <div className="customersmaster">
       <div className="customerhero">
@@ -292,16 +323,23 @@ export default function CustomersModule({
         </select>
       </div>
       <div className="customertable">
-        <div className="customerrow customerhead">
+        <div className={`customerrow customerhead ${role === "admin" ? "admin" : ""}`}>
           <span>Customer</span>
           <span>Contact</span>
           <span>City / Sites</span>
           <span>Status / Owner</span>
           <span>Invoiced</span>
           <span>Balance</span>
+          {role === "admin" && <span>Actions</span>}
         </div>
         {rows.map((c) => (
-          <button className="customerrow" key={c.id} onClick={() => open(c.id)}>
+          <div
+            className={`customerrow ${role === "admin" ? "admin" : ""}`}
+            key={c.id}
+            onClick={() => open(c.id)}
+            role="button"
+            tabIndex={0}
+          >
             <span>
               <b>{c.display_name || c.name}</b>
               <small>
@@ -326,7 +364,44 @@ export default function CustomersModule({
             <span>
               <b>{money(c.balance)}</b>
             </span>
-          </button>
+            {role === "admin" && (
+              <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    background: "#f8fafc",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => open(c.id)}
+                >
+                  Open
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "#dc2626",
+                    background: "#fef2f2",
+                    border: "1px solid #fca5a5",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                  title="Permanently delete customer"
+                  onClick={() => deleteCustomer(c.id)}
+                >
+                  🗑 Delete
+                </button>
+              </span>
+            )}
+          </div>
         ))}
       </div>
       {show && (
@@ -338,9 +413,14 @@ export default function CustomersModule({
             </header>
             <CustomerForm v={form} set={setForm} users={users} />
             <div className="customeractions">
-              <button onClick={() => setShow(false)}>Cancel</button>
-              <button className="primary" onClick={() => create()}>
-                Create permanent customer
+              <button type="button" disabled={createBusy} onClick={() => setShow(false)}>Cancel</button>
+              <button
+                type="button"
+                className="primary"
+                disabled={createBusy || !form.name.trim() || !form.phone.trim()}
+                onClick={() => create()}
+              >
+                {createBusy ? "Creating customer…" : "Create permanent customer"}
               </button>
             </div>
           </div>
@@ -442,6 +522,14 @@ export default function CustomersModule({
                 }
               />
             </label>
+            {role === "admin" && (
+              <button
+                style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
+                onClick={() => deleteCustomer(detail.customer.id)}
+              >
+                🗑 Delete customer
+              </button>
+            )}
           </div>
           <nav>
             {tabs.map((x) => (

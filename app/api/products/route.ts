@@ -386,3 +386,26 @@ export async function PATCH(req: Request) {
       : Response.json({ error: "Unable to update item" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const u = await requireUser(["admin"]);
+    const url = new URL(req.url);
+    const variantId = url.searchParams.get("variantId") || url.searchParams.get("id");
+    if (!variantId) return Response.json({ error: "Item variant ID is required" }, { status: 400 });
+    const id = Number(variantId);
+    const v = await env.DB.prepare("SELECT product_id FROM variants WHERE id=?").bind(id).first<{ product_id: number }>();
+    if (!v) return Response.json({ error: "Item not found" }, { status: 404 });
+    const otherVariants = await env.DB.prepare("SELECT COUNT(*) n FROM variants WHERE product_id=? AND id!=?").bind(v.product_id, id).first<{ n: number }>();
+    await env.DB.prepare("DELETE FROM variants WHERE id=?").bind(id).run();
+    if (!otherVariants?.n) {
+      await env.DB.prepare("DELETE FROM products WHERE id=?").bind(v.product_id).run();
+    }
+    await env.DB.prepare(
+      "INSERT INTO audit_log(user_id,action,entity_type,entity_id,created_at)VALUES(?,'item_deleted','product',?,?)"
+    ).bind(u.id, String(id), new Date().toISOString()).run();
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to delete item" }, { status: 500 });
+  }
+}

@@ -93,3 +93,25 @@ export async function PATCH(req: Request) {
     await audit(u.id, action === "revision" ? "quote_revised" : "quote_updated", id); return Response.json({ ok: true, revision, status });
   } catch (e) { return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to update quotation" }, { status: 500 }); }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const u = await requireUser(["admin"]);
+    const id = Number(new URL(req.url).searchParams.get("id"));
+    if (!id) return Response.json({ error: "Quotation ID is required" }, { status: 400 });
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM quotation_items WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotation_rooms WHERE floor_id IN (SELECT id FROM quotation_floors WHERE quotation_id=?)").bind(id),
+      env.DB.prepare("DELETE FROM quotation_floors WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotation_milestones WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotation_revisions WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotation_files WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotation_acceptances WHERE quotation_id=?").bind(id),
+      env.DB.prepare("DELETE FROM quotations WHERE id=?").bind(id),
+    ]);
+    await audit(u.id, "quote_deleted", id);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to delete quotation" }, { status: 500 });
+  }
+}

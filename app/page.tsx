@@ -937,6 +937,7 @@ export default function Home() {
             taxable={taxable}
             tax={tax}
             total={total}
+            role={auth.user.role}
           />
         ) : module === "Items" ? (
           <ItemsModule isAdmin={auth.user.role === "admin"} />
@@ -2338,6 +2339,7 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
   useEffect(()=>{setSearch(Object.values(initialFilter).join(" "));if(allowed)load();if(name==="Payments")Promise.all([fetch("/api/projects").then(r=>r.json()),fetch("/api/quotations?limit=100").then(r=>r.json())]).then(([p,q])=>{const customerMap=new Map<string,Record<string,unknown>>();[...(p.filters?.customers||[]),...(q.filters?.customers||[])].forEach((c:Record<string,unknown>)=>customerMap.set(String(c.id),c));setPaymentLookups({customers:[...customerMap.values()],projects:p.projects||[],quotations:q.quotations||[]})}).catch(()=>setToast("Unable to load customer payment choices"));if(name==="Tasks")fetch("/api/projects").then(r=>r.json()).then(p=>setTaskLookups({projects:p.projects||[],users:p.filters?.users||[]})).catch(()=>setToast("Unable to load project task choices"))},[name,JSON.stringify(initialFilter)]);
   const save=async(v:Record<string,string>)=>{try{let payload:Record<string,unknown>={...v};if(name==="Leads")payload={...v,customerName:v.name};const url=endpoint[name],method=editing?"PATCH":"POST";if(editing)payload.id=editing.id;const r=await fetch(url,{method,headers:{"content-type":"application/json"},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to save record");setOpen(false);setEditing(null);setToast(`${singular} saved`);load()}catch(e){setToast(e instanceof Error?e.message:"Unable to save record")}};
   const archive=async(row:Record<string,unknown>)=>{if(!confirm(`Archive this ${singular}?`))return;const r=await fetch(`${endpoint[name]}?id=${row.id}`,{method:"DELETE"});if(r.ok){setToast(`${singular} archived`);load()}else setToast("Unable to archive record")};
+  const removePermanent=async(row:Record<string,unknown>)=>{if(!confirm(`Permanently delete this ${singular}? This action cannot be undone.`))return;const url=endpoint[name]?.includes("/records/")?`${endpoint[name]}?id=${row.id}&permanent=1`:`${endpoint[name]}?id=${row.id}`;const r=await fetch(url,{method:"DELETE"});if(r.ok){setToast(`${singular} deleted permanently`);load()}else{const d=await r.json().catch(()=>({}));setToast(d.error||"Unable to delete record")}};
   const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>[name==="Tasks"?taskLookups.projects.find(p=>String(p.id)===String(r.project_id))?.title:null,r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
   const paymentFields:Field[]=name==="Payments"?[
     {key:"customer_selector",label:"Customer name",required:true,options:paymentLookups.customers.map(c=>({value:String(c.id),label:String(c.name)}))},
@@ -2381,7 +2383,7 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
             placeholder="Search records"
           />
         </div>
-        {error&&<p className="formerror">{error}</p>}{!loading&&!error&&rows.length===0&&<p className="emptyrow">No records yet. Add the first {singular}.</p>}{rows.filter(r=>JSON.stringify(r).toLowerCase().includes(search.toLowerCase())).map((r,i)=><div className="record" key={String(r.id||i)}><span>{String(r.id||r.number||"—")}</span><b>{titleOf(r)}</b><small>{detailOf(r)||"Saved record"}</small><span className="rowactions"><button onClick={()=>{setEditing(r);setOpen(true)}}>{name==="Tasks"?"Update":"Edit"}</button>{name!=="Overview"&&name!=="Tasks"&&<button className="danger" onClick={()=>archive(r)}>Archive</button>}</span></div>)}
+        {error&&<p className="formerror">{error}</p>}{!loading&&!error&&rows.length===0&&<p className="emptyrow">No records yet. Add the first {singular}.</p>}{rows.filter(r=>JSON.stringify(r).toLowerCase().includes(search.toLowerCase())).map((r,i)=><div className="record" key={String(r.id||i)}><span>{String(r.id||r.number||"—")}</span><b>{titleOf(r)}</b><small>{detailOf(r)||"Saved record"}</small><span className="rowactions"><button onClick={()=>{setEditing(r);setOpen(true)}}>{name==="Tasks"?"Update":"Edit"}</button>{name!=="Overview"&&name!=="Tasks"&&<button className="danger" onClick={()=>archive(r)}>Archive</button>}{role==="admin"&&name!=="Overview"&&<button className="danger" onClick={()=>removePermanent(r)}>🗑 Delete</button>}</span></div>)}
       </div>
       {open && (
         <RecordModal
@@ -2444,6 +2446,18 @@ function UsersModule({ currentEmail }: { currentEmail: string }) {
       return;
     }
     setNotice("Employee account updated");
+    setEditing(null);
+    load();
+  };
+  const removeUser = async (user: ManagedUser) => {
+    if (!confirm(`Permanently delete employee account for "${user.name}" (${user.email})? This action cannot be undone.`)) return;
+    const r = await fetch(`/api/users?id=${encodeURIComponent(user.id)}`, { method: "DELETE" });
+    const d = await r.json();
+    if (!r.ok) {
+      setNotice(d.error || "Unable to delete employee");
+      return;
+    }
+    setNotice("Employee account deleted permanently");
     setEditing(null);
     load();
   };
@@ -2530,6 +2544,7 @@ function UsersModule({ currentEmail }: { currentEmail: string }) {
           isSelf={editing.email === currentEmail}
           onClose={() => setEditing(null)}
           onUpdate={(c) => update(editing, c)}
+          onDelete={() => removeUser(editing)}
         />
       )}
     </div>
@@ -2638,11 +2653,13 @@ function ManageUserModal({
   isSelf,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   user: ManagedUser;
   isSelf: boolean;
   onClose: () => void;
   onUpdate: (v: Record<string, unknown>) => void;
+  onDelete?: () => void;
 }) {
   const [role, setRole] = useState(user.role),
     [password, setPassword] = useState("");
@@ -2691,6 +2708,20 @@ function ManageUserModal({
         )}
         <div className="modalactions">
           <button onClick={onClose}>Cancel</button>
+          {!isSelf && onDelete && (
+            <button
+              type="button"
+              className="danger"
+              onClick={onDelete}
+              style={{
+                borderColor: "#fecaca",
+                background: "#fef2f2",
+                color: "#dc2626",
+              }}
+            >
+              🗑 Delete account
+            </button>
+          )}
           {!isSelf && (
             <button onClick={() => onUpdate({ active: !user.active })}>
               {user.active ? "Deactivate" : "Activate"}

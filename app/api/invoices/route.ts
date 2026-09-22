@@ -1,6 +1,13 @@
 import { env } from "cloudflare:workers";
 import { requireUser } from "../../../lib/auth";
 
+const audit = (userId: string, action: string, id: string) =>
+  env.DB.prepare(
+    "INSERT INTO audit_log(user_id,action,entity_type,entity_id,created_at)VALUES(?,?,?,?,?)",
+  )
+    .bind(userId, action, "tax_invoice", id, new Date().toISOString())
+    .run();
+
 type Line = {
   description: string;
   sku?: string;
@@ -554,6 +561,31 @@ export async function PATCH(req: Request) {
       : Response.json(
           {
             error: e instanceof Error ? e.message : "Unable to update invoice",
+          },
+          { status: 500 },
+        );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await requireUser(["admin"]);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Invoice ID is required" }, { status: 400 });
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM tax_invoice_items WHERE invoice_id=?").bind(id),
+      env.DB.prepare("DELETE FROM invoice_payments WHERE invoice_id=?").bind(id),
+      env.DB.prepare("DELETE FROM tax_adjustment_notes WHERE invoice_id=?").bind(id),
+      env.DB.prepare("DELETE FROM tax_invoices WHERE id=?").bind(id),
+    ]);
+    await audit(user.id, "invoice_deleted", id);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json(
+          {
+            error: e instanceof Error ? e.message : "Unable to delete invoice",
           },
           { status: 500 },
         );

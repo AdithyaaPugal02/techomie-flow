@@ -142,8 +142,8 @@
   transition: background 0.14s ease;
 }
 .itemsrow.admin {
-  grid-template-columns: 56px 1.4fr 1fr 1.15fr 0.7fr 0.7fr 0.7fr 0.8fr 0.9fr 0.4fr;
-  min-width: 1250px;
+  grid-template-columns: 56px 1.4fr 1fr 1.15fr 0.7fr 0.7fr 0.7fr 0.8fr 0.9fr 130px;
+  min-width: 1280px;
 }
 .itemsrow:not(.itemshead):hover {
   background: #f8faff;

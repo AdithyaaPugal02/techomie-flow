@@ -40,3 +40,19 @@ export async function PATCH(req:Request){
   const transitions:R={review:"Under Review",return:"Returned for Correction",approve:row.paid_by==="Employee Personal Money"?"Reimbursement Pending":"Approved",reject:"Rejected",reimburse:"Reimbursed",cancel:"Cancelled"},next=transitions[action];if(!next)return Response.json({error:"Unsupported action"},{status:400});if(["return","reject"].includes(action)&&!p.comment)return Response.json({error:"A reason/comment is required"},{status:400});if(action==="approve"&&p.approvedAmount!==undefined&&Number(p.approvedAmount)>Number(row.amount))return Response.json({error:"Approved amount cannot exceed the claimed amount"},{status:400});if(action==="reimburse"&&(!p.paymentDate||!p.reference||!p.paymentMode))return Response.json({error:"Payment date, method and reference are required"},{status:400});const sets=["status=?","updated_at=?"],vals:any[]=[next,t];if(action==="approve"){sets.push("approved_amount=?","approved_by=?","approved_at=?","approver_comment=?");vals.push(Number(p.approvedAmount??row.amount),user.id,t,p.comment||null)}if(action==="reject"){sets.push("approved_by=?","rejection_reason=?");vals.push(user.id,p.comment)}if(action==="return"){sets.push("approver_comment=?");vals.push(p.comment)}if(action==="reimburse"){sets.push("reimbursement_date=?","reimbursement_mode=?","reimbursement_reference=?","payer=?");vals.push(p.paymentDate,p.paymentMode,p.reference,p.payer||user.name)}await env.DB.prepare(`UPDATE expenses SET ${sets.join(",")} WHERE id=?`).bind(...vals,id).run();await history(user.id,id,action,row.status,next,p.comment||p.reference||null,p);if(row.created_by)await notify(row.created_by,`expense_${action}`,`Expense ${id} ${next.toLowerCase()}`,id);return Response.json({ok:true,status:next})
  }catch(e){return e instanceof Response?e:Response.json({error:e instanceof Error?e.message:"Unable to update expense"},{status:500})}
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await requireUser(["admin"]);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Expense ID is required" }, { status: 400 });
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM expense_history WHERE expense_id=?").bind(id),
+      env.DB.prepare("DELETE FROM attachments WHERE entity_type='expense' AND entity_id=?").bind(id),
+      env.DB.prepare("DELETE FROM expenses WHERE id=?").bind(id),
+    ]);
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to delete expense" }, { status: 500 });
+  }
+}

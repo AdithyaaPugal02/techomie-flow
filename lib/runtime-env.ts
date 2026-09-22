@@ -34,7 +34,8 @@ function translate(source: string) {
     .replace(
       /(insert\s+into\s+"(?:activities|audit_log|customers|products|quotations|sites|variants)"\s*\(\s*"id"[^)]*\)\s*values\s*)\(\s*null\s*,/i,
       "$1(DEFAULT,",
-    );
+    )
+    .replace(/\s*\bRETURNING\b\s*/gi, " RETURNING ");
   if (/^\s*INSERT\s+/i.test(source) && /OR\s+IGNORE/i.test(source) && !/ON\s+CONFLICT/i.test(query)) {
     const returning = query.match(/\s+RETURNING\s+/i);
     query = returning

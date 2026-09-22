@@ -153,6 +153,10 @@
   align-items: center;
   transition: background 0.14s ease;
 }
+.customerrow.admin {
+  grid-template-columns: 1.3fr 1fr 0.8fr 0.9fr 0.7fr 0.7fr 140px;
+  min-width: 980px;
+}
 .customerrow:not(.customerhead):hover {
   background: #f8faff;
   cursor: pointer;

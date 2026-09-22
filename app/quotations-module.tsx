@@ -212,7 +212,7 @@ export default function QuotationsModule({ role }: { role: string }) {
         </button>
       </div>
       <div className="qlist">
-        <div className="qrow qhead">
+        <div className={`qrow qhead ${role === "admin" ? "admin" : ""}`}>
           <span>Quote</span>
           <span>Customer / Site</span>
           <span>Date / Validity</span>
@@ -222,7 +222,7 @@ export default function QuotationsModule({ role }: { role: string }) {
           <span>Actions</span>
         </div>
         {rows.map((x) => (
-          <div className="qrow" key={x.id} onClick={() => open(x.id)}>
+          <div className={`qrow ${role === "admin" ? "admin" : ""}`} key={x.id} onClick={() => open(x.id)}>
             <span>
               <b>{x.number}</b>
               <small>Revision {x.revision || 0}</small>
@@ -251,6 +251,25 @@ export default function QuotationsModule({ role }: { role: string }) {
               >
                 Open
               </button>
+              {role === "admin" && (
+                <button
+                  className="qdelbtn"
+                  title="Permanently delete quotation"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!confirm(`Permanently delete quotation ${x.number || x.id}? This action cannot be undone.`)) return;
+                    const r = await fetch(`/api/quotations?id=${x.id}`, { method: "DELETE" });
+                    const d = await r.json();
+                    if (r.ok) {
+                      load();
+                    } else {
+                      alert(d.error || "Unable to delete quotation");
+                    }
+                  }}
+                >
+                  🗑 Delete
+                </button>
+              )}
             </span>
           </div>
         ))}
@@ -842,6 +861,24 @@ function QuoteWorkspace({
               }}
             >
               Convert to project
+            </button>
+          )}
+          {role === "admin" && quote?.id && (
+            <button
+              style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
+              onClick={async () => {
+                if (!confirm(`Permanently delete quotation ${quote.number || quote.id}? This action cannot be undone.`)) return;
+                const r = await fetch(`/api/quotations?id=${quote.id}`, { method: "DELETE" });
+                const d = await r.json();
+                if (!r.ok) {
+                  notify(d.error || "Unable to delete quotation");
+                  return;
+                }
+                notify(`Quotation ${quote.number || quote.id} deleted`);
+                close();
+              }}
+            >
+              🗑 Delete quotation
             </button>
           )}
         </div>

@@ -80,7 +80,8 @@
   font-size: 9px;
   color: #667085;
 }
-.invoiceregister > button {
+.invoiceregister > button,
+.invoiceregister > .invoiceregistercard {
   width: 100%;
   border: 0;
   border-bottom: 1px solid #e7eaf0;
@@ -88,24 +89,34 @@
   padding: 14px 16px;
   text-align: left;
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.invoiceregister > button:hover {
+.invoiceregister > button:hover,
+.invoiceregister > .invoiceregistercard:hover {
   background: #f8fafc;
 }
-.invoiceregister > button.active {
+.invoiceregister > button.active,
+.invoiceregister > .invoiceregistercard.active {
   background: #eff6ff;
   border-left: 3px solid #1769ff;
 }
-.invoiceregister button span {
+.invoiceregister .invoicemain {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+}
+.invoiceregister button span,
+.invoiceregister .invoiceregistercard span {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.invoiceregister button span:last-child {
+.invoiceregister button span:last-child,
+.invoiceregister .invoiceregistercard span:last-child {
   align-items: flex-end;
 }
 .invoiceregister b,
@@ -139,6 +150,28 @@
 .invstatus.finalised {
   background: #eff8ff;
   color: #175cd3;
+}
+
+.invoicecardactions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.invoicecardactions .invdelbtn {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.invoicecardactions .invdelbtn:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
 }
 
 .emptyinvoice,

@@ -15,6 +15,71 @@ export async function GET(req: Request) {
       url = new URL(req.url),
       id = url.searchParams.get("id");
     if (id) {
+      try {
+        const consolidated = await env.DB.prepare(`
+          SELECT
+            (SELECT row_to_json(_c) FROM (SELECT c.*, u.name as assigned_name FROM customers c LEFT JOIN users u ON u.id=c.assigned_to WHERE c.id = $1) _c) as customer,
+            (SELECT COALESCE(json_agg(_ct), '[]') FROM (SELECT * FROM customer_contacts WHERE customer_id=$1 AND active=1 ORDER BY primary_contact DESC, name) _ct) as contacts,
+            (SELECT COALESCE(json_agg(_s), '[]') FROM (SELECT * FROM customer_sites WHERE customer_id=$1 AND archived=0 ORDER BY name) _s) as sites,
+            (SELECT COALESCE(json_agg(_l), '[]') FROM (SELECT l.*, u.name as assigned_name FROM leads l LEFT JOIN users u ON u.id=l.assigned_to WHERE l.customer_id=$1 AND l.archived=0 ORDER BY l.created_at DESC) _l) as leads,
+            (SELECT COALESCE(json_agg(_q), '[]') FROM (SELECT q.*, s.name as site_name FROM quotations q LEFT JOIN customer_sites s ON s.id=q.site_id WHERE q.customer_id=$1 ORDER BY q.created_at DESC) _q) as quotes,
+            (SELECT COALESCE(json_agg(_i), '[]') FROM (SELECT i.*, COALESCE((SELECT SUM(p.amount) FROM invoice_payments p WHERE p.invoice_id=i.id),0) as paid FROM tax_invoices i WHERE i.customer_id=$1 ORDER BY i.invoice_date DESC) _i) as invoices,
+            (SELECT COALESCE(json_agg(_p), '[]') FROM (SELECT p.*, s.name as site_name, u.name as manager_name FROM projects p LEFT JOIN customer_sites s ON s.id=p.site_id LEFT JOIN users u ON u.id=p.manager_id WHERE p.customer_id=$1 AND p.archived=0 ORDER BY p.updated_at DESC) _p) as projects,
+            (SELECT COALESCE(json_agg(_pm), '[]') FROM (SELECT p.* FROM payments p JOIN projects pr ON pr.id=p.project_id WHERE pr.customer_id=$1 AND p.archived=0 ORDER BY p.date DESC) _pm) as payments,
+            (SELECT COALESCE(json_agg(_w), '[]') FROM (SELECT w.*, s.name as site_name FROM warranties w LEFT JOIN customer_sites s ON s.id=w.site_id WHERE w.customer_id=$1) _w) as warranties,
+            (SELECT COALESCE(json_agg(_st), '[]') FROM (SELECT st.*, s.name as site_name, u.name as assigned_name FROM service_tickets st LEFT JOIN customer_sites s ON s.id=st.site_id LEFT JOIN users u ON u.id=st.assigned_to WHERE st.customer_id=$1 AND st.archived=0) _st) as service,
+            (SELECT COALESCE(json_agg(_amc), '[]') FROM (SELECT * FROM amc_contracts WHERE customer_id=$1) _amc) as amc,
+            (SELECT COALESCE(json_agg(_n), '[]') FROM (SELECT n.*, u.name as author FROM customer_notes n LEFT JOIN users u ON u.id=n.created_by WHERE n.customer_id=$1 ORDER BY n.created_at DESC) _n) as notes,
+            (SELECT COALESCE(json_agg(_doc), '[]') FROM (SELECT * FROM attachments WHERE entity_type='customer' AND entity_id=CAST($1 AS TEXT) AND archived=0 ORDER BY created_at DESC) _doc) as docs,
+            (SELECT COALESCE(json_agg(_act), '[]') FROM (SELECT a.*, u.name as staff_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id WHERE (a.entity_type='customer' AND a.entity_id=CAST($1 AS TEXT)) OR (a.entity_type IN ('lead','quotation','project','tax_invoice') AND a.entity_id IN(SELECT id FROM leads WHERE customer_id=$1)) ORDER BY a.created_at DESC LIMIT 100) _act) as activity
+        `).bind(id).first<any>();
+
+        if (consolidated && consolidated.customer) {
+          const c = consolidated.customer;
+          const inv = consolidated.invoices || [];
+          const received = inv.reduce((a: number, x: any) => a + Number(x.paid || 0), 0);
+          const invoiced = inv
+            .filter((x: any) => x.status !== "Draft" && x.status !== "Cancelled")
+            .reduce((a: number, x: any) => a + Number(x.grand_total || 0), 0);
+
+          return Response.json({
+            customer: { ...c, tags: c.tags ? (typeof c.tags === "string" ? JSON.parse(c.tags) : c.tags) : [] },
+            contacts: consolidated.contacts || [],
+            sites: consolidated.sites || [],
+            leads: consolidated.leads || [],
+            quotations: consolidated.quotes || [],
+            invoices: inv.map((x: any) => ({
+              ...x,
+              balance: Math.max(0, Number(x.grand_total) - Number(x.paid)),
+            })),
+            projects: consolidated.projects || [],
+            payments: consolidated.payments || [],
+            warranties: consolidated.warranties || [],
+            service: consolidated.service || [],
+            amc: consolidated.amc || [],
+            notes: consolidated.notes || [],
+            documents: consolidated.docs || [],
+            activity: consolidated.activity || [],
+            summary: {
+              sites: (consolidated.sites || []).length,
+              quoted: (consolidated.quotes || []).reduce((a: number, x: any) => a + Number(x.total || 0), 0),
+              accepted: (consolidated.quotes || [])
+                .filter((x: any) => ["accepted", "won", "invoiced"].includes(String(x.status).toLowerCase()))
+                .reduce((a: number, x: any) => a + Number(x.total || 0), 0),
+              invoiced,
+              received,
+              pending: Math.max(0, invoiced - received),
+              overdue: inv
+                .filter((x: any) => x.status !== "Paid" && String(x.due_date || "9999") < new Date().toISOString().slice(0, 10))
+                .reduce((a: number, x: any) => a + Math.max(0, Number(x.grand_total) - Number(x.paid)), 0),
+              activeProjects: (consolidated.projects || []).filter((x: any) => x.status !== "Completed").length,
+              completedProjects: (consolidated.projects || []).filter((x: any) => x.status === "Completed").length,
+              openService: (consolidated.service || []).filter((x: any) => !["Closed", "Resolved", "Completed"].includes(String(x.status))).length,
+            },
+          });
+        }
+      } catch {}
+
       const c = await env.DB.prepare(
         "SELECT c.*,u.name assigned_name FROM customers c LEFT JOIN users u ON u.id=c.assigned_to WHERE c.id=?",
       )
@@ -252,29 +317,122 @@ export async function POST(req: Request) {
         )
         .first<{ id: number }>();
     const code = customerCode(row!.id);
-    await env.DB.prepare("UPDATE customers SET customer_code=? WHERE id=?")
-      .bind(code, row!.id)
-      .run();
-    if (p.primaryContact) {
-      await env.DB.prepare(
-        "INSERT INTO customer_contacts(id,customer_id,name,designation,phone,whatsapp,email,primary_contact,active,created_at,updated_at)VALUES(?,?,?,?,?,?,?,1,1,?,?)",
-      )
-        .bind(
-          crypto.randomUUID(),
-          row!.id,
-          p.primaryContact,
-          p.primaryDesignation || null,
-          p.phone,
-          p.whatsapp || null,
-          p.email || null,
-          now,
-          now,
-        )
-        .run();
-    }
-    await log(u.id, "customer_created", String(row!.id));
+    const contactId = crypto.randomUUID();
+
+    // Run code update, contact insertion and audit log in parallel to save multiple network round-trips
+    await Promise.all([
+      env.DB.prepare("UPDATE customers SET customer_code=? WHERE id=?")
+        .bind(code, row!.id)
+        .run(),
+      p.primaryContact
+        ? env.DB.prepare(
+            "INSERT INTO customer_contacts(id,customer_id,name,designation,phone,whatsapp,email,primary_contact,active,created_at,updated_at)VALUES(?,?,?,?,?,?,?,1,1,?,?)",
+          )
+            .bind(
+              contactId,
+              row!.id,
+              p.primaryContact,
+              p.primaryDesignation || null,
+              p.phone,
+              p.whatsapp || null,
+              p.email || null,
+              now,
+              now,
+            )
+            .run()
+        : Promise.resolve(),
+      log(u.id, "customer_created", String(row!.id)),
+    ]);
+
+    const customerObj = {
+      id: row!.id,
+      customer_code: code,
+      customerCode: code,
+      customer_type: p.customerType || "Individual",
+      name: p.name,
+      display_name: p.displayName || p.name,
+      primary_contact: p.primaryContact || p.name,
+      phone: p.phone,
+      whatsapp: p.whatsapp || null,
+      email: p.email || null,
+      alternate_phone: p.alternatePhone || null,
+      gstin: p.gstin || null,
+      pan: p.pan || null,
+      billing_address: p.billingAddress || null,
+      city: p.city || null,
+      state: p.state || "Tamil Nadu",
+      pincode: p.pincode || null,
+      country: p.country || "India",
+      lead_source: p.leadSource || null,
+      assigned_to: p.assignedTo || u.id,
+      assigned_name: u.name,
+      status: p.status || "Prospect",
+      notes: p.notes || null,
+      tags: p.tags || [],
+      archived: 0,
+      created_at: now,
+      invoiced: 0,
+      received: 0,
+      balance: 0,
+      site_count: 0,
+    };
+
+    const detailObj = {
+      customer: customerObj,
+      contacts: p.primaryContact
+        ? [
+            {
+              id: contactId,
+              customer_id: row!.id,
+              name: p.primaryContact,
+              designation: p.primaryDesignation || null,
+              phone: p.phone,
+              whatsapp: p.whatsapp || null,
+              email: p.email || null,
+              primary_contact: 1,
+              active: 1,
+              created_at: now,
+              updated_at: now,
+            },
+          ]
+        : [],
+      sites: [],
+      leads: [],
+      quotations: [],
+      invoices: [],
+      projects: [],
+      payments: [],
+      warranties: [],
+      service: [],
+      amc: [],
+      notes: [],
+      documents: [],
+      activity: [
+        {
+          user_id: u.id,
+          staff_name: u.name,
+          action: "customer_created",
+          entity_type: "customer",
+          entity_id: String(row!.id),
+          created_at: now,
+        },
+      ],
+      summary: {
+        sites: 0,
+        quoted: 0,
+        accepted: 0,
+        invoiced: 0,
+        received: 0,
+        pending: 0,
+        overdue: 0,
+        activeProjects: 0,
+        completedProjects: 0,
+        openService: 0,
+      },
+    };
+
     return Response.json(
-      { customer: { id: row!.id, customerCode: code } },
+      { customer: customerObj, detail: detailObj },
       { status: 201 },
     );
   } catch (e) {
@@ -453,6 +611,32 @@ export async function PATCH(req: Request) {
       : Response.json(
           {
             error: e instanceof Error ? e.message : "Unable to update customer",
+          },
+          { status: 500 },
+        );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await requireUser(["admin"]);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Customer ID is required" }, { status: 400 });
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM customer_contacts WHERE customer_id=?").bind(id),
+      env.DB.prepare("DELETE FROM customer_notes WHERE customer_id=?").bind(id),
+      env.DB.prepare("DELETE FROM customer_sites WHERE customer_id=?").bind(id),
+      env.DB.prepare("DELETE FROM attachments WHERE entity_type='customer' AND entity_id=?").bind(id),
+      env.DB.prepare("DELETE FROM customers WHERE id=?").bind(id),
+    ]);
+    await log(user.id, "customer_deleted", String(id));
+    return Response.json({ ok: true });
+  } catch (e) {
+    return e instanceof Response
+      ? e
+      : Response.json(
+          {
+            error: e instanceof Error ? e.message : "Unable to delete customer",
           },
           { status: 500 },
         );

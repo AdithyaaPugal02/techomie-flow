@@ -421,23 +421,40 @@ export async function DELETE(req: Request) {
   try {
     const entity = entityName(req),
       config = configs[entity];
-    if (!config || !config.archive)
+    if (!config)
+      return Response.json(
+        { error: "Entity is not supported" },
+        { status: 400 },
+      );
+    const user = await requireUser(config.roles),
+      url = new URL(req.url),
+      id = url.searchParams.get("id"),
+      permanent = url.searchParams.get("permanent") === "1" || url.searchParams.get("permanent") === "true";
+    if (!id)
+      return Response.json({ error: "Record id is required" }, { status: 400 });
+    if (permanent) {
+      if (user.role !== "admin") {
+        return Response.json({ error: "Admin access required for permanent delete" }, { status: 403 });
+      }
+      await env.DB.prepare(`DELETE FROM ${config.table} WHERE id=?`)
+        .bind(id)
+        .run();
+      await writeAudit(user.id, `${entity}_deleted`, entity, id);
+      return Response.json({ ok: true, deleted: true });
+    }
+    if (!config.archive)
       return Response.json(
         { error: "Archiving is not supported" },
         { status: 400 },
       );
-    const user = await requireUser(config.roles),
-      id = new URL(req.url).searchParams.get("id");
-    if (!id)
-      return Response.json({ error: "Record id is required" }, { status: 400 });
     await env.DB.prepare(`UPDATE ${config.table} SET archived=1 WHERE id=?`)
       .bind(id)
       .run();
     await writeAudit(user.id, `${entity}_archived`, entity, id);
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, archived: true });
   } catch (e) {
     return e instanceof Response
       ? e
-      : Response.json({ error: "Unable to archive record" }, { status: 500 });
+      : Response.json({ error: "Unable to delete record" }, { status: 500 });
   }
 }
