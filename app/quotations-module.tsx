@@ -474,7 +474,7 @@ function QuoteWorkspace({
         { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
       ],
       terms: "",
-      warranty: "Standard Products: 2 Years Full Replacement + 4 Years Service Warranty\nRoyal Edge & Touch Series: 10 Years Full Replacement + 10 Years Service Warranty",
+      warranty: "Standard Products: 2+4 Years Warranty\nRoyal Edge & Touch Series: 10+10 Years Warranty",
       taxMode: "GST",
     }),
     [tab, setTab] = useState(initialTab),
@@ -3782,24 +3782,18 @@ function getItemFeatureTag(item: R): string | null {
         {/* Warranty Assurance Cards */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
-            <div className="qwarrantybadge"><strong>2Y + 4Y</strong></div>
+            <div className="qwarrantybadge"><strong>2+4</strong></div>
             <div>
               <small>STANDARD SMART PRODUCTS</small>
-              <b><strong className="qwarranty-years">2 Years</strong> Full Replacement + <strong className="qwarranty-years">4 Years</strong> Service Warranty</b>
-              <p>
-                Covers smart touch switches, dimmers, fan controllers, curtain modules, and gateway hubs with <strong className="qwarranty-years">2+4 Years</strong> warranty against manufacturing and electronic defects.
-              </p>
+              <b><strong className="qwarranty-years">2+4 Years</strong> Warranty</b>
             </div>
           </article>
 
           <article className="qwarrantycard gold">
-            <div className="qwarrantybadge"><strong>10Y + 10Y</strong></div>
+            <div className="qwarrantybadge"><strong>10+10</strong></div>
             <div>
               <small>ROYAL EDGE &amp; TOUCH SERIES</small>
-              <b><strong className="qwarranty-years">10 Years</strong> Full Replacement + <strong className="qwarranty-years">10 Years</strong> Service Warranty</b>
-              <p>
-                Exclusive <strong className="qwarranty-years">10+10 Years</strong> warranty for Royal Edge CNC panels and touch series glass switches with complimentary priority onsite service visits.
-              </p>
+              <b><strong className="qwarranty-years">10+10 Years</strong> Warranty</b>
             </div>
           </article>
         </div>
