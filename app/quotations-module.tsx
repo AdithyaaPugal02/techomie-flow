@@ -408,7 +408,7 @@ function QuoteWorkspace({
         { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
       ],
       terms: "",
-      warranty: "Standard Products: 2 Years Full Replacement + 4 Years Service Warranty\nRoyal Edge Series: 5 Years Full Replacement + 5 Years Service Warranty",
+      warranty: "Standard Products: 2 Years Full Replacement + 4 Years Service Warranty\nRoyal Edge & Touch Series: 10 Years Full Replacement + 10 Years Service Warranty",
       taxMode: "GST",
     }),
     [tab, setTab] = useState(initialTab),
@@ -3439,12 +3439,12 @@ function getItemFeatureTag(item: R): string | null {
           </article>
 
           <article className="qwarrantycard gold">
-            <div className="qwarrantybadge">5Y + 5Y</div>
+            <div className="qwarrantybadge">10Y + 10Y</div>
             <div>
-              <small>ROYAL EDGE / TOUCH SERIES</small>
-              <b>5 Years Full Replacement + 5 Years Service Warranty</b>
+              <small>ROYAL EDGE &amp; TOUCH SERIES</small>
+              <b>10 Years Full Replacement + 10 Years Service Warranty</b>
               <p>
-                Exclusive warranty for Royal Edge CNC panels and color touch glass switches with complimentary priority onsite service visits.
+                Exclusive 10+10 warranty for Royal Edge CNC panels and touch series glass switches with complimentary priority onsite service visits.
               </p>
             </div>
           </article>
