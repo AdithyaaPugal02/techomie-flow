@@ -89,6 +89,72 @@ function normalizeSwitchMat(raw?: string): string {
   return raw;
 }
 
+interface SwitchSpecs {
+  moduleSize: string;
+  switches: string;
+  fan: string;
+  hasHvSwitch: boolean;
+  hasAny16A: boolean;
+  plugs: string;
+}
+
+function parseSwitchSpecs(name?: string, attrs: Record<string, any> = {}): SwitchSpecs {
+  const normName = name || "";
+
+  // 1. Module Size:
+  let moduleSize = attrs.module || "";
+  if (!moduleSize || moduleSize === "-" || moduleSize === "Per Icon") {
+    const m = normName.match(/(\d+)\s*M(?:odule)?\b/i);
+    if (m) moduleSize = m[1];
+  }
+  moduleSize = String(moduleSize || "").replace(/M$/i, "").trim();
+
+  // 2. Switches (gang count):
+  let switches = "";
+  const sw = normName.match(/(\d+)\s*Switch/i);
+  if (sw) {
+    switches = sw[1];
+  } else if (/Door\s*Bell|Bell\b/i.test(normName)) {
+    switches = "Bell";
+  } else if (/Curtain/i.test(normName)) {
+    switches = "Curtain";
+  } else if (/Scene/i.test(normName)) {
+    switches = "Scene";
+  } else if (/Dimmer/i.test(normName)) {
+    switches = "Dimmer";
+  } else {
+    switches = "0";
+  }
+
+  // 3. Fan count:
+  let fan = "0";
+  const fn = normName.match(/(\d+)\s*Fan/i);
+  if (fn) {
+    fan = fn[1];
+  } else if (/\bFan\b/i.test(normName)) {
+    fan = "1";
+  }
+
+  // 4. HV switch (16A heavy duty switch) vs any 16A load:
+  const hasHvSwitch =
+    /(\d+)-16A/i.test(normName) ||
+    /16A\s*Switch/i.test(normName) ||
+    /\bHV\s*Switch\b/i.test(normName) ||
+    /\bHeavy\b/i.test(normName);
+  const hasAny16A = hasHvSwitch || /\b16A\b/i.test(normName) || /\bHV\b/i.test(normName);
+
+  // 5. Plug / Socket count:
+  let plugs = "0";
+  const pl = normName.match(/(\d+)\s*Socket/i);
+  if (pl) {
+    plugs = pl[1];
+  } else if (/Socket|Plug/i.test(normName)) {
+    plugs = "1";
+  }
+
+  return { moduleSize, switches, fan, hasHvSwitch, hasAny16A, plugs };
+}
+
 export default function QuotationsModule({ role }: { role: string }) {
   const [view, setView] = useState<"list" | "quote">("list"),
     [rows, setRows] = useState<R[]>([]),
@@ -1775,6 +1841,11 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     [model, setModel] = useState(""),
     [technology, setTechnology] = useState(""),
     [material, setMaterial] = useState(""),
+    [switchCount, setSwitchCount] = useState(""),
+    [fanCount, setFanCount] = useState(""),
+    [hvFilter, setHvFilter] = useState(""),
+    [plugCount, setPlugCount] = useState(""),
+    [moduleSize, setModuleSize] = useState(""),
     [added, setAdded] = useState(0),
     [showCustom, setShowCustom] = useState(false),
     [custom, setCustom] = useState<R>({ name: "", description: "", qty: 1, unit: "Nos", price: 0, discount: 0, gst: 18, warranty: "", note: "" }),
@@ -1816,11 +1887,13 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     }
     const normTech = normalizeSwitchTech(attrs.technology);
     const normMat = normalizeSwitchMat(attrs.material || attrs.finish);
+    const switchSpecs = parseSwitchSpecs(item.name, attrs);
     return {
       ...item,
       parsedAttributes: attrs,
       normTech,
       normMat,
+      switchSpecs,
     };
   });
 
@@ -1848,6 +1921,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
       const displayName = /^noviq\s/i.test(item.name)
         ? item.name
         : (item.brand === "Noviq" || item.brand === "Noviq OEM" ? `Noviq ${item.name}` : item.name);
+      const specs = parseSwitchSpecs(displayName, item.parsedAttributes);
       switchModelsMap.set(key, {
         key,
         productId: item.product_id,
@@ -1856,7 +1930,8 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         brand: item.brand,
         category: item.category,
         series: item.series,
-        module: item.parsedAttributes.module || "",
+        module: specs.moduleSize || item.parsedAttributes.module || "",
+        specs,
         shortDescription: item.short_description || item.description,
         description: item.description,
         unit: item.unit || "Nos",
@@ -1885,6 +1960,36 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     ? SMART_SWITCH_MATERIALS.map((m) => m.id)
     : [...new Set(regularItems.flatMap((item) => [item.parsedAttributes.material, item.parsedAttributes.finish, item.normMat]).filter(Boolean))].sort();
 
+  const availableModules = Array.from(
+    new Set(allSwitchModels.map((m) => m.module || m.specs?.moduleSize).filter(Boolean))
+  ).sort((a, b) => Number(a) - Number(b));
+
+  const availableSwitches = Array.from(
+    new Set(allSwitchModels.map((m) => m.specs?.switches).filter((s) => s && s !== "0"))
+  ).sort((a, b) => {
+    const numA = Number(a), numB = Number(b);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    if (!isNaN(numA)) return -1;
+    if (!isNaN(numB)) return 1;
+    return String(a).localeCompare(String(b));
+  });
+
+  const activeSwitchFiltersCount = [
+    moduleSize,
+    switchCount,
+    fanCount,
+    hvFilter,
+    plugCount,
+  ].filter(Boolean).length;
+
+  const resetSwitchFilters = () => {
+    setModuleSize("");
+    setSwitchCount("");
+    setFanCount("");
+    setHvFilter("");
+    setPlugCount("");
+  };
+
   const filteredSwitchModels = allSwitchModels.filter((m) => {
     if (category && category !== "Smart switches") return false;
     if (model && m.key !== model && String(m.productId) !== model) return false;
@@ -1895,6 +2000,28 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     if (material) {
       const hasMat = m.variants.some((v: R) => v.normMat === material);
       if (!hasMat) return false;
+    }
+    // Switch specifications filters:
+    if (moduleSize && m.module !== moduleSize && m.specs?.moduleSize !== moduleSize) {
+      return false;
+    }
+    if (switchCount && m.specs?.switches !== switchCount) {
+      return false;
+    }
+    if (fanCount) {
+      if (fanCount === "0" && m.specs?.fan !== "0") return false;
+      if (fanCount === "with_fan" && m.specs?.fan === "0") return false;
+      if (fanCount !== "0" && fanCount !== "with_fan" && m.specs?.fan !== fanCount) return false;
+    }
+    if (hvFilter) {
+      if (hvFilter === "with_hv" && !m.specs?.hasHvSwitch) return false;
+      if (hvFilter === "any_16a" && !m.specs?.hasAny16A) return false;
+      if (hvFilter === "standard" && m.specs?.hasHvSwitch) return false;
+    }
+    if (plugCount) {
+      if (plugCount === "0" && m.specs?.plugs !== "0") return false;
+      if (plugCount === "with_plug" && m.specs?.plugs === "0") return false;
+      if (plugCount !== "0" && plugCount !== "with_plug" && m.specs?.plugs !== plugCount) return false;
     }
     return true;
   });
@@ -1958,6 +2085,26 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     if (model && String(item.product_id) !== model) return false;
     if (technology && item.normTech !== technology && item.parsedAttributes.technology !== technology) return false;
     if (material && item.normMat !== material && item.parsedAttributes.material !== material && item.parsedAttributes.finish !== material) return false;
+    if (activeSwitchFiltersCount > 0) {
+      const specs = item.switchSpecs;
+      if (moduleSize && specs?.moduleSize !== moduleSize) return false;
+      if (switchCount && specs?.switches !== switchCount) return false;
+      if (fanCount) {
+        if (fanCount === "0" && specs?.fan !== "0") return false;
+        if (fanCount === "with_fan" && specs?.fan === "0") return false;
+        if (fanCount !== "0" && fanCount !== "with_fan" && specs?.fan !== fanCount) return false;
+      }
+      if (hvFilter) {
+        if (hvFilter === "with_hv" && !specs?.hasHvSwitch) return false;
+        if (hvFilter === "any_16a" && !specs?.hasAny16A) return false;
+        if (hvFilter === "standard" && specs?.hasHvSwitch) return false;
+      }
+      if (plugCount) {
+        if (plugCount === "0" && specs?.plugs !== "0") return false;
+        if (plugCount === "with_plug" && specs?.plugs === "0") return false;
+        if (plugCount !== "0" && plugCount !== "with_plug" && specs?.plugs !== plugCount) return false;
+      }
+    }
     return true;
   });
 
@@ -1988,7 +2135,13 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         />
 
         <div className="itempickerfilters">
-          <select value={category} onChange={(e) => { setCategory(e.target.value); setModel(""); setTechnology(""); setMaterial(""); }}>
+          <select value={category} onChange={(e) => {
+            setCategory(e.target.value);
+            setModel("");
+            setTechnology("");
+            setMaterial("");
+            resetSwitchFilters();
+          }}>
             <option value="">All categories</option>
             {categories.map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
@@ -2006,6 +2159,118 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
           </select>
           <button className="primary" onClick={() => setShowCustom((value) => !value)}>＋ Custom item</button>
         </div>
+
+        {(!category || category === "Smart switches") && (
+          <div className="switchspecsfilterbar">
+            <div className="switchspecsfilterheader">
+              <span>
+                <b>Switch Board Filters</b>
+                {activeSwitchFiltersCount > 0 && (
+                  <span className="filtercountbadge">{activeSwitchFiltersCount} active</span>
+                )}
+                <small style={{ color: "#64748b", fontWeight: "normal" }}>
+                  ({filteredSwitchModels.length} models)
+                </small>
+              </span>
+              {activeSwitchFiltersCount > 0 && (
+                <button
+                  type="button"
+                  className="switchspecsresetbtn"
+                  onClick={resetSwitchFilters}
+                >
+                  ✕ Reset filters
+                </button>
+              )}
+            </div>
+
+            <div className="switchspecsgrid">
+              <div className="switchspecitem">
+                <label><span>📐 Module Size</span></label>
+                <select
+                  className={moduleSize ? "active-filter" : ""}
+                  value={moduleSize}
+                  onChange={(e) => setModuleSize(e.target.value)}
+                >
+                  <option value="">All modules</option>
+                  {availableModules.map((m) => (
+                    <option key={m} value={m}>{m} Module ({m}M)</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="switchspecitem">
+                <label><span>🔘 No. of Switches</span></label>
+                <select
+                  className={switchCount ? "active-filter" : ""}
+                  value={switchCount}
+                  onChange={(e) => setSwitchCount(e.target.value)}
+                >
+                  <option value="">All switches</option>
+                  {availableSwitches.map((sw) => {
+                    const label = !isNaN(Number(sw))
+                      ? `${sw} Switches`
+                      : sw === "Bell"
+                        ? "Door Bell"
+                        : sw === "Curtain"
+                          ? "Curtain Switch"
+                          : sw === "Scene"
+                            ? "Scene Controller"
+                            : sw === "Dimmer"
+                              ? "Dimmer Switch"
+                              : sw;
+                    return <option key={sw} value={sw}>{label}</option>;
+                  })}
+                  <option value="0">No Switches (0)</option>
+                </select>
+              </div>
+
+              <div className="switchspecitem">
+                <label><span>🌀 Fan</span></label>
+                <select
+                  className={fanCount ? "active-filter" : ""}
+                  value={fanCount}
+                  onChange={(e) => setFanCount(e.target.value)}
+                >
+                  <option value="">All fans</option>
+                  <option value="0">Without Fan (0)</option>
+                  <option value="with_fan">With Fan (Any)</option>
+                  <option value="1">1 Fan</option>
+                  <option value="2">2 Fans</option>
+                </select>
+              </div>
+
+              <div className="switchspecitem">
+                <label><span>⚡ HV Switch (16A)</span></label>
+                <select
+                  className={hvFilter ? "active-filter" : ""}
+                  value={hvFilter}
+                  onChange={(e) => setHvFilter(e.target.value)}
+                >
+                  <option value="">All HV options</option>
+                  <option value="with_hv">⚡ 16A HV Switch</option>
+                  <option value="any_16a">⚡ Any 16A (Switch/Socket)</option>
+                  <option value="standard">Standard (6A only)</option>
+                </select>
+              </div>
+
+              <div className="switchspecitem">
+                <label><span>🔌 Plug / Socket</span></label>
+                <select
+                  className={plugCount ? "active-filter" : ""}
+                  value={plugCount}
+                  onChange={(e) => setPlugCount(e.target.value)}
+                >
+                  <option value="">All sockets / plugs</option>
+                  <option value="0">Without Socket (0)</option>
+                  <option value="with_plug">With Socket (Any)</option>
+                  <option value="1">1 Socket</option>
+                  <option value="2">2 Sockets</option>
+                  <option value="3">3 Sockets</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showCustom && (
           <div className="customquoteitem">
@@ -2053,7 +2318,21 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                       <div className="switchmodeldetails">
                         <small>{m.brand} · {m.category}{m.series ? ` · ${m.series}` : ""}</small>
                         <b>{m.name || activeVariant.name || activeVariant.sku || "Smart Switch"}</b>
-                        {m.module && <span className="modulebadge">{m.module} Module Panel</span>}
+                        <div className="switchspecstags">
+                          {m.module && <span className="modulebadge">{m.module} Module Panel</span>}
+                          {m.specs?.switches && m.specs.switches !== "0" && (
+                            <span className="specbadge switchbadge">🔘 {m.specs.switches} Switch</span>
+                          )}
+                          {m.specs?.fan && m.specs.fan !== "0" && (
+                            <span className="specbadge fanbadge">🌀 {m.specs.fan} Fan</span>
+                          )}
+                          {m.specs?.hasHvSwitch && (
+                            <span className="specbadge hvbadge">⚡ 16A HV</span>
+                          )}
+                          {m.specs?.plugs && m.specs.plugs !== "0" && (
+                            <span className="specbadge plugbadge">🔌 {m.specs.plugs} Socket</span>
+                          )}
+                        </div>
                         {m.shortDescription && <p>{m.shortDescription}</p>}
                       </div>
                     </div>
