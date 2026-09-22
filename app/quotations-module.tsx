@@ -2612,8 +2612,8 @@ function getItemFeatureTag(item: R): string | null {
     const pages: R[] = [];
     let currentPageRooms: R[] = [];
     let currentUsed = 0;
-    // Guaranteed 148mm room budget: preserves 25mm clearance before footer on all pages
-    const getBudget = (isFirst: boolean) => 148;
+    // Guaranteed room budget: 192mm accommodates up to 10 items + floor summary on a single A4 page
+    const getBudget = (isFirst: boolean) => 192;
 
     const pushCurrentPage = () => {
       if (currentPageRooms.length) {
@@ -2648,10 +2648,10 @@ function getItemFeatureTag(item: R): string | null {
       let chunkIdx = 0;
       while (itemIdx < items.length) {
         const curBudget = getBudget(pages.length === 0);
-        // Room header (14mm) + table thead (9mm) + subtotal (8mm) + margin (4mm) = 35mm (chunk 0)
-        // Continued chunk: banner (12mm) + thead (9mm) + subtotal (8mm) + margin (4mm) = 30mm
-        const overhead = chunkIdx === 0 ? 35 : 30;
-        const itemHeight = 22; // Height for large product photo + description
+        // Room header (12mm) + table thead (8mm) + subtotal (6mm) = 26mm (chunk 0)
+        // Continued chunk: banner (10mm) + thead (8mm) + subtotal (6mm) = 24mm
+        const overhead = chunkIdx === 0 ? 26 : 24;
+        const itemHeight = 14; // Compact product photo + single-line title & specs
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
         // break to next page immediately so the room starts cleanly at the top of the next page!
@@ -2683,7 +2683,7 @@ function getItemFeatureTag(item: R): string | null {
       }
     }
 
-    const floorSummaryCost = 36;
+    const floorSummaryCost = 28;
     const finalBudget = getBudget(pages.length === 0);
     if (currentPageRooms.length && currentUsed + floorSummaryCost <= finalBudget) {
       pages.push({ rooms: currentPageRooms, hasFloorSummary: true });
@@ -3199,13 +3199,13 @@ function getItemFeatureTag(item: R): string | null {
         );
       })}
 
-      {/* FLOOR-WISE INVESTMENT SUMMARY PAGE */}
+      {/* COMMERCIAL & PAYMENT TERMS PAGE */}
       <section className="qpaperfinance">
-        {head("COMMERCIAL SUMMARY")}
+        {head("COMMERCIAL & PAYMENT TERMS")}
         <div className="qsectiontitle">
-          <small>INVESTMENT OVERVIEW</small>
-          <h2>Floor-Wise Investment Summary</h2>
-          <span>All values in INR</span>
+          <small>INVESTMENT OVERVIEW &amp; PAYMENT SCHEDULE</small>
+          <h2>Commercial Summary &amp; Payment Terms</h2>
+          <span>All values in INR · Standard Commercial Proposal</span>
         </div>
 
         <div className="qfloortablebox">
@@ -3252,7 +3252,7 @@ function getItemFeatureTag(item: R): string | null {
               {snap.projectItems && snap.projectItems.length > 0 && (
                 <tr>
                   <td>
-                    <b>Project-Level Items & Gate Automation</b>
+                    <b>Project-Level Items &amp; Gate Automation</b>
                     <small>Shared controllers, gateways, and outdoor items</small>
                   </td>
                   <td style={{ textAlign: "center" }}>—</td>
@@ -3276,7 +3276,7 @@ function getItemFeatureTag(item: R): string | null {
         <div className="qcommercialbreakdown">
           <div className="qcalcrows">
             <div className="qcalcrow">
-              <span>Product & System Subtotal</span>
+              <span>Product &amp; System Subtotal</span>
               <b>{money(totals.subtotal)}</b>
             </div>
             {totals.discount > 0 && (
@@ -3328,22 +3328,63 @@ function getItemFeatureTag(item: R): string | null {
             </ul>
           </aside>
         </div>
-        {foot("Floor-Wise Investment Summary")}
-      </section>
 
-      {/* INSTALLATION & SCOPE PAGE */}
-      <section className="qpaperscope">
-        {head("INSTALLATION & SCOPE")}
-        <div className="qsectiontitle">
-          <small>STANDARDS & EXECUTION</small>
-          <h2>Installation, Commissioning & Scope</h2>
-          <span>Standard Operating Procedures</span>
+        {/* PAYMENT MILESTONES */}
+        <div className="qmilestones-block">
+          <div className="qsubheading">
+            <small>PAYMENT SCHEDULE</small>
+            <h4>Payment Milestones</h4>
+          </div>
+          <div className="qmilestones">
+            {(snap.paymentPlan && snap.paymentPlan.length
+              ? snap.paymentPlan
+              : [
+                  { name: "Advance", percent: 20, condition: "Order confirmation & procurement" },
+                  { name: "Procurement", percent: 60, condition: "On arrival of hardware / dispatch" },
+                  { name: "Handover", percent: 20, condition: "Testing, commissioning & handover" },
+                ]
+            ).map((m: R, index: number) => (
+              <article key={m.name || index}>
+                <i>{String(index + 1).padStart(2, "0")}</i>
+                <span>
+                  <small>{m.percent}% MILESTONE</small>
+                  <b>{m.name}</b>
+                  <em>{m.condition}</em>
+                </span>
+                <strong>
+                  {money((totals.grand * Number(m.percent || 0)) / 100)}
+                </strong>
+              </article>
+            ))}
+          </div>
         </div>
 
+        {/* COMMERCIAL TERMS */}
+        <div className="qcommercialtermsbox">
+          <small>TERMS &amp; CONDITIONS</small>
+          <p>
+            {snap.terms ||
+              "1. Quotation validity is 30 calendar days from the date of issue. 2. Delivery lead time is 2 to 3 weeks upon receipt of confirmed advance. 3. Taxes are charged in accordance with Indian GST regulations. 4. Techomie reserves the right to revise commercial quotes if the floor plan or room switchboard point count changes during execution."}
+          </p>
+        </div>
+
+        {foot("Commercial & Payment Terms")}
+      </section>
+
+      {/* EXECUTION STANDARDS, WARRANTY & SIGN-OFF PAGE */}
+      <section className="qpaperterms qpaperclosing">
+        {head("EXECUTION & SIGN-OFF")}
+        <div className="qsectiontitle">
+          <small>STANDARDS, WARRANTY &amp; ACCEPTANCE</small>
+          <h2>Installation Scope, Warranty &amp; Customer Sign-Off</h2>
+          <span>Standard Operating Procedures &amp; Official Authorization</span>
+        </div>
+
+        {/* Installation Policy */}
         <div className="qpolicybox">
           <div className="qpolicyicon">🔧</div>
           <div>
-            <b>Installation & Commissioning Policy</b>
+            <b>Installation &amp; Commissioning Policy</b>
             <p>
               {snap.details?.installationScope ||
                 "Installation, configuration, testing and commissioning of the quoted automation products shall be carried out by Techomie. Product-wise installation will be coordinated room-wise and floor-wise. Gate automation installation includes motor mounting and commissioning, with required welding support to be arranged at site. Smart lock installation will be coordinated with the client's carpenter."}
@@ -3351,6 +3392,7 @@ function getItemFeatureTag(item: R): string | null {
           </div>
         </div>
 
+        {/* Scope of Work & Prerequisites */}
         <div className="qscopetwocol">
           <article className="qscopebox">
             <small>TECHOMIE SCOPE OF WORK</small>
@@ -3358,9 +3400,9 @@ function getItemFeatureTag(item: R): string | null {
               <li>Supply of genuine smart touch switches, gateways, sensors, and controllers.</li>
               <li>Precision retrofitting and termination in existing or new switch backboxes.</li>
               <li>Wireless mesh (Zigbee / Wi-Fi) pairing for zero-latency point response.</li>
-              <li>Setup of Techomie Mobile App on client smartphones (iOS & Android).</li>
-              <li>Integration with voice assistants (Amazon Alexa & Google Home).</li>
-              <li>Programming smart routines: Morning Wakeup, Cinema Mode, All-Off & Away.</li>
+              <li>Setup of Techomie Mobile App on client smartphones (iOS &amp; Android).</li>
+              <li>Integration with voice assistants (Amazon Alexa &amp; Google Home).</li>
+              <li>Programming smart routines: Morning Wakeup, Cinema Mode, All-Off &amp; Away.</li>
               <li>Full system live demonstration, handover, and user guidance.</li>
             </ul>
           </article>
@@ -3383,42 +3425,7 @@ function getItemFeatureTag(item: R): string | null {
           <span>Civil masonry, conduit chasing, repainting, structural wall cutting, or main electrical meter wiring.</span>
         </div>
 
-        {foot("Installation & Scope")}
-      </section>
-
-      {/* PAYMENT & WARRANTY PAGE */}
-      <section className="qpaperterms">
-        {head("PAYMENT & WARRANTY")}
-        <div className="qsectiontitle">
-          <small>COMMERCIAL TERMS</small>
-          <h2>Payment Milestones & Warranty Assurance</h2>
-          <span>Clear & Transparent Terms</span>
-        </div>
-
-        <div className="qmilestones">
-          {(snap.paymentPlan && snap.paymentPlan.length
-            ? snap.paymentPlan
-            : [
-                { name: "Advance", percent: 50, condition: "Order confirmation & procurement" },
-                { name: "Inception of Installation", percent: 20, condition: "On arrival of hardware at site" },
-                { name: "On Handover", percent: 20, condition: "After system testing & commissioning" },
-                { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
-              ]
-          ).map((m: R, index: number) => (
-            <article key={m.name || index}>
-              <i>{String(index + 1).padStart(2, "0")}</i>
-              <span>
-                <small>{m.percent}% MILESTONE</small>
-                <b>{m.name}</b>
-                <em>{m.condition}</em>
-              </span>
-              <strong>
-                {money((totals.grand * Number(m.percent || 0)) / 100)}
-              </strong>
-            </article>
-          ))}
-        </div>
-
+        {/* Warranty Assurance Cards */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
             <div className="qwarrantybadge">2Y + 4Y</div>
@@ -3443,26 +3450,7 @@ function getItemFeatureTag(item: R): string | null {
           </article>
         </div>
 
-        <div className="qcommercialtermsbox">
-          <small>TERMS & CONDITIONS</small>
-          <p>
-            {snap.terms ||
-              "1. Quotation validity is 30 calendar days from the date of issue. 2. Delivery lead time is 2 to 3 weeks upon receipt of confirmed advance. 3. Taxes are charged in accordance with Indian GST regulations. 4. Techomie reserves the right to revise commercial quotes if the floor plan or room switchboard point count changes during execution."}
-          </p>
-        </div>
-
-        {foot("Payment & Warranty")}
-      </section>
-
-      {/* BANK DETAILS, CUSTOMER ACCEPTANCE & SIGN-OFF PAGE */}
-      <section className="qpaperterms qpaperclosing">
-        {head("ACCEPTANCE & SIGN-OFF")}
-        <div className="qsectiontitle">
-          <small>PROJECT CONFIRMATION</small>
-          <h2>Bank Details & Customer Sign-Off</h2>
-          <span>Official Authorization</span>
-        </div>
-
+        {/* Bank Details */}
         <div className="qbankcard">
           <div className="qbankhead">
             <b>TECHOMIE OFFICIAL BANK ACCOUNT</b>
@@ -3496,6 +3484,7 @@ function getItemFeatureTag(item: R): string | null {
           </div>
         </div>
 
+        {/* Acceptance & Signatures */}
         <div className="qacceptanceblock">
           <div className="qsignbox">
             <div className="qsigntitle">FOR TECHOMIE SMART DEVICES</div>
@@ -3504,7 +3493,7 @@ function getItemFeatureTag(item: R): string | null {
             </p>
             <div className="qsignspace">
               {branding.signature && (
-                <img src={branding.signature} alt="Sign" style={{ maxHeight: "36px" }} />
+                <img src={branding.signature} alt="Sign" style={{ maxHeight: "32px" }} />
               )}
             </div>
             <div className="qsignline">
@@ -3514,21 +3503,21 @@ function getItemFeatureTag(item: R): string | null {
           </div>
 
           <div className="qsignbox">
-            <div className="qsigntitle">CUSTOMER ACCEPTANCE & APPROVAL</div>
+            <div className="qsigntitle">CUSTOMER ACCEPTANCE &amp; APPROVAL</div>
             <p className="qacceptancetext">
-              "I / We hereby accept and approve Quotation <b>{quote.number}</b> (Revision {quote.revision || 0}) for <b>{money(totals.grand)}</b> and agree to the room-wise scope, payment schedule, and terms outlined above."
+              &quot;I / We hereby accept and approve Quotation <b>{quote.number}</b> (Revision {quote.revision || 0}) for <b>{money(totals.grand)}</b> and agree to the room-wise scope, payment schedule, and terms outlined above.&quot;
             </p>
             <div className="qsignspace" />
             <div className="qsignline">
               <b>{customerName}</b>
-              <span>Signature & Date</span>
+              <span>Signature &amp; Date</span>
             </div>
           </div>
         </div>
 
         <div className="qclosingbanner">
           <small>THANK YOU FOR CHOOSING TECHOMIE</small>
-          <h2>Let's make your space smarter.</h2>
+          <h2>Let&apos;s make your space smarter.</h2>
           <p>Smart Home Automation · Digital Security · Gate Automation · Motorized Shades</p>
         </div>
 
@@ -3624,7 +3613,9 @@ function quotePdfFormat(snap: R) {
   if (manual === "detailed" || manual === "compact") return manual;
   const rooms = (snap?.floors || []).flatMap((f: R) => f.rooms || []);
   const items = rooms.flatMap((r: R) => r.items || []);
-  return ["Full Smart Home Proposal", "Detailed Smart Home Proposal"].includes(snap?.details?.quoteType) || rooms.length > 1 || items.length > 4
+  // Small quotes with few items (<= 10 items and <= 2 rooms) auto-select clean compact quotation
+  if (rooms.length <= 2 && items.length <= 10) return "compact";
+  return ["Full Smart Home Proposal", "Detailed Smart Home Proposal"].includes(snap?.details?.quoteType) || rooms.length > 2 || items.length > 10
     ? "detailed"
     : "compact";
 }
