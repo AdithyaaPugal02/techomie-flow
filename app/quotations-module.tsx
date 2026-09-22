@@ -2785,7 +2785,26 @@ function QuotePaper({ quote, snap, totals }: R) {
           </p>
         ))}
         <h2>Warranty</h2>
-        <p>{snap.warranty}</p>
+        <div style={{ whiteSpace: "pre-line" }}>
+          {snap.warranty ? (
+            snap.warranty.split("\n").map((line: string, i: number) => {
+              const parts = line.split(/(\b\d+\s*Years?\b|\b\d+\+\d+\s*(?:Years?)?\b|\b\d+Y\s*\+\s*\d+Y\b)/gi);
+              return (
+                <p key={i} style={{ margin: "2px 0" }}>
+                  {parts.map((p: string, j: number) =>
+                    /(\b\d+\s*Years?\b|\b\d+\+\d+\s*(?:Years?)?\b|\b\d+Y\s*\+\s*\d+Y\b)/i.test(p) ? (
+                      <strong key={j} className="qwarranty-years" style={{ fontWeight: 800 }}>{p}</strong>
+                    ) : (
+                      p
+                    )
+                  )}
+                </p>
+              );
+            })
+          ) : (
+            <p>Standard product warranty applies.</p>
+          )}
+        </div>
         <h2>Terms & conditions</h2>
         <p>{snap.terms}</p>
         <footer>
@@ -3763,23 +3782,23 @@ function getItemFeatureTag(item: R): string | null {
         {/* Warranty Assurance Cards */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
-            <div className="qwarrantybadge">2Y + 4Y</div>
+            <div className="qwarrantybadge"><strong>2Y + 4Y</strong></div>
             <div>
               <small>STANDARD SMART PRODUCTS</small>
-              <b>2 Years Full Replacement + 4 Years Service Warranty</b>
+              <b><strong className="qwarranty-years">2 Years</strong> Full Replacement + <strong className="qwarranty-years">4 Years</strong> Service Warranty</b>
               <p>
-                Covers smart touch switches, dimmers, fan controllers, curtain modules, and gateway hubs against manufacturing and electronic defects.
+                Covers smart touch switches, dimmers, fan controllers, curtain modules, and gateway hubs with <strong className="qwarranty-years">2+4 Years</strong> warranty against manufacturing and electronic defects.
               </p>
             </div>
           </article>
 
           <article className="qwarrantycard gold">
-            <div className="qwarrantybadge">10Y + 10Y</div>
+            <div className="qwarrantybadge"><strong>10Y + 10Y</strong></div>
             <div>
               <small>ROYAL EDGE &amp; TOUCH SERIES</small>
-              <b>10 Years Full Replacement + 10 Years Service Warranty</b>
+              <b><strong className="qwarranty-years">10 Years</strong> Full Replacement + <strong className="qwarranty-years">10 Years</strong> Service Warranty</b>
               <p>
-                Exclusive 10+10 warranty for Royal Edge CNC panels and touch series glass switches with complimentary priority onsite service visits.
+                Exclusive <strong className="qwarranty-years">10+10 Years</strong> warranty for Royal Edge CNC panels and touch series glass switches with complimentary priority onsite service visits.
               </p>
             </div>
           </article>

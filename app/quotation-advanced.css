@@ -939,8 +939,19 @@
 .qwarrantycard b {
   display: block;
   font-size: 9px;
-  color: #0f172a;
+  font-weight: 600 !important;
+  color: #1e293b;
   margin: 1px 0 2px;
+}
+.qwarrantycard .qwarranty-years,
+.qwarranty-years {
+  font-weight: 900 !important;
+  font-size: 1.05em;
+  color: #0284c7 !important;
+}
+.qwarrantycard.gold .qwarranty-years {
+  color: #b45309 !important;
+  font-weight: 900 !important;
 }
 .qwarrantycard p {
   margin: 0;
@@ -1253,12 +1264,14 @@
 .qpaperclosing .qwarrantybadge {
   font-size: 8.5px;
   padding: 3px 5px;
+  font-weight: 900 !important;
 }
 .qpaperclosing .qwarrantycard small {
   font-size: 5.8px;
 }
 .qpaperclosing .qwarrantycard b {
   font-size: 7.8px;
+  font-weight: 600 !important;
 }
 .qpaperclosing .qwarrantycard p {
   font-size: 6.6px;
