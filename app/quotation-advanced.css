@@ -469,18 +469,19 @@
   color: #f1f5f9;
 }
 .qboqtable th {
-  padding: 4px 5px;
+  padding: 5px 6px;
   font-size: 6.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: 0;
   white-space: nowrap;
+  vertical-align: middle;
 }
 .qboqtable td {
-  padding: 4px 5px;
+  padding: 5px 6px;
   border-bottom: 1px solid #e2e8f0;
-  vertical-align: middle;
+  vertical-align: top;
   font-size: 7.5px;
   color: #334155;
 }
@@ -491,93 +492,135 @@
   font-weight: 700;
   color: #64748b;
   text-align: center;
+  vertical-align: top;
+  padding-top: 7px;
+  font-size: 8px;
 }
 .qboqtable td.td-img {
-  width: 82px;
+  width: 76px;
   text-align: center;
-  padding: 5px 3px;
+  vertical-align: top;
+  padding: 5px 3px 5px 3px;
 }
-.qboqtable td.td-img img {
-  width: 72px;
-  height: 72px;
-  max-width: 72px;
-  max-height: 72px;
-  object-fit: contain;
+.qboqtable .qboqimgwrap {
+  width: 68px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 3px;
+  padding: 2px;
+  margin: 0 auto;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+.qboqtable .qboqimgwrap img,
+.qboqtable td.td-img img {
+  max-width: 62px;
+  max-height: 44px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   display: block;
   margin: auto;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+.qboqtable td.td-details {
+  vertical-align: top;
+  padding: 5px 6px 6px 4px;
 }
 .qboqtable td.td-details b {
   display: block;
   font-size: 8.5px;
+  font-weight: 700;
   color: #0f172a;
-  line-height: 1.25;
+  line-height: 1.35;
 }
 .qboqtable td.td-details small {
   display: block;
   font-size: 6.8px;
   color: #64748b;
-  line-height: 1.3;
-  margin-top: 1px;
+  line-height: 1.35;
+  margin-top: 2px;
 }
 .qboqtable td.td-qty {
   text-align: center;
-  font-weight: 600;
+  vertical-align: top;
+  padding-top: 7px;
+  font-weight: 700;
+  font-size: 8px;
+  color: #0f172a;
   white-space: nowrap;
 }
 .qboqtable td.td-unit {
   text-align: center;
+  vertical-align: top;
+  padding-top: 7px;
   color: #64748b;
+  font-size: 7.5px;
   white-space: nowrap;
 }
 .qboqtable td.td-rate {
   text-align: right;
+  vertical-align: top;
+  padding-top: 7px;
   font-family: inherit;
+  font-size: 8px;
+  font-weight: 600;
+  color: #334155;
   white-space: nowrap;
 }
 .qboqtable td.td-disc {
   text-align: center;
-  color: #475569;
+  vertical-align: top;
+  padding-top: 7px;
+  color: #64748b;
+  font-size: 7.5px;
   white-space: nowrap;
 }
 .qboqtable td.td-amt {
   text-align: right;
+  vertical-align: top;
+  padding-top: 7px;
   font-weight: 800;
+  font-size: 8.5px;
   color: #0f172a;
   white-space: nowrap;
 }
 .qboqtable .qitem-pills {
-  display: block !important;
-  margin-top: 3px !important;
-  line-height: 1.3 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 3px 5px !important;
+  margin-top: 4px !important;
+  line-height: 1 !important;
 }
 .qboqtable .item-pill-badge {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
   font-size: 6.5px !important;
-  line-height: 1.2 !important;
-  padding: 1px 5px !important;
+  line-height: 1 !important;
+  padding: 2px 5px !important;
   border-radius: 3px !important;
-  margin: 0 4px 2px 0 !important;
+  margin: 0 !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  vertical-align: middle !important;
+  white-space: nowrap !important;
 }
 .qboqtable .qitemsku {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
   font-size: 6.5px !important;
-  line-height: 1.2 !important;
+  line-height: 1 !important;
   color: #64748b !important;
   font-family: inherit !important;
   background: #f1f5f9 !important;
-  padding: 1px 5px !important;
+  padding: 2px 5px !important;
   border-radius: 3px !important;
   border: 1px solid #e2e8f0 !important;
-  margin: 0 4px 2px 0 !important;
-  vertical-align: middle !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
 }
 .qboqsubtotalrow td {
   background: #f1f5f9 !important;

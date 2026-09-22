@@ -3074,7 +3074,7 @@ function getItemFeatureTag(item: R): string | null {
                     <thead>
                       <tr>
                         <th style={{ width: "28px", textAlign: "center" }}>S.NO</th>
-                        <th style={{ width: "82px", textAlign: "center" }}>PHOTO</th>
+                        <th style={{ width: "76px", textAlign: "center" }}>PHOTO</th>
                         <th style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
                         <th style={{ width: "36px", textAlign: "center" }}>QTY</th>
                         <th style={{ width: "38px", textAlign: "center" }}>UNIT</th>
@@ -3086,20 +3086,26 @@ function getItemFeatureTag(item: R): string | null {
                     <tbody>
                       {(room.items || []).map((item: R, index: number) => {
                         const sno = (room.startSno || 1) + index;
+                        const isDuplicateDesc =
+                          item.description &&
+                          (item.description.trim() === item.name.trim() ||
+                            item.name.toLowerCase().includes(item.description.trim().toLowerCase()) ||
+                            item.description.toLowerCase().includes(item.name.trim().toLowerCase()));
                         return (
                           <tr key={index} className="qboqrow">
                             <td className="td-sno">{sno}</td>
                             <td className="td-img">
-                              <img src={item.image || logo} alt="" />
+                              <div className="qboqimgwrap">
+                                <img src={item.image || logo} alt="" />
+                              </div>
                             </td>
                             <td className="td-details">
                               <b>
                                 {item.name} {item.optional ? "(Optional)" : ""}
                               </b>
-                              {item.description &&
-                                item.description.trim() !== item.name.trim() && (
-                                  <small>{item.description}</small>
-                                )}
+                              {item.description && !isDuplicateDesc && (
+                                <small>{item.description}</small>
+                              )}
                               <div className="qitem-pills">
                                 {item.technology && (
                                   <span className="item-pill-badge tech">
