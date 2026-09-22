@@ -1899,6 +1899,60 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     return true;
   });
 
+  const rankModel = (name: string, series: string = "") => {
+    if (!q.trim()) return 0;
+    const nameLower = (name || "").toLowerCase();
+    const seriesLower = (series || "").toLowerCase();
+    const cleanQ = q.toLowerCase().trim();
+    let score = 0;
+
+    // 1. Exact full phrase match in product name:
+    if (nameLower === cleanQ) score += 500;
+    else if (nameLower.includes(cleanQ)) score += 250;
+
+    // 2. Specific switch gang count (e.g. "8 switch", "6 switch", "10 switch"):
+    const gangMatch = cleanQ.match(/(\d+)\s*switch/);
+    if (gangMatch) {
+      const desiredGang = gangMatch[1];
+      const targetPattern = new RegExp(`\\b${desiredGang}\\s*switch\\b`, "i");
+      if (targetPattern.test(nameLower)) {
+        score += 200;
+      } else {
+        const actualGang = nameLower.match(/(\d+)\s*switch/);
+        if (actualGang && actualGang[1] !== desiredGang) {
+          score -= 160; // Heavily penalize wrong gang count (e.g. 10 switch when searching 8 switch)
+        }
+      }
+    }
+
+    // 3. Series matching:
+    const userWantsColor = cleanQ.includes("color") || cleanQ.includes("colour");
+    const itemHasColor = nameLower.includes("color") || seriesLower.includes("color");
+    if (!userWantsColor && itemHasColor) {
+      score -= 70; // Demote "Color" series if user didn't type "color"
+    } else if (userWantsColor && itemHasColor) {
+      score += 80;
+    }
+
+    const userWantsRoyal = cleanQ.includes("royal");
+    const itemHasRoyal = nameLower.includes("royal") || seriesLower.includes("royal");
+    if (!userWantsRoyal && itemHasRoyal) {
+      score -= 25;
+    } else if (userWantsRoyal && itemHasRoyal) {
+      score += 80;
+    }
+
+    // 4. Token position & coverage in name:
+    const terms = cleanQ.split(/\s+/).filter(Boolean);
+    terms.forEach((term) => {
+      if (nameLower.includes(term)) score += 25;
+    });
+
+    return score;
+  };
+
+  filteredSwitchModels.sort((a, b) => rankModel(b.name, b.series) - rankModel(a.name, a.series) || a.name.localeCompare(b.name));
+
   const filteredRegularItems = regularItems.filter((item) => {
     if (category && item.category !== category) return false;
     if (model && String(item.product_id) !== model) return false;
@@ -1906,6 +1960,8 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     if (material && item.normMat !== material && item.parsedAttributes.material !== material && item.parsedAttributes.finish !== material) return false;
     return true;
   });
+
+  filteredRegularItems.sort((a, b) => rankModel(b.name, b.series) - rankModel(a.name, a.series) || a.name.localeCompare(b.name));
 
   const addAndContinue = (item: R) => { add(item); setAdded((count) => count + 1); };
 
