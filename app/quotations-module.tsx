@@ -3127,10 +3127,10 @@ function getItemFeatureTag(item: R): string | null {
       let chunkIdx = 0;
       while (itemIdx < items.length) {
         const curBudget = getBudget(pages.length === 0);
-        // Room header (12mm) + table thead (8mm) + subtotal (6mm) = 26mm (chunk 0)
-        // Continued chunk: banner (10mm) + thead (8mm) + subtotal (6mm) = 24mm
-        const overhead = chunkIdx === 0 ? 26 : 24;
-        const itemHeight = 14; // Compact product photo + single-line title & specs
+        // Room header (12mm) + table thead (8mm) = 20mm (chunk 0)
+        // Continued chunk: banner (10mm) + thead (8mm) = 18mm (room subtotal removed)
+        const overhead = chunkIdx === 0 ? 20 : 18;
+        const itemHeight = 19; // Expanded product photo & balanced cell height
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
         // break to next page immediately so the room starts cleanly at the top of the next page!
@@ -3520,11 +3520,6 @@ function getItemFeatureTag(item: R): string | null {
 
             {/* Room items tables */}
             {scope.rooms.map((room: R, rIndex: number) => {
-              const roomSubtotal = (room.items || []).reduce(
-                (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
-                0,
-              );
-
               return (
                 <div
                   className="qpdfroom"
@@ -3553,7 +3548,7 @@ function getItemFeatureTag(item: R): string | null {
                     <thead>
                       <tr>
                         <th style={{ width: "28px", textAlign: "center" }}>S.NO</th>
-                        <th style={{ width: "76px", textAlign: "center" }}>PHOTO</th>
+                        <th style={{ width: "98px", textAlign: "center" }}>PHOTO</th>
                         <th style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
                         <th style={{ width: "36px", textAlign: "center" }}>QTY</th>
                         <th style={{ width: "38px", textAlign: "center" }}>UNIT</th>
@@ -3619,24 +3614,6 @@ function getItemFeatureTag(item: R): string | null {
                           </tr>
                         );
                       })}
-                      {room.isChunkEnd && (
-                        <tr className="qboqsubtotalrow">
-                          <td
-                            colSpan={7}
-                            style={{
-                              textAlign: "right",
-                              fontWeight: 700,
-                              color: "#334155",
-                              paddingRight: "8px",
-                            }}
-                          >
-                            {room.name} Total:
-                          </td>
-                          <td style={{ textAlign: "right", fontWeight: 800 }}>
-                            <strong>{money(roomSubtotal)}</strong>
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>
