@@ -1,5 +1,6 @@
 "use client";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -587,6 +588,7 @@ function QuoteWorkspace({
     onCreated(Number(d.quotation.id));
   };
   const action = async (action: string, extra: R = {}) => {
+    if (!quote?.id) return;
     await persist();
     const r = await fetch("/api/quotations/workspace", {
         method: "PATCH",
@@ -599,7 +601,7 @@ function QuoteWorkspace({
     await load();
   };
   const relink = async (nextCustomerId: string, nextSiteId: string) => {
-    if (!nextCustomerId || !nextSiteId) return;
+    if (!quote?.id || !nextCustomerId || !nextSiteId) return;
     await persist();
     setSave("Updating customer and site…");
     const r = await fetch("/api/quotations/workspace", {
@@ -755,7 +757,7 @@ function QuoteWorkspace({
         customers={customers}
         sites={sites}
         customerId={customerId}
-        setCustomerId={(x) => {
+        setCustomerId={(x: string) => {
           setCustomerId(x);
           setSiteId("");
         }}
@@ -949,16 +951,34 @@ function QuoteWorkspace({
           )}
         </div>
       </header>
-      <nav>
-        {workflowSteps.map((x, index) => (
-          <button
-            key={x}
-            className={tab === x ? "active" : ""}
-            onClick={() => setTab(x)}
-          >
-            <><b>{index + 1}</b> {x}</>
-          </button>
-        ))}
+      <nav className="qstepwizardnav">
+        {workflowSteps.map((x, index) => {
+          const isCurrent = tab === x;
+          const isPassed = stepIndex > index;
+          return (
+            <Fragment key={x}>
+              <button
+                type="button"
+                className={`qstepnavbtn ${isCurrent ? "active" : ""} ${isPassed ? "completed" : ""}`}
+                onClick={() => setTab(x)}
+                title={`Go to Step ${index + 1}: ${x}`}
+              >
+                <span className="qstepnum">
+                  {isPassed ? "✓" : index + 1}
+                </span>
+                <span className="qsteplabel">
+                  <small>Step {index + 1}</small>
+                  <b>{x}</b>
+                </span>
+              </button>
+              {index < workflowSteps.length - 1 && (
+                <div className={`qstepdivider ${stepIndex > index ? "completed" : ""}`}>
+                  <span className="qsteparrow">›</span>
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
       </nav>
       <main>
         {tab === "Customer & Site" ? (
@@ -1010,6 +1030,95 @@ function QuoteWorkspace({
         ) : (
           <Files rows={files} />
         )}
+        {/* Step-by-Step in-between navigation bar */}
+        {stepIndex >= 0 && (
+          <div className="qstepflow-nav">
+            <div className="qstepflow-progressbar">
+              <div
+                className="qstepflow-progressfill"
+                style={{ width: `${Math.round(((stepIndex + 1) / workflowSteps.length) * 100)}%` }}
+              />
+            </div>
+
+            <div className="qstepflow-body">
+              {/* Previous Step Button */}
+              <div className="qstepflow-left">
+                {stepIndex > 0 ? (
+                  <button
+                    type="button"
+                    className="qstepbtn prev"
+                    onClick={() => moveStep(-1)}
+                  >
+                    <span className="arrow">←</span>
+                    <div className="btnlabel">
+                      <small>Previous Step {stepIndex}</small>
+                      <b>{workflowSteps[stepIndex - 1]}</b>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="qstepbtn-placeholder" />
+                )}
+              </div>
+
+              {/* In-between Step Indicator and Quick Jump Pills */}
+              <div className="qstepflow-center">
+                <div className="qstepflow-info">
+                  <span className="stepcount">Step {stepIndex + 1} of 5</span>
+                  <span className="steptitle">{workflowSteps[stepIndex]}</span>
+                </div>
+                <div className="qstepflow-pills">
+                  {workflowSteps.map((s, idx) => {
+                    const isCurrent = idx === stepIndex;
+                    const isDone = idx < stepIndex;
+                    const shortNames = ["1. Customer", "2. Items", "3. Pricing", "4. Terms", "5. Preview"];
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`qstepflow-dot ${isCurrent ? "active" : ""} ${isDone ? "done" : ""}`}
+                        onClick={() => setTab(s)}
+                        title={`Navigate to Step ${idx + 1}: ${s}`}
+                      >
+                        <span className="num">{isDone ? "✓" : idx + 1}</span>
+                        <span className="pilltext">{shortNames[idx]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Next Step Button */}
+              <div className="qstepflow-right">
+                {stepIndex < workflowSteps.length - 1 ? (
+                  <button
+                    type="button"
+                    className="qstepbtn next primary"
+                    onClick={() => moveStep(1)}
+                  >
+                    <div className="btnlabel">
+                      <small>Next Step {stepIndex + 2}</small>
+                      <b>{workflowSteps[stepIndex + 1]}</b>
+                    </div>
+                    <span className="arrow">→</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="qstepbtn complete primary"
+                    onClick={() => {
+                      if (persist) persist();
+                    }}
+                  >
+                    <div className="btnlabel">
+                      <small>Step 5 of 5</small>
+                      <b>✓ Proposal Complete</b>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
       {tab !== "Preview & Send" && tab !== "Revisions" && (
         <aside>
@@ -1032,9 +1141,25 @@ function QuoteWorkspace({
       )}
       {stepIndex >= 0 && (
         <div className="qworkflowfooter">
-          <button disabled={stepIndex === 0} onClick={() => moveStep(-1)}>Previous</button>
-          <span>Step {stepIndex + 1} of 5</span>
-          <button className="primary" disabled={stepIndex === 4} onClick={() => moveStep(1)}>Next</button>
+          <button
+            disabled={stepIndex === 0}
+            onClick={() => moveStep(-1)}
+            title={stepIndex > 0 ? `Back to Step ${stepIndex}: ${workflowSteps[stepIndex - 1]}` : undefined}
+          >
+            ← {stepIndex > 0 ? workflowSteps[stepIndex - 1] : "Previous"}
+          </button>
+          <div className="qworkflowfooter-stepindicator">
+            <span className="stepnum">Step {stepIndex + 1} of 5</span>
+            <span className="stepname">{workflowSteps[stepIndex]}</span>
+          </div>
+          <button
+            className="primary"
+            disabled={stepIndex === 4}
+            onClick={() => moveStep(1)}
+            title={stepIndex < 4 ? `Proceed to Step ${stepIndex + 2}: ${workflowSteps[stepIndex + 1]}` : undefined}
+          >
+            {stepIndex < 4 ? `${workflowSteps[stepIndex + 1]} →` : "✓ Complete"}
+          </button>
         </div>
       )}
       {picker && (
@@ -1043,7 +1168,7 @@ function QuoteWorkspace({
           role={role}
           taxMode={snap.taxMode || "GST"}
           close={() => setPicker(null)}
-          add={(item) => {
+          add={(item: any) => {
             const next = structuredClone(snap);
             const floor = next.floors[picker.floor],
               room = floor.rooms[picker.room];

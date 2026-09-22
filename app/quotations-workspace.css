@@ -328,11 +328,13 @@
   border-color: #cbd5e1;
   transform: translateY(-1px);
 }
-.qworkspace > nav {
+.qworkspace > nav,
+.qstepwizardnav {
   grid-column: 1/-1;
   display: flex;
+  align-items: center;
   gap: 6px;
-  padding: 8px 20px;
+  padding: 10px 20px;
   background: #ffffff;
   border-bottom: 1px solid var(--border-subtle, #e2e8f0);
   overflow-x: auto;
@@ -340,10 +342,11 @@
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
 }
-.qworkspace > nav::-webkit-scrollbar {
+.qworkspace > nav::-webkit-scrollbar,
+.qstepwizardnav::-webkit-scrollbar {
   display: none;
 }
-.qworkspace > nav button {
+.qworkspace > nav button:not(.qstepnavbtn) {
   border: 1px solid transparent;
   background: transparent;
   padding: 9px 16px;
@@ -358,16 +361,16 @@
   align-items: center;
   gap: 8px;
 }
-.qworkspace > nav button:hover {
+.qworkspace > nav button:not(.qstepnavbtn):hover {
   color: var(--text-primary, #0f172a);
   background: #f1f5f9;
 }
-.qworkspace > nav button.active {
+.qworkspace > nav button:not(.qstepnavbtn).active {
   color: #0284c7;
   background: rgba(2, 132, 199, 0.08);
   border-color: rgba(2, 132, 199, 0.2);
 }
-.qworkspace > nav button b {
+.qworkspace > nav button:not(.qstepnavbtn) b {
   display: inline-grid;
   place-items: center;
   width: 22px;
@@ -378,9 +381,119 @@
   color: #475569;
   font-weight: 700;
 }
-.qworkspace > nav button.active b {
+.qworkspace > nav button:not(.qstepnavbtn).active b {
   color: #ffffff;
   background: #0284c7;
+}
+
+/* 5-Step Quotation Wizard Stepper Navigation */
+.qstepnavbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  text-align: left;
+}
+.qstepnavbtn:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+.qstepnavbtn.active {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08);
+}
+.qstepnavbtn.completed:not(.active) {
+  background: #f8fafc;
+}
+.qstepnum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+  transition: all 0.18s ease;
+}
+.qstepnavbtn.active .qstepnum {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+}
+.qstepnavbtn.completed .qstepnum {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+}
+.qstepnavbtn.completed.active .qstepnum {
+  background: #0284c7;
+  border-color: #0284c7;
+}
+.qsteplabel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+.qsteplabel small {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  transition: color 0.18s ease;
+}
+.qstepnavbtn.active .qsteplabel small {
+  color: #0284c7;
+}
+.qstepnavbtn.completed:not(.active) .qsteplabel small {
+  color: #16a34a;
+}
+.qsteplabel b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  transition: color 0.18s ease;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+}
+.qstepnavbtn.active .qsteplabel b {
+  color: #0c4a6e;
+  font-weight: 750;
+}
+.qstepnavbtn.completed:not(.active) .qsteplabel b {
+  color: #1e293b;
+}
+.qstepdivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
+  color: #cbd5e1;
+  user-select: none;
+}
+.qstepdivider.completed {
+  color: #16a34a;
+}
+.qsteparrow {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.6;
 }
 .qworkspace > main {
   padding: 24px;
@@ -990,30 +1103,265 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   position: sticky;
   bottom: 0;
-  z-index: 2;
-  background: #fff;
+  z-index: 10;
+  background: #ffffff;
   border-top: 1px solid #e4e7ec;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.04);
 }
 .qworkflowfooter button {
-  padding: 9px 16px;
-  border: 1px solid #d7dce4;
-  border-radius: 8px;
-  background: #fff;
+  padding: 9px 18px;
+  border: 1.5px solid #d0d5dd;
+  border-radius: 9px;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.qworkflowfooter button:hover:not(:disabled) {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
 }
 .qworkflowfooter button.primary {
-  color: #fff;
-  border-color: #1769ff;
-  background: #1769ff;
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #0284c7, #1d4ed8);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  font-weight: 700;
+}
+.qworkflowfooter button.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0369a1, #1e40af);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
 }
 .qworkflowfooter button:disabled {
   opacity: 0.45;
+  cursor: not-allowed;
 }
-.qworkflowfooter span {
-  color: #667085;
+.qworkflowfooter-stepindicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.qworkflowfooter-stepindicator .stepnum {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #0284c7;
+  letter-spacing: 0.5px;
+}
+.qworkflowfooter-stepindicator .stepname {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* In-Between Step Flow Navigation Card */
+.qstepflow-nav {
+  margin-top: 36px;
+  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 1px 4px rgba(15, 23, 42, 0.03);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.qstepflow-progressbar {
+  height: 4px;
+  background: #f1f5f9;
+  width: 100%;
+  position: relative;
+}
+.qstepflow-progressfill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #2563eb);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.qstepflow-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
+}
+.qstepflow-left,
+.qstepflow-right {
+  display: flex;
+  align-items: center;
+  min-width: 190px;
+}
+.qstepflow-right {
+  justify-content: flex-end;
+}
+.qstepbtn-placeholder {
+  min-width: 190px;
+}
+.qstepbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  text-align: left;
+}
+.qstepbtn:hover {
+  background: #f8fafc;
+  border-color: #0284c7;
+  color: #0284c7;
+  transform: translateY(-1px);
+}
+.qstepbtn.primary {
+  background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(2, 132, 199, 0.28);
+}
+.qstepbtn.primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #1e40af 100%);
+  box-shadow: 0 5px 16px rgba(2, 132, 199, 0.38);
+}
+.qstepbtn .arrow {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+.qstepbtn .btnlabel {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.qstepbtn .btnlabel small {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+.qstepbtn .btnlabel b {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.qstepbtn.primary .btnlabel small {
+  color: #e0f2fe;
+}
+.qstepbtn.primary .btnlabel b {
+  color: #ffffff;
+}
+.qstepflow-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.qstepflow-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qstepflow-info .stepcount {
   font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.qstepflow-info .steptitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.qstepflow-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.qstepflow-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.qstepflow-dot .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+}
+.qstepflow-dot:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+}
+.qstepflow-dot.done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.qstepflow-dot.done .num {
+  background: #16a34a;
+  color: #ffffff;
+}
+.qstepflow-dot.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+.qstepflow-dot.active .num {
+  background: #ffffff;
+  color: #0284c7;
+}
+
+@media (max-width: 900px) {
+  .qstepflow-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .qstepflow-left,
+  .qstepflow-right,
+  .qstepbtn-placeholder {
+    min-width: 0;
+    width: 100%;
+  }
+  .qstepbtn {
+    width: 100%;
+    justify-content: center;
+  }
+  .qstepflow-center {
+    order: -1;
+  }
 }
 .qloading {
   padding: 50px;
