@@ -131,12 +131,6 @@ const calculate = (lines: Line[], interstate: boolean, inclusive: boolean) => {
     amountWords: words(grandTotal),
   };
 };
-const audit = (uid: string, action: string, id: string) =>
-  env.DB.prepare(
-    "INSERT INTO audit_log (user_id,action,entity_type,entity_id,created_at) VALUES (?,?,?,?,?)",
-  )
-    .bind(uid, action, "tax_invoice", id, new Date().toISOString())
-    .run();
 
 export async function GET(req: Request) {
   try {

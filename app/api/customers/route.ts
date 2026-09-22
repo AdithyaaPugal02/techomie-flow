@@ -289,7 +289,7 @@ export async function POST(req: Request) {
       );
     const now = t(),
       row = await env.DB.prepare(
-        "INSERT INTO customers(customer_code,customer_type,name,display_name,primary_contact,phone,whatsapp,email,alternate_phone,gstin,pan,billing_address,city,state,pincode,country,lead_source,assigned_to,status,notes,tags,archived,created_at)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)RETURNING id",
+        "INSERT INTO customers(customer_code,customer_type,name,display_name,primary_contact,phone,whatsapp,email,alternate_phone,gstin,pan,billing_address,city,state,pincode,country,lead_source,assigned_to,status,notes,tags,archived,created_at)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?) RETURNING id",
       )
         .bind(
           null,

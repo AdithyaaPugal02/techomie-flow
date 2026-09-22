@@ -330,25 +330,31 @@ export default function CustomersModule({
           <span>Status / Owner</span>
           <span>Invoiced</span>
           <span>Balance</span>
-          {role === "admin" && <span>Actions</span>}
+          {role === "admin" && <span className="headeractions">Actions</span>}
         </div>
         {rows.map((c) => (
           <div
             className={`customerrow ${role === "admin" ? "admin" : ""}`}
             key={c.id}
             onClick={() => open(c.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                open(c.id);
+              }
+            }}
             role="button"
             tabIndex={0}
           >
             <span>
-              <b>{c.display_name || c.name}</b>
+              <b>{c.display_name || c.name || c.primary_contact || `Customer #${c.id}`}</b>
               <small>
-                {c.customer_code || `CUS-${c.id}`} · {c.customer_type}
+                {c.customer_code || (c.id ? `TCM-CUS-${String(c.id).padStart(6, "0")}` : `CUS-${c.id}`)} · {c.customer_type}
               </small>
             </span>
             <span>
-              <b>{c.phone}</b>
-              <small>{c.email || c.whatsapp}</small>
+              <b>{c.phone || "—"}</b>
+              <small>{c.email || c.whatsapp || "No contact info"}</small>
             </span>
             <span>
               <b>{c.city || "—"}</b>
@@ -365,37 +371,25 @@ export default function CustomersModule({
               <b>{money(c.balance)}</b>
             </span>
             {role === "admin" && (
-              <span onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <span className="custactioncell">
                 <button
                   type="button"
-                  style={{
-                    padding: "5px 10px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    background: "#f8fafc",
-                    border: "1px solid #cbd5e1",
-                    borderRadius: "6px",
-                    cursor: "pointer",
+                  className="custopenbtn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open(c.id);
                   }}
-                  onClick={() => open(c.id)}
                 >
                   Open
                 </button>
                 <button
                   type="button"
-                  className="danger"
-                  style={{
-                    padding: "5px 10px",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    color: "#dc2626",
-                    background: "#fef2f2",
-                    border: "1px solid #fca5a5",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
+                  className="custdelbtn"
                   title="Permanently delete customer"
-                  onClick={() => deleteCustomer(c.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteCustomer(c.id);
+                  }}
                 >
                   🗑 Delete
                 </button>

@@ -1541,7 +1541,7 @@
   .record > b { font-size: 13.5px !important; color: var(--text) !important; font-weight: 600; }
   .record > small { color: var(--secondary) !important; font-size: 12px !important; }
 
-  .tablehead, .masterhead, .leadhead, .customerhead, .itemshead, .projecthead, .teamhead, .svrow.head, [class*="gridhead"] {
+  .tablehead, .masterhead, .leadhead, .itemshead, .projecthead, .teamhead, .svrow.head, [class*="gridhead"] {
     position: sticky;
     top: 64px;
     z-index: 2;
@@ -1553,6 +1553,9 @@
     letter-spacing: 0.06em !important;
     text-transform: uppercase !important;
     border-bottom: 1px solid var(--border) !important;
+  }
+  .customerhead {
+    position: static !important;
   }
   .tablerow, .leadrow, .customerrow, .itemsrow, .projectrow, .masterrow, .teamrow, .svrow, .qrow, [class*="table"] [class*="row"] {
     min-height: 50px;
