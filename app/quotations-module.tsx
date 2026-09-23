@@ -4298,15 +4298,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           <div className={`qsubsystemsgrid qcols-${Math.min(subsystems.length, 2)}`}>
             {subsystems.map((sub) => (
               <article key={sub.id} className="qsubsystemcard">
-                {sub.id === "lighting" && decidedSwitch && (
-                  <div className="qsubswitchhero">
-                    <img src={decidedSwitch.image} alt={decidedSwitch.label} />
-                    <div className="qsubswitchherolabel">
-                      <small>SPECIFIED AESTHETIC</small>
-                      <b>{decidedSwitch.label}</b>
-                    </div>
-                  </div>
-                )}
+
                 <div className="qsubsystemhead">
                   <span className="qsubsystemicon">{sub.icon}</span>
                   <div className="qsubsystemtitlewrap">
