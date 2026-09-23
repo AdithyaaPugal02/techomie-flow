@@ -2340,19 +2340,14 @@
 
 .qsubsystemsgrid {
   display: grid;
-  gap: 4.5mm 5mm;
-  margin: 2mm 0 4mm;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm 4.5mm;
+  margin: 1.5mm 0 2.5mm;
   flex: 1;
 }
 
-.qsubsystemsgrid.qcols-1 {
-  grid-template-columns: 1fr;
-}
-
-.qsubsystemsgrid.qcols-2 {
-  grid-template-columns: 1fr 1fr;
-}
-
+.qsubsystemsgrid.qcols-1,
+.qsubsystemsgrid.qcols-2,
 .qsubsystemsgrid.qcols-3 {
   grid-template-columns: 1fr 1fr;
 }
@@ -2361,12 +2356,26 @@
   background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
   border: 1.5px solid #e2e8f0;
   border-top: 3.5px solid #0284c7;
-  border-radius: 10px;
-  padding: 4mm 5mm 4.5mm;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  border-radius: 9px;
+  padding: 3mm 4.5mm 3.2mm;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 2.5mm;
+  gap: 1.8mm;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* 5th card (Gate Automation) spans full width across both columns with 2-column bullet layout */
+.qsubsystemcard:nth-child(5) {
+  grid-column: 1 / -1;
+  border-top-color: #8b5cf6;
+}
+
+.qsubsystemcard:nth-child(5) .qsubsystemfeaturelist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5mm 5mm;
 }
 
 /* Individual Category Accent Colors */
@@ -2482,7 +2491,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2mm;
+  gap: 1.6mm;
 }
 
 .qsubsystemfeaturelist li {

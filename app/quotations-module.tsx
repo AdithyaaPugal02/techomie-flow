@@ -3492,109 +3492,9 @@ interface SubsystemFeature {
 }
 
 function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
-  const floors = snap.floors || [];
-  const allItems: R[] = [
-    ...floors.flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || [])),
-    ...(snap.projectItems || []),
-  ];
-
-  const fullText = allItems
-    .map(
-      (i: R) =>
-        `${i.name || ""} ${i.category || ""} ${i.description || ""} ${i.sku || ""} ${i.technology || ""} ${i.series || ""}`,
-    )
-    .join(" ")
-    .toLowerCase();
-
-  const isGateOnly =
-    allItems.length > 0 &&
-    allItems.every((i: R) => {
-      const t = `${i.name || ""} ${i.category || ""}`.toLowerCase();
-      return t.includes("gate") || t.includes("sliding") || t.includes("swing") || t.includes("operator") || t.includes("barrier");
-    });
-
-  const hasLighting =
-    !isGateOnly &&
-    (allItems.length === 0 ||
-      fullText.includes("switch") ||
-      fullText.includes("dimmer") ||
-      fullText.includes("fan") ||
-      fullText.includes("relay") ||
-      fullText.includes("luxeray") ||
-      fullText.includes("lighting") ||
-      fullText.includes("light") ||
-      fullText.includes("smart switch") ||
-      fullText.includes("plug") ||
-      fullText.includes("socket") ||
-      fullText.includes("touch") ||
-      fullText.includes("gang") ||
-      fullText.includes("node") ||
-      fullText.includes("edge") ||
-      fullText.includes("noviq") ||
-      fullText.includes("panel") ||
-      fullText.includes("scene") ||
-      fullText.includes("smart") ||
-      fullText.includes("zigbee") ||
-      fullText.includes("wifi"));
-
-  const hasCurtains =
-    fullText.includes("curtain") ||
-    fullText.includes("drapery") ||
-    fullText.includes("track") ||
-    fullText.includes("blind") ||
-    fullText.includes("tubular motor") ||
-    fullText.includes("shutter");
-
-  const hasLocks =
-    fullText.includes("lock") ||
-    fullText.includes("deadbolt") ||
-    fullText.includes("mortise") ||
-    fullText.includes("fingerprint") ||
-    fullText.includes("face id") ||
-    fullText.includes("digital lock") ||
-    fullText.includes("rim lock");
-
-  const hasSecurity =
-    fullText.includes("sensor") ||
-    fullText.includes("motion") ||
-    fullText.includes("radar") ||
-    fullText.includes("pir") ||
-    fullText.includes("siren") ||
-    fullText.includes("alarm") ||
-    fullText.includes("cctv") ||
-    fullText.includes("camera") ||
-    fullText.includes("vdp") ||
-    fullText.includes("doorbell") ||
-    fullText.includes("intercom") ||
-    fullText.includes("smoke") ||
-    fullText.includes("gas");
-
-  const hasGate =
-    fullText.includes("gate") ||
-    fullText.includes("barrier") ||
-    fullText.includes("boom") ||
-    fullText.includes("sliding") ||
-    fullText.includes("swing") ||
-    fullText.includes("operator") ||
-    fullText.includes("autozon") ||
-    fullText.includes("remote") ||
-    fullText.includes("transmitter") ||
-    fullText.includes("photocell") ||
-    fullText.includes("azse") ||
-    fullText.includes("azsl") ||
-    fullText.includes("azsw") ||
-    fullText.includes("azbb");
-
-  const hasScreen =
-    fullText.includes("screen") ||
-    fullText.includes("display") ||
-    fullText.includes("tuya screen") ||
-    fullText.includes("smart panel");
-
-  const subsystems: SubsystemFeature[] = [];
-
-  if (hasLighting) {
-    subsystems.push({
+  // Always include all 5 smart-home solution features to showcase the complete Techomie experience
+  return [
+    {
       id: "lighting",
       category: "SMART LIGHTING",
       title: "Smart Lighting & Scene Control",
@@ -3611,11 +3511,8 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
         "Remote control when away from home",
         "Automation based on sensors and routines",
       ],
-    });
-  }
-
-  if (hasCurtains) {
-    subsystems.push({
+    },
+    {
       id: "curtains",
       category: "SMART CURTAINS",
       title: "Smart Motorized Curtains",
@@ -3629,11 +3526,8 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
         "Manual control",
         "Integration with other automation",
       ],
-    });
-  }
-
-  if (hasLocks) {
-    subsystems.push({
+    },
+    {
       id: "locks",
       category: "SMART DOOR LOCKS",
       title: "Smart Digital Door Locks",
@@ -3650,11 +3544,8 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
         "Door status monitoring",
         "Mechanical key backup",
       ],
-    });
-  }
-
-  if (hasSecurity) {
-    subsystems.push({
+    },
+    {
       id: "security",
       category: "INTEGRATED SECURITY",
       title: "Smart Security & Monitoring",
@@ -3670,11 +3561,8 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
         "CCTV integration where included",
         "Security automation scenarios",
       ],
-    });
-  }
-
-  if (hasGate) {
-    subsystems.push({
+    },
+    {
       id: "gate",
       category: "GATE AUTOMATION",
       title: "Automated Gates & Boom Barriers",
@@ -3688,27 +3576,8 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
         "Safety features based on the selected controller",
         "Integration with smart-home controls where supported",
       ],
-    });
-  }
-
-  if (hasScreen && subsystems.length < 5) {
-    subsystems.push({
-      id: "screen",
-      category: "CENTRAL INTERFACE",
-      title: "Smart Touch Screen Console",
-      subtitle: "In-wall high definition command center for all rooms",
-      badge: "Touch Screen",
-      icon: "📱",
-      features: [
-        "Centralized in-wall touch control for all floors and rooms",
-        "Instant scene triggering and real-time device status display",
-        "Smart doorbell intercom answering directly from the screen",
-        "Unified family access point without requiring personal phones",
-      ],
-    });
-  }
-
-  return subsystems;
+    },
+  ];
 }
 
 function synthesizeSmartScenes(subsystems: SubsystemFeature[]) {
