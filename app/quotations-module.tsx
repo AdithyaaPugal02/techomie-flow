@@ -4251,7 +4251,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                   <table className="qboqtable">
                     <colgroup>
                       <col className="col-sno" style={{ width: "34px" }} />
-                      <col className="col-img" style={{ width: "98px" }} />
+                      <col className="col-img" style={{ width: "125px" }} />
                       <col className="col-details" />
                       <col className="col-qty" style={{ width: "38px" }} />
                       <col className="col-unit" style={{ width: "40px" }} />
@@ -4262,7 +4262,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                     <thead>
                       <tr>
                         <th className="th-sno" style={{ width: "34px", textAlign: "center" }}>S.NO</th>
-                        <th className="th-img" style={{ width: "98px", textAlign: "center" }}>PHOTO</th>
+                        <th className="th-img" style={{ width: "125px", textAlign: "center" }}>PHOTO</th>
                         <th className="th-details" style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
                         <th className="th-qty" style={{ width: "38px", textAlign: "center" }}>QTY</th>
                         <th className="th-unit" style={{ width: "40px", textAlign: "center" }}>UNIT</th>
