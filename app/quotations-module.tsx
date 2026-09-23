@@ -4538,11 +4538,11 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
 
       {/* EXECUTION STANDARDS, WARRANTY & SIGN-OFF PAGE */}
       <section className="qpaperterms qpaperclosing">
-        {head("EXECUTION & SIGN-OFF")}
+        {head("INSTALLATION & ACCEPTANCE")}
         <div className="qsectiontitle">
           <small>STANDARDS, WARRANTY &amp; ACCEPTANCE</small>
           <h2>Installation Scope, Warranty &amp; Customer Sign-Off</h2>
-          <span>Standard Operating Procedures &amp; Official Authorization</span>
+          <span>Standard Operating Procedures, What's Included / Excluded &amp; Authorization</span>
         </div>
 
         {/* Installation Policy */}
@@ -4560,7 +4560,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         {/* Scope of Work & Prerequisites */}
         <div className="qscopetwocol">
           <article className="qscopebox">
-            <small>TECHOMIE SCOPE OF WORK</small>
+            <small>WHAT'S INCLUDED (TECHOMIE SCOPE OF WORK)</small>
             <ul>
               <li>Supply of genuine smart touch switches, gateways, sensors, and controllers.</li>
               <li>Precision retrofitting and termination in existing or new switch backboxes.</li>
@@ -4573,7 +4573,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </article>
 
           <article className="qscopebox">
-            <small>CLIENT SITE PREREQUISITES</small>
+            <small>WHAT'S NOT INCLUDED &amp; SITE PREREQUISITES</small>
             <ul>
               <li>Standard metal or PVC switch backboxes with adequate depth.</li>
               <li><b>Mandatory Neutral Line:</b> Neutral wire must be present in every switchboard.</li>
@@ -4586,7 +4586,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         </div>
 
         <div className="qexclusionbar">
-          <small>EXCLUSIONS:</small>
+          <small>EXCLUSIONS (NOT INCLUDED):</small>
           <span>Civil masonry, conduit chasing, repainting, structural wall cutting, or main electrical meter wiring.</span>
         </div>
 
