@@ -526,3 +526,205 @@
   .expenseheroactions button { width: 100%; text-align: center; }
   .expensedetail dl { grid-template-columns: 1fr; }
 }
+
+/* Petrol & Travel Mileage Calculator */
+.petrolcalcbox {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1.5px solid #7dd3fc;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 4px 0;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+.petrolcalcheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.petrolcalctitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 750;
+  color: #0369a1;
+}
+.petrolcitybadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #38bdf8;
+  color: #0284c7;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.petrolcalcgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 640px) {
+  .petrolcalcgrid {
+    grid-template-columns: 1fr;
+  }
+}
+.petrolcalcfield {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.petrolcalcfield span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.petrolcalcfield small {
+  font-size: 10.5px;
+  color: #0369a1;
+  font-weight: 500;
+}
+.petrolcalcfield input {
+  background: #ffffff !important;
+  border: 1.5px solid #94a3b8 !important;
+  border-radius: 8px !important;
+  padding: 8px 11px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  transition: all 0.15s ease;
+}
+.petrolcalcfield input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25) !important;
+  outline: none !important;
+}
+.mileagepresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 3px;
+}
+.mileagepresetbtn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mileagepresetbtn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f8fafc;
+}
+.mileagepresetbtn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.petrolresultbanner {
+  background: #ffffff;
+  border: 1.5px solid #38bdf8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.petrolresultformula {
+  font-size: 12.5px;
+  color: #0369a1;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.petrolresultformula span {
+  color: #64748b;
+  font-weight: normal;
+  display: block;
+  font-size: 11px;
+}
+.petrolapplybtn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+  transition: all 0.15s ease;
+}
+.petrolapplybtn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.45);
+}
+
+.petrolbreakdowncard {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 14px 0;
+}
+.petrolbreakdownhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.petrolbreakdownhead b {
+  color: #0369a1;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.petrolbreakdowngrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.petrolbreakdowngrid > div {
+  background: #ffffff;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.petrolbreakdowngrid small {
+  font-size: 10.5px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.petrolbreakdowngrid b {
+  font-size: 13px;
+  color: #0f172a;
+}
+

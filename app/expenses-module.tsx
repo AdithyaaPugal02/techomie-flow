@@ -21,6 +21,8 @@ const blank = (type = "Claim") => ({
   tax: "",
   mode: "UPI",
   distance_km: "",
+  vehicle_mileage: "",
+  petrol_price: "101.40",
   notes: "",
 });
 const statuses = [
@@ -112,6 +114,8 @@ export default function ExpensesModule({
       amount: String(d.expense.amount || ""),
       tax: String(d.expense.tax || ""),
       distance_km: String(d.expense.distance_km || ""),
+      vehicle_mileage: String(d.expense.vehicle_mileage || ""),
+      petrol_price: String(d.expense.petrol_price != null ? d.expense.petrol_price : "101.40"),
     });
     setReceipts(d.receipts || []);
     setHistory(d.history || []);
@@ -133,6 +137,8 @@ export default function ExpensesModule({
       amount: Number(form.amount),
       tax: Number(form.tax || 0),
       distance_km: form.distance_km ? Number(form.distance_km) : null,
+      vehicle_mileage: form.vehicle_mileage ? Number(form.vehicle_mileage) : null,
+      petrol_price: form.petrol_price ? Number(form.petrol_price) : null,
     };
     const r = await fetch("/api/expenses", {
         method: selected ? "PATCH" : "POST",
@@ -466,6 +472,11 @@ export default function ExpensesModule({
                 <span>
                   <b>{x.category}</b>
                   <small>{x.description || x.vendor || "No description"}</small>
+                  {Boolean(x.distance_km || x.vehicle_mileage) && (
+                    <small style={{ color: "#0284c7", fontWeight: 650, marginTop: 2, display: "block" }}>
+                      ⛽ {x.distance_km ? `${x.distance_km} km` : ""}{x.vehicle_mileage ? ` @ ${x.vehicle_mileage} km/L` : ""}{x.petrol_price ? ` (₹${x.petrol_price}/L)` : ""}
+                    </small>
+                  )}
                 </span>
                 <span>{x.project_title || "Not linked"}</span>
                 {isAdmin && <span>{x.employee_name || "Company"}</span>}
@@ -723,14 +734,121 @@ function ExpenseForm({
           ))}
         </select>
       </label>
-      <label>
-        <span>Mileage / distance km</span>
-        <input
-          type="number"
-          value={x.distance_km || ""}
-          onChange={(e) => change("distance_km", e.target.value)}
-        />
-      </label>
+      {/* ⛽ Petrol Expense & Vehicle Mileage Calculator */}
+      <div className="petrolcalcbox">
+        <div className="petrolcalcheader">
+          <div className="petrolcalctitle">
+            <span>⛽</span>
+            <span>Petrol Expense &amp; Vehicle Mileage Calculator</span>
+          </div>
+          <span className="petrolcitybadge">📍 Coimbatore, TN Petrol Rate</span>
+        </div>
+
+        <div className="petrolcalcgrid">
+          <div className="petrolcalcfield">
+            <span>
+              Kilometers Travelled (km)
+              {Boolean(x.distance_km) && <small>{x.distance_km} km</small>}
+            </span>
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              placeholder="e.g. 45"
+              value={x.distance_km || ""}
+              onChange={(e) => change("distance_km", e.target.value)}
+            />
+            <small style={{ marginTop: 2, color: "#64748b", fontSize: 10.5 }}>
+              Total trip or site-visit distance
+            </small>
+          </div>
+
+          <div className="petrolcalcfield">
+            <span>
+              Vehicle Mileage (km/L) *
+              {Boolean(x.vehicle_mileage) && <small>{x.vehicle_mileage} km/L</small>}
+            </span>
+            <input
+              type="number"
+              step="0.5"
+              min="1"
+              placeholder="e.g. 40"
+              value={x.vehicle_mileage || ""}
+              onChange={(e) => change("vehicle_mileage", e.target.value)}
+            />
+            <div className="mileagepresets">
+              {[
+                { label: "🏍️ Bike (40)", val: "40" },
+                { label: "🛵 Scooter (35)", val: "35" },
+                { label: "🚗 Car (14)", val: "14" },
+                { label: "🚙 SUV (11)", val: "11" },
+              ].map((p) => (
+                <button
+                  key={p.val}
+                  type="button"
+                  className={`mileagepresetbtn ${String(x.vehicle_mileage) === p.val ? "active" : ""}`}
+                  onClick={() => change("vehicle_mileage", p.val)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="petrolcalcfield">
+            <span>
+              Current Coimbatore Petrol Price (₹/L) *
+              <small>Editable</small>
+            </span>
+            <input
+              type="number"
+              step="0.05"
+              min="1"
+              placeholder="101.40"
+              value={x.petrol_price !== undefined && x.petrol_price !== null && x.petrol_price !== "" ? x.petrol_price : "101.40"}
+              onChange={(e) => change("petrol_price", e.target.value)}
+            />
+            <small style={{ marginTop: 2, color: "#64748b", fontSize: 10.5 }}>
+              Coimbatore, TN retail rate (editable)
+            </small>
+          </div>
+        </div>
+
+        {(() => {
+          const dist = Number(x.distance_km || 0);
+          const mil = Number(x.vehicle_mileage || 0);
+          const rate = Number(x.petrol_price || 101.40);
+          if (dist > 0 && mil > 0 && rate > 0) {
+            const litres = dist / mil;
+            const calcTotal = Math.round(litres * rate * 100) / 100;
+            const costPerKm = (rate / mil).toFixed(2);
+            return (
+              <div className="petrolresultbanner">
+                <div className="petrolresultformula">
+                  <b>{dist} km ÷ {mil} km/L = {litres.toFixed(2)} Litres</b> × ₹{rate.toFixed(2)}/L = <strong>₹{calcTotal.toFixed(2)}</strong>
+                  <span>Running cost: ₹{costPerKm} / km · Calculated fuel cost for Coimbatore</span>
+                </div>
+                <button
+                  type="button"
+                  className="petrolapplybtn"
+                  onClick={() => {
+                    change("amount", String(calcTotal));
+                    if (!x.description || x.description.startsWith("Petrol expense:")) {
+                      change("description", `Petrol expense: ${dist} km @ ${mil} km/L (Coimbatore rate ₹${rate.toFixed(2)}/L)`);
+                    }
+                    if (!x.vendor) {
+                      change("vendor", "Petrol Bunk (Coimbatore)");
+                    }
+                  }}
+                >
+                  ⚡ Apply ₹{calcTotal.toFixed(2)} to Amount
+                </button>
+              </div>
+            );
+          }
+          return null;
+        })()}
+      </div>
       <label className="wide">
         <span>Internal note</span>
         <textarea
@@ -792,6 +910,40 @@ function ExpenseDetail({
           Possible duplicate expense detected. Review date, amount and supplier.
         </div>
       ) : null}
+      {Boolean(x.distance_km || x.vehicle_mileage) && (
+        <div className="petrolbreakdowncard">
+          <div className="petrolbreakdownhead">
+            <b>⛽ Petrol &amp; Vehicle Mileage Details</b>
+            <span className="petrolcitybadge">📍 Coimbatore Rate</span>
+          </div>
+          <div className="petrolbreakdowngrid">
+            <div>
+              <small>Distance</small>
+              <b>{x.distance_km ? `${x.distance_km} km` : "—"}</b>
+            </div>
+            <div>
+              <small>Vehicle Mileage</small>
+              <b>{x.vehicle_mileage ? `${x.vehicle_mileage} km/L` : "—"}</b>
+            </div>
+            <div>
+              <small>Coimbatore Petrol Rate</small>
+              <b>{x.petrol_price ? `₹${Number(x.petrol_price).toFixed(2)} / L` : "₹101.40 / L"}</b>
+            </div>
+            {Number(x.distance_km) > 0 && Number(x.vehicle_mileage) > 0 && (
+              <>
+                <div>
+                  <small>Fuel Consumed</small>
+                  <b>{(Number(x.distance_km) / Number(x.vehicle_mileage)).toFixed(2)} Litres</b>
+                </div>
+                <div>
+                  <small>Running Cost</small>
+                  <b>₹{(Number(x.petrol_price || 101.40) / Number(x.vehicle_mileage)).toFixed(2)} / km</b>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <dl>
         {[
           ["Paid by", x.paid_by],
