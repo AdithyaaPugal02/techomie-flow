@@ -78,7 +78,7 @@ const normalizeQuantities = (snapshot: R) => {
     normalized.details.validUntil = normalized.details.validUntil || later(30);
   }
   normalized.taxMode = normalized.taxMode || "GST";
-  normalized.warranty = normalized.warranty || "Standard Products: 2+4 Years Warranty\nRoyal Edge & Touch Series: 10+10 Years Warranty";
+  normalized.warranty = normalized.warranty || "All Techomie Smart Products: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)\nRoyal Edge & Touch Series: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)";
 
   for (const floor of normalized.floors) {
     if (!Array.isArray(floor.rooms)) floor.rooms = [];
@@ -574,7 +574,7 @@ function QuoteWorkspace({
         { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
       ],
       terms: "",
-      warranty: "Standard Products: 2+4 Years Warranty\nRoyal Edge & Touch Series: 10+10 Years Warranty",
+      warranty: "All Techomie Smart Products: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)\nRoyal Edge & Touch Series: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)",
       taxMode: "GST",
     }),
     [tab, setTab] = useState(initialTab),
@@ -4607,11 +4607,11 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         {/* WARRANTY ASSURANCE CARDS */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
-            <div className="qwarrantybadge"><strong>6-YR</strong></div>
+            <div className="qwarrantybadge"><strong>10-YR</strong></div>
             <div>
-              <small>STANDARD SMART PRODUCTS</small>
-              <b>6-Year Warranty</b>
-              <span>2 Years Full Replacement + 4 Years Service Warranty</span>
+              <small>ALL TECHOMIE SMART PRODUCTS</small>
+              <b>10-Year Warranty</b>
+              <span>5 Years Full Replacement + 5 Years Service Warranty</span>
             </div>
           </article>
 
