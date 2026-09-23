@@ -223,7 +223,7 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
             state: "Tamil Nadu",
             stateCode: "33",
             address:
-              "356/2, Church Road, Sri Murugan Nagar, Phase II, Cheran Maa Nagar, Coimbatore, Tamil Nadu 641048",
+              "356/2, Church Rd, Sri Murugan Nagar, Phase II, Cheran ma Nagar, COIMBATORE Tamil Nadu 641048, India",
           },
         }),
       }),
@@ -1008,8 +1008,11 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
           <div>
             <b>{branding.header || "TECHOMIE SMART DEVICES"}</b>
             <span>
-              356/2, Church Road, Sri Murugan Nagar, Phase II, Cheran Maa Nagar,
-              Coimbatore, Tamil Nadu 641048
+              356/2, Church Rd, Sri Murugan Nagar, Phase II, Cheran ma Nagar,
+              COIMBATORE Tamil Nadu 641048, India
+            </span>
+            <span style={{ display: "block", fontSize: "10px", color: "#64748b", marginTop: "2px" }}>
+              Ph: 07598883121 · info.techomie@gmail.com · https://www.techomie.com/
             </span>
             <div className="gstinbadge">
               <small>GSTIN:</small> <strong>33GIMPP4721H1Z2</strong>

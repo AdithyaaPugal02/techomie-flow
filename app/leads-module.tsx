@@ -505,7 +505,7 @@ export default function LeadsModule({
         <div className="leadtable">
           <div className={`leadrow leadhead ${role === "admin" ? "admin" : ""}`}>
             <span>Lead / Customer</span>
-            <span>Site & Requirement</span>
+            <span>Project & Requirement</span>
             <span>Priority / Stage</span>
             <span>Owner & Value</span>
             <span>Next action</span>
@@ -829,20 +829,20 @@ function LeadForm({
         label="Preferred communication"
         options={["Call", "WhatsApp", "Email"]}
       />
-      <h3>Site details</h3>
-      {field("siteName", "Site / project name")}
+      <h3>Project details</h3>
+      {field("siteName", "Project name")}
       {field("city", "City")}
       {field("pincode", "Pincode")}
       {field("mapsUrl", "Google Maps link", "url")}
       <label className="wide">
-        <span>Full site address</span>
+        <span>Project location / address</span>
         <textarea
           value={v.address || ""}
           onChange={(e) => setV({ ...v, address: e.target.value })}
         />
       </label>
-      {field("siteContactName", "Site contact person")}
-      {field("siteContactPhone", "Site contact number")}
+      {field("siteContactName", "Project contact person")}
+      {field("siteContactPhone", "Project contact number")}
       <Select
         v={v}
         setV={setV}
@@ -896,11 +896,12 @@ function LeadForm({
         <span>Requirement categories</span>
         {requirements.map((x) => {
           const currentReqs = parseReqCategories(v.requirementCategories);
+          const isChecked = currentReqs.includes(x);
           return (
-            <label key={x}>
+            <label key={x} className={isChecked ? "active" : ""}>
               <input
                 type="checkbox"
-                checked={currentReqs.includes(x)}
+                checked={isChecked}
                 onChange={(e) =>
                   setV({
                     ...v,
@@ -1142,7 +1143,7 @@ function Detail({
               />
             </section>
             <section>
-              <h3>Customer & site</h3>
+              <h3>Customer & project</h3>
               <Info
                 k="Customer"
                 v={`${l.customer_type} · ${l.customer_name}`}
@@ -1152,7 +1153,7 @@ function Detail({
                 v={`${l.phone} / ${l.whatsapp || "—"}`}
               />
               <Info
-                k="Site"
+                k="Project Location"
                 v={`${l.site_name || "—"}, ${l.address || ""}, ${l.city || ""} ${l.pincode || ""}`}
               />
               <Info

@@ -130,11 +130,54 @@ export default function ExpensesModule({
     setSaving("Not saved");
   };
   const save = async (submit = false) => {
+    let currentAmount = form.amount ? Number(form.amount) : 0;
+    let desc = form.description || "";
+    let vend = form.vendor || "";
+
+    // Auto-calculate amount if empty but distance and vehicle mileage are provided
+    if ((!currentAmount || currentAmount <= 0) && form.distance_km && form.vehicle_mileage) {
+      const dist = Number(form.distance_km);
+      const mil = Number(form.vehicle_mileage);
+      const rate = Number(form.petrol_price || 101.40);
+      if (dist > 0 && mil > 0) {
+        currentAmount = Math.round((dist / mil) * rate * 100) / 100;
+        if (!desc) {
+          desc = `Petrol expense: ${dist} km @ ${mil} km/L (Coimbatore rate ₹${rate.toFixed(2)}/L)`;
+        }
+        if (!vend) {
+          vend = "Petrol Bunk (Coimbatore)";
+        }
+        setForm((prev: R) => ({
+          ...prev,
+          amount: String(currentAmount),
+          description: desc,
+          vendor: vend,
+        }));
+      }
+    }
+
+    if (submit) {
+      if (!form.date) {
+        setMessage("Please select the expense date");
+        return;
+      }
+      if (!form.category) {
+        setMessage("Please select an expense category");
+        return;
+      }
+      if (!currentAmount || currentAmount <= 0) {
+        setMessage("Please enter an expense amount (or fill distance & mileage to calculate)");
+        return;
+      }
+    }
+
     setBusy(true);
     setSaving("Saving…");
     const payload = {
       ...form,
-      amount: Number(form.amount),
+      amount: currentAmount,
+      description: desc,
+      vendor: vend,
       tax: Number(form.tax || 0),
       distance_km: form.distance_km ? Number(form.distance_km) : null,
       vehicle_mileage: form.vehicle_mileage ? Number(form.vehicle_mileage) : null,
@@ -556,6 +599,12 @@ export default function ExpensesModule({
                 ×
               </button>
             </header>
+            {message && (
+              <div className="expensemodalalert">
+                <span>⚠️ {message}</span>
+                <button type="button" onClick={() => setMessage("")}>×</button>
+              </div>
+            )}
             {detail && !showForm ? (
               <ExpenseDetail
                 x={detail}
@@ -581,6 +630,7 @@ export default function ExpensesModule({
               {showForm ? (
                 <>
                   <button
+                    type="button"
                     onClick={() => {
                       setShowForm(false);
                       setDetail(null);
@@ -588,21 +638,25 @@ export default function ExpensesModule({
                   >
                     Close
                   </button>
-                  <button disabled={busy} onClick={() => save(false)}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => save(false)}
+                  >
                     Save draft
                   </button>
                   <button
+                    type="button"
                     className="primary"
-                    disabled={
-                      busy || !form.date || !form.category || !form.amount
-                    }
+                    disabled={busy}
                     onClick={() => save(true)}
                   >
-                    Submit expense
+                    {busy ? "Submitting…" : "Submit expense"}
                   </button>
                 </>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     setDetail(null);
                     setSelected(null);
@@ -681,7 +735,7 @@ function ExpenseForm({
         />
       </label>
       <label>
-        <span>Related project / site</span>
+        <span>Related project</span>
         <select
           value={x.project_id || ""}
           onChange={(e) => change("project_id", e.target.value)}

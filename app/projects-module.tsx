@@ -375,7 +375,7 @@ export default function ProjectsModule({
           className={`projectrow ${role === "technician" ? "tech" : ""} ${role === "admin" ? "admin" : ""} projecthead`}
         >
           <span>Project</span>
-          <span>Customer / Site</span>
+          <span>Customer / Location</span>
           <span>Quote</span>
           {role !== "technician" && (
             <>
@@ -554,10 +554,6 @@ function ProjectCreate({
       setErr("Please select a customer.");
       return;
     }
-    if (!v.siteId) {
-      setErr("Please select an installation site.");
-      return;
-    }
     if (!v.direct && !v.quotationId) {
       setErr("Please select an accepted quotation.");
       return;
@@ -635,11 +631,16 @@ function ProjectCreate({
               value={v.customerId}
               onChange={(e) => {
                 const cId = e.target.value;
+                const cust = (options.customers || []).find(
+                  (x: R) => String(x.id) === String(cId)
+                );
                 set({
                   ...v,
                   customerId: cId,
                   siteId: "",
                   quotationId: "",
+                  address: cust?.billing_address || v.address || "",
+                  title: v.title || (cust?.name ? `${cust.name} Project` : ""),
                 });
               }}
             >
@@ -653,28 +654,44 @@ function ProjectCreate({
           </label>
 
           <label>
-            <span>
-              Installation Site <b>*</b>
-            </span>
-            <select
-              value={v.siteId}
-              onChange={(e) => set({ ...v, siteId: e.target.value })}
-              disabled={!v.customerId}
-            >
-              <option value="">
-                {!v.customerId
-                  ? "Select customer first"
-                  : sites.length === 0
-                  ? "No sites registered for customer"
-                  : "Select site"}
-              </option>
-              {sites.map((x: R) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
-            </select>
+            <span>Project Location / Address</span>
+            <input
+              type="text"
+              placeholder="e.g. Site address or landmark"
+              value={v.address || v.siteAddress || ""}
+              onChange={(e) =>
+                set({
+                  ...v,
+                  address: e.target.value,
+                  siteAddress: e.target.value,
+                })
+              }
+            />
           </label>
+
+          {sites.length > 1 && (
+            <label>
+              <span>Existing Project / Site</span>
+              <select
+                value={v.siteId || ""}
+                onChange={(e) => {
+                  const s = sites.find((x: R) => String(x.id) === e.target.value);
+                  set({
+                    ...v,
+                    siteId: e.target.value,
+                    address: s?.address || v.address,
+                  });
+                }}
+              >
+                <option value="">Auto-create / Use project location</option>
+                {sites.map((x: R) => (
+                  <option key={x.id} value={x.id}>
+                    {x.name} {x.city ? `(${x.city})` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           {!v.direct && (
             <label className="wide">
@@ -1137,7 +1154,7 @@ function ProjectDetail({
               {/* Customer & Location */}
               <section className="infocard">
                 <div className="infocard-head">
-                  <h3>Customer & Site Details</h3>
+                  <h3>Customer & Project Details</h3>
                   <button
                     className="ghostbtn"
                     onClick={() => navigate("Customers")}
@@ -1158,7 +1175,7 @@ function ProjectDetail({
                   </div>
                 )}
                 <div className="inforow">
-                  <span>Site Address</span>
+                  <span>Project Location / Address</span>
                   <b>{p.site_address || "—"}, {p.city || ""}</b>
                 </div>
                 <div className="inforow">

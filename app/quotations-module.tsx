@@ -789,15 +789,16 @@ function QuoteWorkspace({
             pdf.addPage("a4", "portrait");
           }
           const canvas = await html2canvas(section, {
-            scale: 2,
+            scale: 2.8,
             useCORS: true,
             backgroundColor: "#ffffff",
             logging: false,
-            imageTimeout: 10000,
-            windowWidth: section.scrollWidth || 794,
+            imageTimeout: 15000,
+            width: 794,
+            windowWidth: 794,
           });
-          const imgData = canvas.toDataURL("image/jpeg", 0.95);
-          pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+          const imgData = canvas.toDataURL("image/jpeg", 0.98);
+          pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "SLOW");
         }
 
         const blob = pdf.output("blob");
@@ -3453,12 +3454,321 @@ function getItemFeatureTag(item: R): string | null {
   return null;
 }
 
+interface SubsystemFeature {
+  id: string;
+  category: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  icon: string;
+  features: string[];
+}
+
+function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
+  const floors = snap.floors || [];
+  const allItems: R[] = [
+    ...floors.flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || [])),
+    ...(snap.projectItems || []),
+  ];
+
+  const fullText = allItems
+    .map(
+      (i: R) =>
+        `${i.name || ""} ${i.category || ""} ${i.description || ""} ${i.sku || ""} ${i.technology || ""} ${i.series || ""}`,
+    )
+    .join(" ")
+    .toLowerCase();
+
+  const hasLighting =
+    allItems.length === 0 ||
+    fullText.includes("switch") ||
+    fullText.includes("dimmer") ||
+    fullText.includes("fan") ||
+    fullText.includes("relay") ||
+    fullText.includes("luxeray") ||
+    fullText.includes("lighting") ||
+    fullText.includes("smart switch") ||
+    fullText.includes("plug") ||
+    fullText.includes("socket");
+
+  const hasCurtains =
+    fullText.includes("curtain") ||
+    fullText.includes("drapery") ||
+    fullText.includes("track") ||
+    fullText.includes("blind") ||
+    fullText.includes("tubular motor") ||
+    fullText.includes("shutter");
+
+  const hasLocks =
+    fullText.includes("lock") ||
+    fullText.includes("deadbolt") ||
+    fullText.includes("mortise") ||
+    fullText.includes("fingerprint") ||
+    fullText.includes("face id") ||
+    fullText.includes("digital lock") ||
+    fullText.includes("rim lock");
+
+  const hasSecurity =
+    fullText.includes("sensor") ||
+    fullText.includes("motion") ||
+    fullText.includes("radar") ||
+    fullText.includes("pir") ||
+    fullText.includes("siren") ||
+    fullText.includes("alarm") ||
+    fullText.includes("cctv") ||
+    fullText.includes("camera") ||
+    fullText.includes("vdp") ||
+    fullText.includes("doorbell") ||
+    fullText.includes("intercom") ||
+    fullText.includes("smoke") ||
+    fullText.includes("gas");
+
+  const hasGate =
+    fullText.includes("gate") ||
+    fullText.includes("barrier") ||
+    fullText.includes("boom") ||
+    fullText.includes("sliding") ||
+    fullText.includes("swing") ||
+    fullText.includes("operator") ||
+    fullText.includes("autozon") ||
+    fullText.includes("remote") ||
+    fullText.includes("transmitter") ||
+    fullText.includes("photocell") ||
+    fullText.includes("azse") ||
+    fullText.includes("azsl") ||
+    fullText.includes("azsw") ||
+    fullText.includes("azbb");
+
+  const hasScreen =
+    fullText.includes("screen") ||
+    fullText.includes("display") ||
+    fullText.includes("tuya screen") ||
+    fullText.includes("smart panel");
+
+  const subsystems: SubsystemFeature[] = [];
+
+  if (hasLighting) {
+    subsystems.push({
+      id: "lighting",
+      category: "SMART LIGHTING",
+      title: "Smart Lighting & Scene Control",
+      subtitle: "Effortless ambiance, mobile touch & voice automation",
+      badge: "Lighting",
+      icon: "💡",
+      features: [
+        "Control lights from mobile app (iOS & Android)",
+        "Individual switch circuit and group room-wise control",
+        "Familiar manual switch operation preserved with soft backlights",
+        "Automated ON/OFF scheduling and astronomical countdown timers",
+        "Scene-based control for every mood (Dinner, Reading, Movie, Party)",
+        "Voice control via Amazon Alexa & Google Assistant",
+        "Remote control and live status monitoring when away from home",
+        "Automation based on sensors, schedules, and daily routines",
+      ],
+    });
+  }
+
+  if (hasCurtains) {
+    subsystems.push({
+      id: "curtains",
+      category: "SMART CURTAINS",
+      title: "Smart Motorized Curtains",
+      subtitle: "Automated sunlight management, privacy & quiet operation",
+      badge: "Curtains",
+      icon: "🪟",
+      features: [
+        "Open/close curtains remotely from mobile or bedside",
+        "Scheduled opening at sunrise and closing at sunset",
+        "Scene-based curtain control synchronized with room lighting",
+        "Manual control with soft-touch pull to start auto-glide",
+        "Integration with other smart-home automations and voice assistants",
+      ],
+    });
+  }
+
+  if (hasLocks) {
+    subsystems.push({
+      id: "locks",
+      category: "SMART DOOR LOCKS",
+      title: "Smart Digital Door Locks",
+      subtitle: "Bank-grade keyless entry, audit trail & multi-modal access",
+      badge: "Door Locks",
+      icon: "🔐",
+      features: [
+        "Keyless entry with instant high-speed verification",
+        "Fingerprint access with high-accuracy biometric sensor",
+        "PIN/password access with anti-peep virtual code protection",
+        "RFID/card access where applicable for elderly and staff",
+        "Mobile/app access with remote unlock & live doorbell talk",
+        "Temporary access options and timed OTPs for visitors & staff",
+        "Door status monitoring, lock history logs & tamper alarm alerts",
+        "Mechanical key backup and emergency USB-C power jumpstart",
+      ],
+    });
+  }
+
+  if (hasSecurity) {
+    subsystems.push({
+      id: "security",
+      category: "INTEGRATED SECURITY",
+      title: "Smart Security & Monitoring",
+      subtitle: "24/7 proactive intrusion detection & instant mobile alerts",
+      badge: "Security",
+      icon: "🛡️",
+      features: [
+        "Door/window monitoring with instant magnetic contact alerts",
+        "Motion and human radar presence detection without false alarms",
+        "Instant intrusion alerts and push notifications on your phone",
+        "Siren/alarm integration for immediate deterrent response",
+        "Mobile notifications for state changes and perimeter events",
+        "CCTV integration and video door phone monitoring where included",
+        "Security automation scenarios (Night Perimeter, Vacation Simulation)",
+      ],
+    });
+  }
+
+  if (hasGate) {
+    subsystems.push({
+      id: "gate",
+      category: "GATE AUTOMATION",
+      title: "Automated Gates & Boom Barriers",
+      subtitle: "Driveway motorized operation, obstacle safety & long-range remotes",
+      badge: "Gate Automation",
+      icon: "⛩️",
+      features: [
+        "Automated gate opening and closing without stepping out of vehicle",
+        "Remote operation via encrypted high-frequency wireless transmitters",
+        "Vehicle/person access control tailored to your perimeter",
+        "Safety features based on the selected controller (photocell obstacle protection)",
+        "Integration with smart-home controls and welcome pathway lighting",
+      ],
+    });
+  }
+
+  if (hasScreen && subsystems.length < 5) {
+    subsystems.push({
+      id: "screen",
+      category: "CENTRAL INTERFACE",
+      title: "Smart Touch Screen Console",
+      subtitle: "In-wall high definition command center for all rooms",
+      badge: "Touch Screen",
+      icon: "📱",
+      features: [
+        "Centralized in-wall touch control for all floors and rooms",
+        "Instant scene triggering and real-time device status display",
+        "Smart doorbell intercom answering directly from the screen",
+        "Unified family access point without requiring personal phones",
+      ],
+    });
+  }
+
+  return subsystems;
+}
+
+function synthesizeSmartScenes(subsystems: SubsystemFeature[]) {
+  const ids = new Set(subsystems.map((s) => s.id));
+  const hasLight = ids.has("lighting");
+  const hasCurtain = ids.has("curtains");
+  const hasLock = ids.has("locks");
+  const hasGate = ids.has("gate");
+  const hasSecurity = ids.has("security");
+
+  const scenes = [];
+
+  // 1. GOOD MORNING
+  let morningSteps = "Lights ON → Curtains Open → Selected appliances ON";
+  if (!hasCurtain) {
+    morningSteps = "Warm Lights ON → Pathway Active → Water Heater ON";
+  }
+  scenes.push({
+    name: "GOOD MORNING",
+    time: "07:00 AM",
+    icon: "🌅",
+    steps: morningSteps,
+    desc: "Awaken comfortably to gentle lighting and natural morning warmth automatically synchronized for your day.",
+  });
+
+  // 2. LEAVING HOME
+  let awaySteps = "Lights OFF → Curtains Close → Security Mode ON";
+  if (hasGate && hasLock) {
+    awaySteps = "Lights OFF → Curtains Close → Doors Locked → Gate Closed → Security Mode ON";
+  } else if (hasLock) {
+    awaySteps = "Lights OFF → Curtains Close → Doors Checked & Locked → Security Mode ON";
+  } else if (!hasCurtain && !hasSecurity) {
+    awaySteps = "All Lights & Fans OFF → ACs OFF → Standby Power Saved";
+  }
+  scenes.push({
+    name: "LEAVING HOME",
+    time: "09:30 AM",
+    icon: "🚪",
+    steps: awaySteps,
+    desc: "One touch near the main exit or on your phone puts the entire property into secure, power-saving away mode.",
+  });
+
+  // 3. MOVIE MODE
+  let movieSteps = "Main Lights OFF → Accent Lights ON → Curtains Close";
+  if (!hasCurtain) {
+    movieSteps = "Main Lights OFF → Accent Lights Dimmed (20%) → Warm Ambiance ON";
+  }
+  scenes.push({
+    name: "MOVIE MODE",
+    time: "08:00 PM",
+    icon: "🎬",
+    steps: movieSteps,
+    desc: "Dims the main lighting to warm cove tones and closes motorized window shades for an immersive private cinema feel.",
+  });
+
+  // 4. GOOD NIGHT
+  let nightSteps = "Selected Lights OFF → Doors Checked → Security Mode ON";
+  if (!hasLock && !hasSecurity) {
+    nightSteps = "Selected Lights OFF → Bedside Master All-Off → Night Path Dim (10%)";
+  }
+  scenes.push({
+    name: "GOOD NIGHT",
+    time: "11:00 PM",
+    icon: "🌙",
+    steps: nightSteps,
+    desc: "Turn off all active room switches and verify the home is safe and settled right from your bedside panel.",
+  });
+
+  // 5. WELCOME HOME (if gate or lock is present)
+  if (hasGate || hasLock) {
+    let welcomeSteps = "Gate Opens → Pathway Lights ON → Entrance Door Unlocked";
+    if (!hasGate) {
+      welcomeSteps = "Door Unlocked via Biometrics → Foyer Lights Welcome You";
+    }
+    scenes.push({
+      name: "WELCOME HOME",
+      time: "Arrival",
+      icon: "🏡",
+      steps: welcomeSteps,
+      desc: "Drive up or walk through the entrance with automated entry and illuminated pathways welcoming you home.",
+    });
+  }
+
+  return scenes.slice(0, 4);
+}
+
+const whyTechomiePoints = [
+  "Professional installation",
+  "Complete system configuration",
+  "App setup",
+  "Automation programming",
+  "Customer demonstration",
+  "User training",
+  "Local technical support",
+  "Product warranty",
+  "After-sales service",
+  "Integration of multiple systems",
+  "Future expansion capability",
+];
+
   const paginateFloor = (floor: R) => {
     const pages: R[] = [];
     let currentPageRooms: R[] = [];
     let currentUsed = 0;
-    // Guaranteed room budget: 192mm accommodates up to 10 items + floor summary on a single A4 page
-    const getBudget = (isFirst: boolean) => 192;
+    // Room budget: 170mm safe height to guarantee zero row clipping on A4 pages
+    const getBudget = (isFirst: boolean) => 170;
 
     const pushCurrentPage = () => {
       if (currentPageRooms.length) {
@@ -3475,7 +3785,7 @@ function getItemFeatureTag(item: R): string | null {
       const budget = getBudget(pages.length === 0);
 
       if (!items.length) {
-        const cost = 24;
+        const cost = 22;
         if (currentUsed + cost > budget) pushCurrentPage();
         currentPageRooms.push({
           ...room,
@@ -3493,10 +3803,10 @@ function getItemFeatureTag(item: R): string | null {
       let chunkIdx = 0;
       while (itemIdx < items.length) {
         const curBudget = getBudget(pages.length === 0);
-        // Room header (12mm) + table thead (8mm) = 20mm (chunk 0)
-        // Continued chunk: banner (10mm) + thead (8mm) = 18mm (room subtotal removed)
-        const overhead = chunkIdx === 0 ? 20 : 18;
-        const itemHeight = 19; // Expanded product photo & balanced cell height
+        // Room banner + capability pills (14mm) + table thead (8mm) = 22mm (chunk 0)
+        // Continued chunk: banner (10mm) + thead (8mm) = 18mm
+        const overhead = chunkIdx === 0 ? 22 : 18;
+        const itemHeight = 23; // Realistic item row height (60px img wrap + 2-line specs + padding)
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
         // break to next page immediately so the room starts cleanly at the top of the next page!
@@ -3528,18 +3838,11 @@ function getItemFeatureTag(item: R): string | null {
       }
     }
 
-    const floorSummaryCost = 28;
-    const finalBudget = getBudget(pages.length === 0);
-    if (currentPageRooms.length && currentUsed + floorSummaryCost <= finalBudget) {
-      pages.push({ rooms: currentPageRooms, hasFloorSummary: true });
-    } else {
-      if (currentPageRooms.length) {
-        pages.push({ rooms: currentPageRooms, hasFloorSummary: false });
-      }
-      pages.push({ rooms: [], hasFloorSummary: true });
+    if (currentPageRooms.length) {
+      pages.push({ rooms: currentPageRooms });
     }
 
-    return pages.length ? pages : [{ rooms: [], hasFloorSummary: true }];
+    return pages.length ? pages : [{ rooms: [] }];
   };
 
   const scopePages = floors.flatMap((floor: R, floorIndex: number) => {
@@ -3550,9 +3853,11 @@ function getItemFeatureTag(item: R): string | null {
       pageIndex,
       pageCount: pages.length,
       rooms: page.rooms,
-      hasFloorSummary: page.hasFloorSummary,
     }));
   });
+
+  const subsystems = detectQuoteSubsystems(snap);
+  const smartScenes = synthesizeSmartScenes(subsystems);
 
   return (
     <article
@@ -3586,7 +3891,7 @@ function getItemFeatureTag(item: R): string | null {
             <b>{snap.details?.quoteDate || quote.quote_date || new Date().toLocaleDateString("en-IN")}</b>
           </span>
           <span>
-            <small>PROJECT / SITE LOCATION</small>
+            <small>PROJECT LOCATION</small>
             <b>
               {siteName}, {quote.city || "Tamil Nadu"}
             </b>
@@ -3639,7 +3944,7 @@ function getItemFeatureTag(item: R): string | null {
               </span>
             </article>
             <article>
-              <small>PROJECT / SITE ADDRESS</small>
+              <small>PROJECT ADDRESS</small>
               <b>{siteName}</b>
               <span>
                 {snap.details?.installationAddress ||
@@ -3689,171 +3994,8 @@ function getItemFeatureTag(item: R): string | null {
         </section>
       )}
 
-      {/* PAGE 3: SMART LIVING EXPERIENCE & WHAT YOU CAN DO */}
-      {detailed && (
-        <section className="qpaperexperience">
-          {head("SMART LIVING EXPERIENCE")}
-          <div className="qsectiontitle">
-            <small>LIFESTYLE &amp; SYSTEM CAPABILITIES</small>
-            <h2>What You Can Do With Your Techomie Smart Home</h2>
-            <span>Everyday convenience, intelligent automation &amp; effortless control</span>
-          </div>
-
-          <div className="qexperiencegrid">
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">01</span>
-                <div>
-                  <b>Worldwide Mobile App Control</b>
-                  <small>Techomie Smart Life (iOS &amp; Android)</small>
-                </div>
-              </div>
-              <p>
-                Control any light, fan, curtain, or appliance from anywhere in the world. Turn on the bedroom AC or geyser 15 minutes before reaching home, or verify all lights are off from bed or while traveling.
-              </p>
-              <div className="qexpactions">
-                <span>Multi-user family sharing</span>
-                <span>•</span>
-                <span>Real-time feedback</span>
-                <span>•</span>
-                <span>Anywhere cloud access</span>
-              </div>
-            </article>
-
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">02</span>
-                <div>
-                  <b>Hands-Free Voice Automation</b>
-                  <small>Amazon Alexa &amp; Google Assistant</small>
-                </div>
-              </div>
-              <p>
-                Control rooms without lifting a finger: <i>&ldquo;Alexa, turn on Movie Mode&rdquo;</i> dims lights and closes curtains. <i>&ldquo;Hey Google, Good Night&rdquo;</i> turns off all floor lights without leaving bed.
-              </p>
-              <div className="qexpactions">
-                <span>Echo &amp; Nest compatible</span>
-                <span>•</span>
-                <span>Natural speech recognition</span>
-                <span>•</span>
-                <span>Hands-free comfort</span>
-              </div>
-            </article>
-
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">03</span>
-                <div>
-                  <b>Personalized Mood Scenes</b>
-                  <small>Capacitive Wall Panels &amp; Mobile Presets</small>
-                </div>
-              </div>
-              <p>
-                Switch between tailored lighting ambiances with a single touch on the wall panel or mobile app. Create predefined scenes for Dinner, Party, Reading, Focus, or Relaxing evenings with smooth dimming.
-              </p>
-              <div className="qexpactions">
-                <span>4 custom scene buttons per room</span>
-                <span>•</span>
-                <span>Warm cove &amp; chandelier dimming</span>
-              </div>
-            </article>
-
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">04</span>
-                <div>
-                  <b>Astronomical Timers &amp; Schedules</b>
-                  <small>Automated Astronomical Clock</small>
-                </div>
-              </div>
-              <p>
-                Outdoor gate, façade, and garden lights automatically illuminate at sunset and switch off at dawn. Geysers automatically shut off after 20 minutes to conserve power and prevent burnout.
-              </p>
-              <div className="qexpactions">
-                <span>Dusk-to-dawn exterior automation</span>
-                <span>•</span>
-                <span>Scheduled morning wake-up curtains</span>
-              </div>
-            </article>
-
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">05</span>
-                <div>
-                  <b>Central Master &ldquo;All-Off&rdquo; &amp; Away</b>
-                  <small>Whole-Home Central Efficiency</small>
-                </div>
-              </div>
-              <p>
-                A single tap on the exit switch near the main entrance powers down all non-essential lights, fans, and ACs across all floors. Bedside master switch lets you put the home to sleep without walking around.
-              </p>
-              <div className="qexpactions">
-                <span>Main entrance one-touch exit</span>
-                <span>•</span>
-                <span>Bedside master all-off switch</span>
-              </div>
-            </article>
-
-            <article className="qexpcard">
-              <div className="qexphead">
-                <span className="qexpnum">06</span>
-                <div>
-                  <b>Offline Reliability &amp; Zero Rewiring</b>
-                  <small>Local Wireless Mesh &amp; Retrofit</small>
-                </div>
-              </div>
-              <p>
-                Directly retrofits into standard backboxes without cutting walls or repainting. If home Wi-Fi or broadband is temporarily down, physical touch panels and local scenes continue functioning 100% locally.
-              </p>
-              <div className="qexpactions">
-                <span>100% manual touch fallback</span>
-                <span>•</span>
-                <span>Zero plaster cutting or rewiring</span>
-              </div>
-            </article>
-          </div>
-
-          <div className="qscenesbanner">
-            <div className="qsceneshead">
-              <b>DAY IN THE LIFE: PRE-CONFIGURED LIFESTYLE AUTOMATIONS INCLUDED</b>
-              <span>Tailored and programmed by Techomie during commissioning</span>
-            </div>
-            <div className="qscenesgrid">
-              <div className="qscenecol">
-                <b>07:00 AM · Good Morning</b>
-                <p>Curtains glide open to natural sunlight, water heater powers on, and warm kitchen lights turn on automatically.</p>
-              </div>
-              <div className="qscenecol">
-                <b>09:30 AM · Departure / Away</b>
-                <p>One touch on the main entrance panel shuts off all lights, fans, and ACs across all floors and locks gates securely.</p>
-              </div>
-              <div className="qscenecol">
-                <b>07:30 PM · Evening / Relax</b>
-                <p>Living room lights dim to warm cove, motorized curtains close, and television media socket turns on.</p>
-              </div>
-              <div className="qscenecol">
-                <b>11:00 PM · Goodnight</b>
-                <p>Bedside switch turns off all interior lights while keeping exterior security lights and boundary radars active.</p>
-              </div>
-            </div>
-          </div>
-
-          {foot("Smart Living Experience & Capabilities")}
-        </section>
-      )}
-
       {/* PAGES 3+: FLOOR-WISE & ROOM-WISE BOQ */}
       {scopePages.map((scope: R, pIdx: number) => {
-        const floorTotal = (scope.floor.rooms || []).reduce(
-          (fAcc: number, r: R) =>
-            fAcc +
-            (r.items || []).reduce(
-              (rAcc: number, it: R) => rAcc + (it.optional ? 0 : line(it).total),
-              0,
-            ),
-          0,
-        );
-
         return (
           <section
             className="qpaperscope"
@@ -3911,16 +4053,26 @@ function getItemFeatureTag(item: R): string | null {
                     </span>
                   </div>
                   <table className="qboqtable">
+                    <colgroup>
+                      <col className="col-sno" style={{ width: "34px" }} />
+                      <col className="col-img" style={{ width: "98px" }} />
+                      <col className="col-details" />
+                      <col className="col-qty" style={{ width: "38px" }} />
+                      <col className="col-unit" style={{ width: "40px" }} />
+                      <col className="col-rate" style={{ width: "74px" }} />
+                      <col className="col-disc" style={{ width: "42px" }} />
+                      <col className="col-amt" style={{ width: "84px" }} />
+                    </colgroup>
                     <thead>
                       <tr>
-                        <th style={{ width: "28px", textAlign: "center" }}>S.NO</th>
-                        <th style={{ width: "98px", textAlign: "center" }}>PHOTO</th>
-                        <th style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
-                        <th style={{ width: "36px", textAlign: "center" }}>QTY</th>
-                        <th style={{ width: "38px", textAlign: "center" }}>UNIT</th>
-                        <th style={{ width: "72px", textAlign: "right" }}>RATE</th>
-                        <th style={{ width: "42px", textAlign: "center" }}>DISC.</th>
-                        <th style={{ width: "82px", textAlign: "right" }}>AMOUNT</th>
+                        <th className="th-sno" style={{ width: "34px", textAlign: "center" }}>S.NO</th>
+                        <th className="th-img" style={{ width: "98px", textAlign: "center" }}>PHOTO</th>
+                        <th className="th-details" style={{ textAlign: "left" }}>PRODUCT / MODULE &amp; SPECIFICATIONS</th>
+                        <th className="th-qty" style={{ width: "38px", textAlign: "center" }}>QTY</th>
+                        <th className="th-unit" style={{ width: "40px", textAlign: "center" }}>UNIT</th>
+                        <th className="th-rate" style={{ width: "74px", textAlign: "right" }}>RATE</th>
+                        <th className="th-disc" style={{ width: "42px", textAlign: "center" }}>DISC.</th>
+                        <th className="th-amt" style={{ width: "84px", textAlign: "right" }}>AMOUNT</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4001,40 +4153,129 @@ function getItemFeatureTag(item: R): string | null {
               );
             })}
 
-            {/* Floor Summary Card placed on the final page of this floor */}
-            {scope.hasFloorSummary && (
-              <div className="qfloorsummarybox">
-                <div className="qfloorsummaryhead">
-                  <span>{scope.floor.name.toUpperCase()} AREA / ROOM BREAKDOWN</span>
-                  <span>AMOUNT (INR)</span>
-                </div>
-                {(scope.floor.rooms || []).map((r: R, rIdx: number) => {
-                  const rTot = (r.items || []).reduce(
-                    (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
-                    0,
-                  );
-                  return (
-                    <div className="qfloorsummaryrow" key={rIdx}>
-                      <span>
-                        {r.name} ({(r.items || []).length} configured items)
-                      </span>
-                      <b>{money(rTot)}</b>
-                    </div>
-                  );
-                })}
-                <div className="qfloorsummarytotal">
-                  <span>{scope.floor.name} Total</span>
-                  <strong>{money(floorTotal)}</strong>
-                </div>
-              </div>
-            )}
-
             {foot(
               `${scope.floor.name} scope${scope.pageCount > 1 ? ` · Page ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`,
             )}
           </section>
         );
       })}
+
+      {/* 4. FEATURES & BENEFITS — WHAT YOU GET */}
+      {detailed && subsystems.length > 0 && (
+        <section className="qpaperfeatures">
+          {head("FEATURES & BENEFITS")}
+          <div className="qsectiontitle">
+            <small>SOLUTION ARCHITECTURE &amp; VALUE</small>
+            <h2>What You Get With Your Techomie Smart Home</h2>
+            <span>
+              Personalized features &amp; everyday living experience engineered from your selected configuration
+            </span>
+          </div>
+
+          <div className={`qsubsystemsgrid qcols-${Math.min(subsystems.length, 2)}`}>
+            {subsystems.map((sub) => (
+              <article key={sub.id} className="qsubsystemcard">
+                <div className="qsubsystemhead">
+                  <span className="qsubsystemicon">{sub.icon}</span>
+                  <div className="qsubsystemtitlewrap">
+                    <span className="qsubsystembadge">{sub.category}</span>
+                    <b>{sub.title}</b>
+                    <small>{sub.subtitle}</small>
+                  </div>
+                </div>
+                <ul className="qsubsystemfeaturelist">
+                  {sub.features.map((feat, fIdx) => (
+                    <li key={fIdx}>
+                      <span className="qbulletcheck">✓</span>
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+
+          <div className="qfeaturesfooterbar">
+            <span>
+              ✦ All hardware modules operate as a single unified ecosystem through the Techomie platform.
+            </span>
+          </div>
+
+          {foot("Features & Benefits — What You Get")}
+        </section>
+      )}
+
+      {/* 5. SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE */}
+      {detailed && (
+        <section className="qpaperadvantage">
+          {head("CAPABILITIES & ADVANTAGE")}
+          <div className="qsectiontitle">
+            <small>INTELLIGENT ROUTINES &amp; SERVICE ASSURANCE</small>
+            <h2>System Capabilities &amp; Your Techomie Advantage</h2>
+            <span>
+              Dynamic scene automations and our dedicated end-to-end service commitments
+            </span>
+          </div>
+
+          {/* SMART SCENES */}
+          <div className="qscenescapsblock">
+            <div className="qscenescapstitle">
+              <small>SYSTEM CAPABILITIES</small>
+              <b>Pre-Programmed Smart Scenes Included With Your System</b>
+              <p>
+                Tailored specifically for the modules in your proposal and programmed during on-site commissioning:
+              </p>
+            </div>
+            <div className="qscenesgridnew">
+              {smartScenes.map((scene, sIdx) => (
+                <div key={sIdx} className="qscenecardnew">
+                  <div className="qsceneheadnew">
+                    <span className="qsceneicon">{scene.icon}</span>
+                    <div>
+                      <b>{scene.name}</b>
+                      <small>{scene.time}</small>
+                    </div>
+                  </div>
+                  <div className="qscenesteps">
+                    <code>{scene.steps}</code>
+                  </div>
+                  <p className="qscenedesc">{scene.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* WHY TECHOMIE? */}
+          <div className="qwhytechomieblock">
+            <div className="qwhyhead">
+              <div className="qwhybadge">THE TECHOMIE ADVANTAGE</div>
+              <b>Why Techomie?</b>
+              <span>11 Core Service Deliverables Included in Every Project</span>
+            </div>
+            <div className="qwhygrid">
+              {whyTechomiePoints.map((pt, pIdx) => (
+                <div key={pIdx} className="qwhyitem">
+                  <span className="qwhycheck">✓</span>
+                  <span>{pt}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* LOCAL & RELIABLE CONTROL */}
+          <div className="qlocalcontrolcard">
+            <div className="qlocalicon">🛡️</div>
+            <div className="qlocalcontent">
+              <b>Local &amp; Reliable Control</b>
+              <p>
+                Selected systems can continue to provide local control even when internet connectivity is unavailable, depending on the products and architecture used.
+              </p>
+            </div>
+          </div>
+
+          {foot("System Capabilities & The Techomie Advantage")}
+        </section>
+      )}
 
       {/* COMMERCIAL & PAYMENT TERMS PAGE */}
       <section className="qpaperfinance">
@@ -4047,25 +4288,20 @@ function getItemFeatureTag(item: R): string | null {
 
         <div className="qfloortablebox">
           <table className="qfloortable">
+            <colgroup>
+              <col style={{ width: "auto" }} />
+              <col style={{ width: "90px" }} />
+              <col style={{ width: "110px" }} />
+            </colgroup>
             <thead>
               <tr>
                 <th style={{ textAlign: "left" }}>Area / Scope Description</th>
-                <th style={{ width: "60px", textAlign: "center" }}>Rooms</th>
-                <th style={{ width: "60px", textAlign: "center" }}>Items</th>
-                <th style={{ width: "110px", textAlign: "right" }}>Investment</th>
+                <th style={{ width: "90px", textAlign: "center" }}>Rooms</th>
+                <th style={{ width: "110px", textAlign: "center" }}>Configured Items</th>
               </tr>
             </thead>
             <tbody>
               {floors.map((f: R, fIdx: number) => {
-                const fTotal = (f.rooms || []).reduce(
-                  (fAcc: number, r: R) =>
-                    fAcc +
-                    (r.items || []).reduce(
-                      (rAcc: number, it: R) => rAcc + (it.optional ? 0 : line(it).total),
-                      0,
-                    ),
-                  0,
-                );
                 const fItemCount = (f.rooms || []).reduce(
                   (acc: number, r: R) => acc + (r.items || []).length,
                   0,
@@ -4080,9 +4316,6 @@ function getItemFeatureTag(item: R): string | null {
                     </td>
                     <td style={{ textAlign: "center" }}>{(f.rooms || []).length}</td>
                     <td style={{ textAlign: "center" }}>{fItemCount}</td>
-                    <td style={{ textAlign: "right" }}>
-                      <b>{money(fTotal)}</b>
-                    </td>
                   </tr>
                 );
               })}
@@ -4094,16 +4327,6 @@ function getItemFeatureTag(item: R): string | null {
                   </td>
                   <td style={{ textAlign: "center" }}>—</td>
                   <td style={{ textAlign: "center" }}>{snap.projectItems.length}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <b>
-                      {money(
-                        snap.projectItems.reduce(
-                          (acc: number, it: R) => acc + (it.optional ? 0 : line(it).total),
-                          0,
-                        ),
-                      )}
-                    </b>
-                  </td>
                 </tr>
               )}
             </tbody>
@@ -4353,8 +4576,11 @@ function getItemFeatureTag(item: R): string | null {
         </div>
 
         <div className="qpreparedbyfoot">
+          <span>
+            <b>Techomie Smart Devices</b> · 356/2, Church Rd, Sri Murugan Nagar, Phase II, Cheran ma Nagar, COIMBATORE 641048<br />
+            <b>GSTIN:</b> 33GIMPP4721H1Z2 · <b>Ph:</b> 07598883121 · <b>Email:</b> info.techomie@gmail.com · <b>Web:</b> https://www.techomie.com/
+          </span>
           <span><b>Consultant:</b> {snap.details?.quotationByName || quote.sales_name || quote.created_name || "Techomie Sales Team"}</span>
-          <span><b>Helpline:</b> +91 90470 12345 · <b>Web:</b> www.techomie.com</span>
         </div>
 
         {foot("Acceptance & Sign-off")}
@@ -4391,8 +4617,8 @@ function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
       </header>
       {!continued && <>
         <div className="qminimalcompany">
-          <p>{address || company.registeredAddress || "Coimbatore, Tamil Nadu"}</p>
-          <p>{[company.gstin && `GSTIN ${company.gstin}`, company.phone, company.email, company.website].filter(Boolean).join(" | ")}</p>
+          <p>{address || company.registeredAddress || "356/2, Church Rd, Sri Murugan Nagar, Phase II, Cheran ma Nagar, COIMBATORE Tamil Nadu 641048, India"}</p>
+          <p>{[`GSTIN ${company.gstin || "33GIMPP4721H1Z2"}`, company.phone || "07598883121", company.email || "info.techomie@gmail.com", company.website || "https://www.techomie.com/"].filter(Boolean).join(" | ")}</p>
         </div>
         <div className="qminimalmeta">
           <span><small>Quote date</small><b>{snap.details?.quoteDate || quote.quote_date}</b></span>

@@ -32,12 +32,11 @@ const blank = {
 const tabs = [
   "Overview",
   "Contacts",
-  "Sites",
+  "Projects",
   "Activity Timeline",
   "Leads",
   "Quotations",
   "Invoices",
-  "Projects",
   "Payments",
   "Warranty & Service",
   "Documents",
@@ -309,7 +308,7 @@ export default function CustomersModule({
           <b>{rows.length}</b>
         </button>
         <button>
-          <small>Active sites</small>
+          <small>Active projects</small>
           <b>{rows.reduce((a, x) => a + Number(x.site_count), 0)}</b>
         </button>
         <button>
@@ -357,7 +356,7 @@ export default function CustomersModule({
         <div className={`customerrow customerhead ${role === "admin" ? "admin" : ""}`}>
           <span>Customer</span>
           <span>Contact</span>
-          <span>City / Sites</span>
+          <span>City / Projects</span>
           <span>Status / Owner</span>
           <span>Invoiced</span>
           <span>Balance</span>
@@ -389,7 +388,7 @@ export default function CustomersModule({
             </span>
             <span>
               <b>{c.city || "—"}</b>
-              <small>{c.site_count} sites</small>
+              <small>{c.site_count} projects</small>
             </span>
             <span>
               <em>{c.status}</em>
@@ -456,10 +455,10 @@ export default function CustomersModule({
           <div className="customermodal sitemodal">
             <header>
               <div>
-                <small>NEW CUSTOMER SITE</small>
-                <h2>Add site for {detail.customer.display_name || detail.customer.name}</h2>
+                <small>NEW PROJECT</small>
+                <h2>Add project for {detail.customer.display_name || detail.customer.name}</h2>
               </div>
-              <button onClick={() => setShowSite(false)}>Ã—</button>
+              <button onClick={() => setShowSite(false)}>×</button>
             </header>
             <SiteForm v={siteForm} set={setSiteForm} />
             <div className="customeractions">
@@ -469,7 +468,7 @@ export default function CustomersModule({
                 disabled={siteBusy || !siteForm.name.trim() || !siteForm.address.trim()}
                 onClick={saveSite}
               >
-                {siteBusy ? "Saving siteâ€¦" : "Save permanent site"}
+                {siteBusy ? "Saving project…" : "Save project"}
               </button>
             </div>
           </div>
@@ -525,7 +524,7 @@ export default function CustomersModule({
           </header>
           <div className="customerquick">
             <button onClick={addContact}>Add contact</button>
-            <button onClick={addSite}>Add site</button>
+            <button onClick={addSite}>Add project</button>
             <button onClick={() => onNavigate("Leads")}>Add lead</button>
             <button onClick={() => onNavigate("Quotations")}>
               Create quote
@@ -595,14 +594,14 @@ function SiteForm({ v, set }: { v: R; set: (v: R) => void }) {
   );
   return (
     <div className="customerform siteform">
-      {input("name", "Site name", true)}
-      {input("address", "Full site address", true)}
+      {input("name", "Project name", true)}
+      {input("address", "Project address", true)}
       {input("city", "City", true)}
       {input("state", "State", true)}
       {input("pincode", "Pincode")}
       {input("mapsUrl", "Google Maps link", false, "url")}
-      {input("contactName", "Site contact person")}
-      {input("contactPhone", "Site contact phone", false, "tel")}
+      {input("contactName", "Project contact person")}
+      {input("contactPhone", "Project contact phone", false, "tel")}
       <label><span>Property type</span><select value={v.propertyType} onChange={e=>set({...v,propertyType:e.target.value})}>{["Villa","Apartment","Office","Commercial","Hotel","Other"].map(x=><option key={x}>{x}</option>)}</select></label>
       <label><span>Construction stage</span><select value={v.constructionStage} onChange={e=>set({...v,constructionStage:e.target.value})}>{["Planning","Under construction","Wiring stage","Finishing","Ready for installation","Occupied"].map(x=><option key={x}>{x}</option>)}</select></label>
       {input("floors", "Floors (comma separated)")}
@@ -776,12 +775,11 @@ function CustomerTab({
     );
   const map: R = {
       Contacts: d.contacts,
-      Sites: d.sites,
       "Activity Timeline": d.activity,
       Leads: d.leads,
       Quotations: d.quotations,
       Invoices: d.invoices,
-      Projects: d.projects,
+      Projects: (d.projects && d.projects.length) ? d.projects : (d.sites || []),
       Payments: d.payments,
       "Warranty & Service": [...d.warranties, ...d.service, ...d.amc],
       Documents: d.documents,
@@ -808,6 +806,7 @@ function CustomerTab({
               <span>
                 {x.phone ||
                   x.site_name ||
+                  x.address ||
                   x.date ||
                   x.created_at ||
                   x.invoice_date ||
@@ -833,7 +832,7 @@ function CustomerTab({
         onClick={
           tab === "Contacts"
             ? addContact
-            : tab === "Sites"
+            : tab === "Projects"
               ? addSite
               : tab === "Notes"
                 ? addNote

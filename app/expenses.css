@@ -255,22 +255,98 @@
 }
 .expensemodal {
   width: min(920px, 96vw);
+  max-height: 92vh !important;
+  display: flex !important;
+  flex-direction: column !important;
   background: #ffffff;
   border-radius: 18px;
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25);
-  overflow: hidden;
+  overflow: hidden !important;
 }
 .expensemodal > header {
   position: sticky;
   top: 0;
+  flex-shrink: 0;
   height: auto;
-  padding: 18px 24px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
-  z-index: 3;
+  z-index: 10;
+}
+.expensemodalalert {
+  flex-shrink: 0;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.expensemodalalert button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #b91c1c;
+  cursor: pointer;
+}
+.expensemodal .expenseform,
+.expensemodal .expensedetail {
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding: 22px 26px;
+  min-height: 0;
+}
+.expensemodal .modalactions {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+}
+.expensemodal .modalactions button {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+.expensemodal .modalactions button:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+.expensemodal .modalactions button.primary {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
+}
+.expensemodal .modalactions button.primary:hover:not(:disabled) {
+  background: #0369a1;
+  border-color: #0369a1;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
+}
+.expensemodal .modalactions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .expensemodal > header small {
   font-size: 11px;

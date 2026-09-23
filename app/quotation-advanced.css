@@ -475,170 +475,229 @@
 
 /* 100% Mathematically Aligned BOQ Table */
 .qboqtable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  margin-bottom: 3.5mm;
-  font-size: 7.5px;
-  border: 1px solid #e2e8f0;
-  border-top: 0;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  margin-bottom: 3.5mm !important;
+  font-size: 7.5px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-top: 0 !important;
+  box-sizing: border-box !important;
 }
 .qboqtable thead tr {
-  background: #1e293b;
-  color: #f1f5f9;
+  background: #1e293b !important;
+  color: #f1f5f9 !important;
 }
 .qboqtable th {
-  padding: 5px 6px;
-  font-size: 6.5px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border: 0;
-  white-space: nowrap;
-  vertical-align: middle;
+  padding: 6px 4px !important;
+  font-size: 6.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
 }
 .qboqtable td {
-  padding: 5px 6px;
-  border-bottom: 1px solid #e2e8f0;
-  vertical-align: middle;
-  font-size: 7.5px;
-  color: #334155;
+  padding: 5px 4px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  vertical-align: middle !important;
+  font-size: 7.5px !important;
+  color: #334155 !important;
+  box-sizing: border-box !important;
 }
 .qboqrow:nth-child(even) td {
-  background: #fbfcfe;
+  background: #fbfcfe !important;
 }
+
+/* Explicit Width Rules for col, th, and td */
+.qboqtable .col-sno,
+.qboqtable th.th-sno,
 .qboqtable td.td-sno {
-  font-weight: 700;
-  color: #64748b;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 8px;
-  padding: 5px 4px;
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  font-size: 8px !important;
+  padding: 5px 2px !important;
+  box-sizing: border-box !important;
 }
+
+.qboqtable .col-img,
+.qboqtable th.th-img,
 .qboqtable td.td-img {
-  width: 98px;
-  text-align: center;
-  vertical-align: middle;
-  padding: 5px 4px;
+  width: 98px !important;
+  min-width: 98px !important;
+  max-width: 98px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 4px 4px !important;
+  box-sizing: border-box !important;
 }
+
 .qboqtable .qboqimgwrap {
-  width: 90px;
-  height: 66px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 7px;
-  padding: 3px;
-  margin: 0 auto;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-  overflow: hidden;
+  width: 88px !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 2px !important;
+  margin: 0 auto !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 .qboqtable .qboqimgwrap img,
 .qboqtable td.td-img img {
-  max-width: 84px;
-  max-height: 60px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  margin: auto;
+  max-width: 82px !important;
+  max-height: 54px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: auto !important;
 }
+
+.qboqtable .col-details,
+.qboqtable th.th-details,
 .qboqtable td.td-details {
-  vertical-align: middle;
-  padding: 5px 6px 5px 4px;
+  width: auto !important;
+  vertical-align: middle !important;
+  padding: 5px 6px 5px 6px !important;
+  box-sizing: border-box !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 .qboqtable td.td-details b {
-  display: block;
-  font-size: 8.5px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.35;
+  display: block !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
 }
 .qboqtable td.td-details small {
-  display: block;
-  font-size: 6.8px;
-  color: #64748b;
-  line-height: 1.35;
-  margin-top: 2px;
+  display: block !important;
+  font-size: 6.8px !important;
+  color: #64748b !important;
+  line-height: 1.35 !important;
+  margin-top: 2px !important;
 }
+
+.qboqtable .col-qty,
+.qboqtable th.th-qty,
 .qboqtable td.td-qty {
-  text-align: center;
-  vertical-align: middle;
-  padding: 5px 4px;
-  font-weight: 700;
-  font-size: 8px;
-  color: #0f172a;
-  white-space: nowrap;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 5px 2px !important;
+  font-weight: 700 !important;
+  font-size: 8px !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
+
+.qboqtable .col-unit,
+.qboqtable th.th-unit,
 .qboqtable td.td-unit {
-  text-align: center;
-  vertical-align: middle;
-  padding: 5px 4px;
-  color: #64748b;
-  font-size: 7.5px;
-  white-space: nowrap;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 5px 2px !important;
+  color: #64748b !important;
+  font-size: 7.5px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
+
+.qboqtable .col-rate,
+.qboqtable th.th-rate,
 .qboqtable td.td-rate {
-  text-align: right;
-  vertical-align: middle;
-  padding: 5px 6px;
-  font-family: inherit;
-  font-size: 8px;
-  font-weight: 600;
-  color: #334155;
-  white-space: nowrap;
+  width: 74px !important;
+  min-width: 74px !important;
+  max-width: 74px !important;
+  text-align: right !important;
+  vertical-align: middle !important;
+  padding: 5px 4px !important;
+  font-family: inherit !important;
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
+
+.qboqtable .col-disc,
+.qboqtable th.th-disc,
 .qboqtable td.td-disc {
-  text-align: center;
-  vertical-align: middle;
-  padding: 5px 4px;
-  color: #64748b;
-  font-size: 7.5px;
-  white-space: nowrap;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 5px 2px !important;
+  color: #64748b !important;
+  font-size: 7.5px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
+
+.qboqtable .col-amt,
+.qboqtable th.th-amt,
 .qboqtable td.td-amt {
-  text-align: right;
-  vertical-align: middle;
-  padding: 5px 6px;
-  font-weight: 800;
-  font-size: 8.5px;
-  color: #0f172a;
-  white-space: nowrap;
+  width: 84px !important;
+  min-width: 84px !important;
+  max-width: 84px !important;
+  text-align: right !important;
+  vertical-align: middle !important;
+  padding: 5px 4px !important;
+  font-weight: 800 !important;
+  font-size: 8.5px !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
+
 .qboqtable .qitem-pills {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 3px 5px !important;
-  margin-top: 4px !important;
-  line-height: 1 !important;
+  display: block !important;
+  margin-top: 3px !important;
+  line-height: 1.6 !important;
 }
 .qboqtable .item-pill-badge {
-  display: inline-flex !important;
-  align-items: center !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
   font-size: 6.5px !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   padding: 2px 5px !important;
   border-radius: 3px !important;
-  margin: 0 !important;
+  margin: 1px 3px 1px 0 !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
   white-space: nowrap !important;
 }
 .qboqtable .qitemsku {
-  display: inline-flex !important;
-  align-items: center !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
   font-size: 6.5px !important;
-  line-height: 1 !important;
+  line-height: 1.2 !important;
   color: #64748b !important;
   font-family: inherit !important;
   background: #f1f5f9 !important;
-  padding: 2px 5px !important;
+  padding: 1px 5px !important;
+  margin: 1px 0 1px 2px !important;
   border-radius: 3px !important;
-  border: 1px solid #e2e8f0 !important;
-  margin: 0 !important;
+  border: 1px solid #cbd5e1 !important;
   white-space: nowrap !important;
 }
 .qboqsubtotalrow td {
@@ -748,6 +807,28 @@
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
   vertical-align: middle;
+}
+.qfloortable th:nth-child(1),
+.qfloortable td:nth-child(1) {
+  width: auto !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+}
+.qfloortable th:nth-child(2),
+.qfloortable td:nth-child(2) {
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+.qfloortable th:nth-child(3),
+.qfloortable td:nth-child(3) {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
 }
 .qfloortable td small {
   display: block;
@@ -2197,6 +2278,327 @@
   border: 1px solid #e9d5ff !important;
 }
 
+/* ==========================================================
+   WHAT YOU GET WITH TECHOMIE: DYNAMIC FEATURES & BENEFITS
+   ========================================================== */
+.qpaperfeatures,
+.qpaperadvantage {
+  min-height: 297mm;
+  padding: 13mm 16mm 12mm 16mm !important;
+  box-sizing: border-box !important;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
 
+.qsubsystemsgrid {
+  display: grid;
+  gap: 4mm 5mm;
+  margin: 4mm 0;
+  flex: 1;
+}
 
+.qsubsystemsgrid.qcols-1 {
+  grid-template-columns: 1fr;
+}
 
+.qsubsystemsgrid.qcols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.qsubsystemsgrid.qcols-3 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.qsubsystemcard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4mm 5mm;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  border-top: 3px solid #0284c7;
+}
+
+.qsubsystemhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 2.5mm;
+}
+
+.qsubsystemicon {
+  font-size: 20px;
+  line-height: 1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qsubsystemtitlewrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.qsubsystembadge {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #0284c7;
+  text-transform: uppercase;
+}
+
+.qsubsystemhead b {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.qsubsystemhead small {
+  font-size: 7.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.qsubsystemfeaturelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8mm;
+}
+
+.qsubsystemfeaturelist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 7.5px;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.qbulletcheck {
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 8px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.qfeaturesfooterbar {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 2.5mm 4mm;
+  font-size: 7.5px;
+  color: #475467;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: 2mm;
+}
+
+/* ==========================================================
+   SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE
+   ========================================================== */
+.qscenescapsblock {
+  margin: 2mm 0 3.5mm 0;
+}
+
+.qscenescapstitle {
+  margin-bottom: 2mm;
+}
+
+.qscenescapstitle small {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #0284c7;
+  text-transform: uppercase;
+  display: block;
+}
+
+.qscenescapstitle b {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f172a;
+  display: block;
+}
+
+.qscenescapstitle p {
+  margin: 2px 0 0 0;
+  font-size: 7.5px;
+  color: #64748b;
+}
+
+.qscenesgridnew {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5mm 4mm;
+}
+
+.qscenecardnew {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2.5mm 3.5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+}
+
+.qsceneheadnew {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qsceneicon {
+  font-size: 14px;
+}
+
+.qsceneheadnew b {
+  font-size: 9px;
+  font-weight: 700;
+  color: #0f172a;
+  display: block;
+}
+
+.qsceneheadnew small {
+  font-size: 7px;
+  font-weight: 600;
+  color: #c8aa72;
+}
+
+.qscenesteps {
+  background: #f1f5f9;
+  border-left: 2.5px solid #0284c7;
+  border-radius: 4px;
+  padding: 1.5mm 2.5mm;
+}
+
+.qscenesteps code {
+  font-family: inherit;
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #0369a1;
+  letter-spacing: -0.01em;
+  display: block;
+  line-height: 1.35;
+}
+
+.qscenedesc {
+  margin: 0;
+  font-size: 7px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Why Techomie Block */
+.qwhytechomieblock {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 3mm 4mm;
+  margin-bottom: 3mm;
+}
+
+.qwhyhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2.5mm;
+  flex-wrap: wrap;
+}
+
+.qwhybadge {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.qwhyhead b {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.qwhyhead span {
+  font-size: 7.5px;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.qwhygrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.8mm 5mm;
+}
+
+.qwhyitem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 7.5px;
+  color: #1e293b;
+  line-height: 1.35;
+}
+
+.qwhycheck {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 8px;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+/* Local & Reliable Control */
+.qlocalcontrolcard {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 3.5px solid #16a34a;
+  border-radius: 6px;
+  padding: 2.5mm 4mm;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  margin-bottom: 2mm;
+}
+
+.qlocalicon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.qlocalcontent b {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #14532d;
+  display: block;
+}
+
+.qlocalcontent p {
+  margin: 1px 0 0 0;
+  font-size: 7.2px;
+  color: #166534;
+  line-height: 1.4;
+}
