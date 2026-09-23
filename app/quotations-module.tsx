@@ -3336,7 +3336,7 @@ function QuotePaperPremium({ quote, snap, totals, branding = {} }: R) {
     logo = snap.company?.logo || "/techomie-logo.jpg",
     validity = snap.details?.validUntil || quote.valid_until,
     pdfFormat = quotePdfFormat(snap),
-    detailed = pdfFormat === "detailed",
+    detailed = pdfFormat !== "compact",
     templateId =
       snap.details?.templateId || branding.defaultQuoteTemplate || "luxury",
     designClass = templateId === "minimal" ? "qproposalclean" : "",
@@ -3500,17 +3500,36 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
     .join(" ")
     .toLowerCase();
 
+  const isGateOnly =
+    allItems.length > 0 &&
+    allItems.every((i: R) => {
+      const t = `${i.name || ""} ${i.category || ""}`.toLowerCase();
+      return t.includes("gate") || t.includes("sliding") || t.includes("swing") || t.includes("operator") || t.includes("barrier");
+    });
+
   const hasLighting =
-    allItems.length === 0 ||
-    fullText.includes("switch") ||
-    fullText.includes("dimmer") ||
-    fullText.includes("fan") ||
-    fullText.includes("relay") ||
-    fullText.includes("luxeray") ||
-    fullText.includes("lighting") ||
-    fullText.includes("smart switch") ||
-    fullText.includes("plug") ||
-    fullText.includes("socket");
+    !isGateOnly &&
+    (allItems.length === 0 ||
+      fullText.includes("switch") ||
+      fullText.includes("dimmer") ||
+      fullText.includes("fan") ||
+      fullText.includes("relay") ||
+      fullText.includes("luxeray") ||
+      fullText.includes("lighting") ||
+      fullText.includes("light") ||
+      fullText.includes("smart switch") ||
+      fullText.includes("plug") ||
+      fullText.includes("socket") ||
+      fullText.includes("touch") ||
+      fullText.includes("gang") ||
+      fullText.includes("node") ||
+      fullText.includes("edge") ||
+      fullText.includes("noviq") ||
+      fullText.includes("panel") ||
+      fullText.includes("scene") ||
+      fullText.includes("smart") ||
+      fullText.includes("zigbee") ||
+      fullText.includes("wifi"));
 
   const hasCurtains =
     fullText.includes("curtain") ||
@@ -4257,7 +4276,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       })}
 
       {/* 4. FEATURES & BENEFITS — WHAT YOU GET */}
-      {detailed && subsystems.length > 0 && (
+      {subsystems.length > 0 && (
         <section className="qpaperfeatures">
           {head("FEATURES & BENEFITS")}
           <div className="qsectiontitle">
@@ -4311,7 +4330,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       )}
 
       {/* 5. SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE */}
-      {detailed && (
+      {(
         <section className="qpaperadvantage">
           {head("CAPABILITIES & ADVANTAGE")}
           <div className="qsectiontitle">
@@ -4772,14 +4791,9 @@ function QuotePaperMinimal({ quote, snap, totals, branding = {} }: R) {
 
 function quotePdfFormat(snap: R) {
   const manual = snap?.details?.pdfFormat;
-  if (manual === "detailed" || manual === "compact") return manual;
-  const rooms = (snap?.floors || []).flatMap((f: R) => f.rooms || []);
-  const items = rooms.flatMap((r: R) => r.items || []);
-  // Small quotes with few items (<= 10 items and <= 2 rooms) auto-select clean compact quotation
-  if (rooms.length <= 2 && items.length <= 10) return "compact";
-  return ["Full Smart Home Proposal", "Detailed Smart Home Proposal"].includes(snap?.details?.quoteType) || rooms.length > 2 || items.length > 10
-    ? "detailed"
-    : "compact";
+  if (manual === "compact") return "compact";
+  // Always default to detailed proposal so every quotation includes the complete solution proposal structure
+  return "detailed";
 }
 
 function Activity({ rows, revisions }: R) {
