@@ -145,22 +145,29 @@ export default function ProjectsModule({
   };
 
   const create = async () => {
-    const r = await fetch("/api/projects", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        customerId: Number(form.customerId),
-        quotationId: form.quotationId ? Number(form.quotationId) : null,
-        value: Number(form.value || 0),
-      }),
-    });
-    const d = await r.json();
-    if (!r.ok) return setMsg(d.error || "Creation failed");
-    setShow(false);
-    setMsg(`${d.project.id} created successfully`);
-    load();
-    open(d.project.id);
+    try {
+      const r = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          customerId: Number(form.customerId),
+          quotationId: form.quotationId ? Number(form.quotationId) : null,
+          value: Number(form.value || 0),
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) {
+        return { ok: false, error: d.error || "Creation failed" };
+      }
+      setShow(false);
+      setMsg(`${d.project?.id || "Project"} created successfully`);
+      load();
+      if (d.project?.id) open(d.project.id);
+      return { ok: true };
+    } catch (e: any) {
+      return { ok: false, error: e?.message || "Failed to create project" };
+    }
   };
 
   const act = async (p: R) => {
@@ -524,40 +531,117 @@ function ProjectCreate({
   set: (x: R) => void;
   options: R;
   close: () => void;
-  save: () => void;
+  save: () => Promise<{ ok: boolean; error?: string }>;
 }) {
-  const sites = (options.sites || []).filter(
-    (x: R) => String(x.customer_id) === String(v.customerId)
-  );
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const sites = useMemo(() => {
+    return (options.sites || []).filter(
+      (x: R) => String(x.customer_id) === String(v.customerId)
+    );
+  }, [options.sites, v.customerId]);
+
+  const customerQuotes = useMemo(() => {
+    return (options.quotes || []).filter(
+      (x: R) => String(x.customer_id) === String(v.customerId)
+    );
+  }, [options.quotes, v.customerId]);
+
+  const handleSave = async () => {
+    setErr("");
+    if (!v.customerId) {
+      setErr("Please select a customer.");
+      return;
+    }
+    if (!v.siteId) {
+      setErr("Please select an installation site.");
+      return;
+    }
+    if (!v.direct && !v.quotationId) {
+      setErr("Please select an accepted quotation.");
+      return;
+    }
+    if (!v.title?.trim()) {
+      setErr("Please enter a project title.");
+      return;
+    }
+    if (!v.managerId) {
+      setErr("Please select a project manager.");
+      return;
+    }
+    if (v.direct) {
+      if (!v.scope?.trim()) {
+        setErr("Please describe the scope of work.");
+        return;
+      }
+      if (!v.directReason?.trim()) {
+        setErr("Please specify direct creation approval reason.");
+        return;
+      }
+    }
+
+    setSaving(true);
+    const res = await save();
+    if (!res.ok) {
+      setErr(res.error || "Failed to create project");
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="modalback" onClick={close}>
+    <div className="projectmodal-back" onClick={close}>
       <div className="projectmodal" onClick={(e) => e.stopPropagation()}>
         <header>
           <div>
             <small>POST-SALE SETUP</small>
             <h2>Create New Project</h2>
           </div>
-          <button onClick={close}>×</button>
+          <button className="closebtn" onClick={close} title="Close">
+            ×
+          </button>
         </header>
+
         <div className="projectform">
-          <label>
-            <span>Workflow Source</span>
-            <select
-              value={String(v.direct)}
-              onChange={(e) => set({ ...v, direct: e.target.value === "true" })}
+          <div className="projectmodal-workflow-pills">
+            <button
+              type="button"
+              className={!v.direct ? "active" : ""}
+              onClick={() => set({ ...v, direct: false })}
             >
-              <option value="false">From Accepted Quotation</option>
-              <option value="true">Direct Service / Small Work</option>
-            </select>
-          </label>
+              📋 From Accepted Quotation
+            </button>
+            <button
+              type="button"
+              className={v.direct ? "active" : ""}
+              onClick={() => set({ ...v, direct: true })}
+            >
+              ⚡ Direct Service / Small Work
+            </button>
+          </div>
+
+          {err && (
+            <div className="projectmodal-error">
+              <span>⚠️</span>
+              <span>{err}</span>
+            </div>
+          )}
+
           <label>
-            <span>Customer *</span>
+            <span>
+              Customer <b>*</b>
+            </span>
             <select
               value={v.customerId}
-              onChange={(e) =>
-                set({ ...v, customerId: e.target.value, siteId: "" })
-              }
+              onChange={(e) => {
+                const cId = e.target.value;
+                set({
+                  ...v,
+                  customerId: cId,
+                  siteId: "",
+                  quotationId: "",
+                });
+              }}
             >
               <option value="">Select customer</option>
               {(options.customers || []).map((x: R) => (
@@ -567,13 +651,23 @@ function ProjectCreate({
               ))}
             </select>
           </label>
+
           <label>
-            <span>Installation Site *</span>
+            <span>
+              Installation Site <b>*</b>
+            </span>
             <select
               value={v.siteId}
               onChange={(e) => set({ ...v, siteId: e.target.value })}
+              disabled={!v.customerId}
             >
-              <option value="">Select site</option>
+              <option value="">
+                {!v.customerId
+                  ? "Select customer first"
+                  : sites.length === 0
+                  ? "No sites registered for customer"
+                  : "Select site"}
+              </option>
               {sites.map((x: R) => (
                 <option key={x.id} value={x.id}>
                   {x.name}
@@ -581,32 +675,64 @@ function ProjectCreate({
               ))}
             </select>
           </label>
+
           {!v.direct && (
-            <label>
-              <span>Accepted Quotation *</span>
+            <label className="wide">
+              <span>
+                Accepted Quotation <b>*</b>
+              </span>
               <select
                 value={v.quotationId}
-                onChange={(e) => set({ ...v, quotationId: e.target.value })}
+                disabled={!v.customerId}
+                onChange={(e) => {
+                  const qId = e.target.value;
+                  const q = customerQuotes.find((x: R) => String(x.id) === String(qId));
+                  const cust = (options.customers || []).find(
+                    (x: R) => String(x.id) === String(v.customerId)
+                  );
+                  set({
+                    ...v,
+                    quotationId: qId,
+                    siteId: q?.site_id ? String(q.site_id) : v.siteId,
+                    title:
+                      v.title ||
+                      (q ? `${cust?.name || "Project"} - ${q.number}` : v.title),
+                    value: q?.total || v.value,
+                  });
+                }}
               >
-                <option value="">Select accepted quote</option>
-                {(options.quotes || [])
-                  .filter((x: R) => String(x.customer_id) === String(v.customerId))
-                  .map((x: R) => (
-                    <option key={x.id} value={x.id}>
-                      {x.number} · {money(x.total)}
-                    </option>
-                  ))}
+                <option value="">
+                  {!v.customerId
+                    ? "Select customer first"
+                    : customerQuotes.length === 0
+                    ? "No accepted quotations for this customer"
+                    : "Select accepted quote"}
+                </option>
+                {customerQuotes.map((x: R) => (
+                  <option key={x.id} value={x.id}>
+                    {x.number} · {money(x.total)}
+                  </option>
+                ))}
               </select>
+              {v.customerId && customerQuotes.length === 0 && (
+                <span className="projectmodal-hint">
+                  Tip: If there are no accepted quotes, switch above to "Direct Service / Small Work".
+                </span>
+              )}
             </label>
           )}
+
           <label className="wide">
-            <span>Project Title *</span>
+            <span>
+              Project Title <b>*</b>
+            </span>
             <input
               placeholder="e.g. Kurumbapalayam Smart Home Automation"
               value={v.title}
               onChange={(e) => set({ ...v, title: e.target.value })}
             />
           </label>
+
           <label>
             <span>Category</span>
             <select
@@ -620,8 +746,11 @@ function ProjectCreate({
               ))}
             </select>
           </label>
+
           <label>
-            <span>Project Manager *</span>
+            <span>
+              Project Manager <b>*</b>
+            </span>
             <select
               value={v.managerId}
               onChange={(e) => set({ ...v, managerId: e.target.value })}
@@ -634,13 +763,16 @@ function ProjectCreate({
               ))}
             </select>
           </label>
+
           {v.direct && (
             <>
               <label className="wide">
-                <span>Scope of Work *</span>
+                <span>
+                  Scope of Work <b>*</b>
+                </span>
                 <textarea
                   rows={3}
-                  placeholder="Detail scope, switches, sensors, wiring checks, etc."
+                  placeholder="Detail scope, switches, sensors, wiring checks, direct deliverables..."
                   value={v.scope}
                   onChange={(e) => set({ ...v, scope: e.target.value })}
                 />
@@ -655,14 +787,18 @@ function ProjectCreate({
                 />
               </label>
               <label>
-                <span>Direct Creation Reason *</span>
+                <span>
+                  Direct Creation Reason <b>*</b>
+                </span>
                 <input
+                  placeholder="e.g. Small/service work approved by Admin"
                   value={v.directReason}
                   onChange={(e) => set({ ...v, directReason: e.target.value })}
                 />
               </label>
             </>
           )}
+
           <label>
             <span>Planned Start Date</span>
             <input
@@ -671,6 +807,7 @@ function ProjectCreate({
               onChange={(e) => set({ ...v, plannedStart: e.target.value })}
             />
           </label>
+
           <label>
             <span>Planned Completion Date</span>
             <input
@@ -680,10 +817,18 @@ function ProjectCreate({
             />
           </label>
         </div>
+
         <footer>
-          <button onClick={close}>Cancel</button>
-          <button className="primary" onClick={save}>
-            Create Execution Project
+          <button type="button" disabled={saving} onClick={close}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="primary"
+            disabled={saving}
+            onClick={handleSave}
+          >
+            {saving ? "Creating Project…" : "Create Execution Project"}
           </button>
         </footer>
       </div>
