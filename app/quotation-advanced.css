@@ -1569,28 +1569,28 @@
 
 .qpaperpremium .qcovermeta {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 3.5mm;
-  background: rgba(7, 21, 34, 0.75);
-  border: 1px solid rgba(200, 170, 114, 0.4);
-  border-radius: 8px;
-  padding: 4mm 5mm;
-  backdrop-filter: blur(12px);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.5mm 4.5mm;
+  background: rgba(7, 21, 34, 0.8);
+  border: 1px solid rgba(200, 170, 114, 0.45);
+  border-radius: 9px;
+  padding: 3.5mm 5mm;
+  backdrop-filter: blur(14px);
   position: relative;
   z-index: 2;
   margin-bottom: 4mm;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
 }
 
 .qpaperpremium .qcovermeta > span {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding-right: 3mm;
+  gap: 2.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  padding-right: 3.5mm;
 }
 
-.qpaperpremium .qcovermeta > span:last-child {
+.qpaperpremium .qcovermeta > span:nth-child(3n) {
   border-right: 0;
   padding-right: 0;
 }
@@ -3278,4 +3278,42 @@
   font-size: 8px;
   font-weight: 600;
   color: #0f172a;
+}
+
+/* Ultra-crisp BOQ Table Luxury Polish */
+.qboqtable {
+  border: 1px solid #cbd5e1 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.qboqtable thead th {
+  background: #071522 !important;
+  color: #ffffff !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  border-bottom: 2px solid #c8aa72 !important;
+}
+
+.qboqtable tbody tr:hover td {
+  background: #f0f7ff !important;
+}
+
+.qboqtable td.td-details b {
+  color: #071522 !important;
+  font-size: 9px !important;
+}
+
+.qboqtable td.td-rate,
+.qboqtable td.td-amt {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.qboqtable td.td-amt {
+  color: #0284c7 !important;
 }

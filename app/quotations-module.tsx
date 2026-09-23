@@ -789,14 +789,21 @@ function QuoteWorkspace({
             pdf.addPage("a4", "portrait");
           }
           const canvas = await html2canvas(section, {
-            scale: 2.8,
+            scale: 3,
             useCORS: true,
             backgroundColor: "#ffffff",
             logging: false,
-            imageTimeout: 15000,
+            imageTimeout: 20000,
             width: 794,
             windowWidth: 794,
+            scrollX: 0,
+            scrollY: 0,
             onclone: (clonedDoc: Document) => {
+              const b = clonedDoc.body;
+              if (b) {
+                b.style.setProperty("-webkit-font-smoothing", "antialiased");
+                b.style.textRendering = "optimizeLegibility";
+              }
               const pills = clonedDoc.querySelectorAll(".item-pill-badge, .qitemsku");
               pills.forEach((p) => {
                 const el = p as HTMLElement;
@@ -3867,7 +3874,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         // Room banner + capability pills (14mm) + table thead (8mm) = 22mm (chunk 0)
         // Continued chunk: banner (10mm) + thead (8mm) = 18mm
         const overhead = chunkIdx === 0 ? 22 : 18;
-        const itemHeight = 23; // Realistic item row height (60px img wrap + 2-line specs + padding)
+        const itemHeight = 26; // Realistic item row height for enlarged photos (78px img wrap + badges + padding)
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
         // break to next page immediately so the room starts cleanly at the top of the next page!
@@ -3954,14 +3961,20 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             <b>{snap.details?.quoteDate || quote.quote_date || new Date().toLocaleDateString("en-IN")}</b>
           </span>
           <span>
-            <small>PROJECT LOCATION</small>
-            <b>
-              {siteName}, {quote.city || "Tamil Nadu"}
-            </b>
+            <small>PROPOSAL VALIDITY</small>
+            <b>{validity || "30 Calendar Days"}</b>
           </span>
           <span>
-            <small>PROPOSAL VALIDITY</small>
-            <b>{validity}</b>
+            <small>PROJECT NAME</small>
+            <b>{siteName}</b>
+          </span>
+          <span>
+            <small>SITE LOCATION</small>
+            <b>{quote.city || "Tamil Nadu"}</b>
+          </span>
+          <span>
+            <small>PREPARED BY</small>
+            <b>{quote.sales_name || snap.company?.displayName || "Techomie Smart Devices"}</b>
           </span>
         </div>
         <div className="qcoverproposed">
