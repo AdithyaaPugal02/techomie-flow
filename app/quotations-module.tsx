@@ -816,6 +816,12 @@ function QuoteWorkspace({
                 el.style.top = "-2.5px";
                 el.style.lineHeight = "1";
               });
+              const switchHeadTexts = clonedDoc.querySelectorAll(".qdecidedswitchhead small, .qdecidedswitchhead b, .qdecidedswitchhead span");
+              switchHeadTexts.forEach((el) => {
+                const h = el as HTMLElement;
+                h.style.letterSpacing = "0px";
+                h.style.fontFamily = "Arial, sans-serif";
+              });
             },
           });
           const imgData = canvas.toDataURL("image/jpeg", 0.98);
@@ -4108,17 +4114,19 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
               <span>Proposal Value</span>
             </div>
           </div>
-          <div className="qnextstep">
-            <b>Proposed Automation Scope Summary</b>
-            <span>
-              {floors
-                .map(
-                  (f: R) =>
-                    `${f.name} (${(f.rooms || []).map((r: R) => r.name).join(", ")})`,
-                )
-                .join(" · ")}
-            </span>
-          </div>
+          {!decidedSwitch && (
+            <div className="qnextstep">
+              <b>Proposed Automation Scope Summary</b>
+              <span>
+                {floors
+                  .map(
+                    (f: R) =>
+                      `${f.name} (${(f.rooms || []).map((r: R) => r.name).join(", ")})`,
+                  )
+                  .join(" · ")}
+              </span>
+            </div>
+          )}
           {decidedSwitch && (
             <div className="qdecidedswitchshowcase">
               <div className="qdecidedswitchhead">
