@@ -3817,6 +3817,64 @@ interface DecidedSwitchInfo {
   description: string;
 }
 
+
+interface ScopeCategoryItem {
+  category: string;
+  scope: string;
+}
+
+function detectScopeSummary(snap: R): ScopeCategoryItem[] {
+  const subsystems = detectQuoteSubsystems(snap);
+  const ids = new Set(subsystems.map((s) => s.id));
+  const summary: ScopeCategoryItem[] = [];
+
+  if (ids.has("lighting")) {
+    summary.push({
+      category: "Lighting Automation",
+      scope: "Smart touch switches, dimmers, fan regulators and scene control",
+    });
+  }
+  if (ids.has("curtains")) {
+    summary.push({
+      category: "Curtain Automation",
+      scope: "Motorized curtain track, tubular motors and automated scheduling",
+    });
+  }
+  if (ids.has("locks") || ids.has("security")) {
+    summary.push({
+      category: "Security & Access",
+      scope: "Smart biometric door locks, sensors, radar and siren integration",
+    });
+  }
+  const allText = JSON.stringify(snap).toLowerCase();
+  if (allText.includes("cctv") || allText.includes("camera") || allText.includes("nvr")) {
+    summary.push({
+      category: "CCTV & Surveillance",
+      scope: "High-definition cameras, NVR recording and remote mobile live view",
+    });
+  }
+  if (ids.has("gate")) {
+    summary.push({
+      category: "Gate Automation",
+      scope: "Heavy-duty motor operator, controller, base plate and wireless remotes",
+    });
+  }
+  if (allText.includes("wifi") || allText.includes("zigbee") || allText.includes("gateway") || allText.includes("network") || allText.includes("poe")) {
+    summary.push({
+      category: "Networking & Mesh",
+      scope: "Wi-Fi, Zigbee 3.0 mesh gateway and local network infrastructure",
+    });
+  }
+
+  if (summary.length === 0) {
+    summary.push({
+      category: "Smart Home Automation",
+      scope: "Supply, installation, commissioning and smart app control",
+    });
+  }
+  return summary;
+}
+
 function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
   const floors = snap.floors || [];
   const allItems: R[] = [
@@ -3993,6 +4051,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
   const subsystems = detectQuoteSubsystems(snap);
   const smartScenes = synthesizeSmartScenes(subsystems);
   const decidedSwitch = getDecidedSwitchSeries(snap);
+  const scopeSummary = detectScopeSummary(snap);
 
   return (
     <article
@@ -4006,7 +4065,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           <img src={logo} alt="Techomie" />
           <span>
             <b>{company}</b>
-            <small>SMART DEVICES. BETTER LIVING.</small>
+            <small>Smart Homes • Security • Automation • Gate Automation</small>
           </span>
         </header>
         <div className="qcoverbody">
@@ -4049,8 +4108,8 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </div>
         </div>
         <footer>
-          <span>TECHOMIE</span>
-          <small>SMART HOME | SECURITY | AUTOMATION</small>
+          <span>TECHOMIE SMART DEVICES</span>
+          <small>Smart Homes • Security • Automation • Gate Automation</small>
         </footer>
       </section>
 
@@ -4059,7 +4118,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         <section className="qintro">
           {head("PROPOSAL OVERVIEW")}
           <div className="qintrohero">
-            <small>DESIGNED AROUND YOUR SPACE</small>
+            <small>PROJECT OVERVIEW</small>
             <h2>
               A smarter property,
               <br />
@@ -4067,35 +4126,34 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             </h2>
             <p>
               {snap.details?.introduction ||
-                "Techomie delivers premium modular automation engineered for seamless control, elegance, and peace of mind. Every room is custom-configured with dedicated touch interfaces, scene logic, and responsive lighting control."}
+                `This quotation covers the supply, installation, configuration and commissioning of smart home automation and security solutions for the proposed residence at ${siteName}${quote.city ? `, ${quote.city}` : ""}.`}
             </p>
           </div>
-          <div className="qpdfcards">
-            <article>
-              <small>CLIENT DETAILS</small>
-              <b>{customerName}</b>
-              <span>
-                {snap.details?.contactName || quote.phone || quote.contact_phone || "Contact on record"}
-              </span>
-            </article>
-            <article>
-              <small>PROJECT ADDRESS</small>
-              <b>{siteName}</b>
-              <span>
-                {snap.details?.installationAddress ||
-                  [quote.site_address, quote.city, quote.state, quote.pincode]
-                    .filter(Boolean)
-                    .join(", ")}
-              </span>
-            </article>
-            <article>
-              <small>SYSTEM HIGHLIGHTS</small>
-              <b>{snap.details?.quoteType || "Complete Home Automation"}</b>
-              <span>
-                {floors.length} Floors · {rooms.length} Automated Areas
-              </span>
-            </article>
+
+          {/* SCOPE SUMMARY TABLE */}
+          <div className="qscopesummarybox">
+            <div className="qscopesummaryhead">
+              <small>EXECUTIVE SCOPE SUMMARY</small>
+              <b>Project Categories &amp; Solution Scope</b>
+            </div>
+            <table className="qscopesummarytable">
+              <thead>
+                <tr>
+                  <th style={{ width: "35%", textAlign: "left" }}>Category</th>
+                  <th style={{ width: "65%", textAlign: "left" }}>Scope Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scopeSummary.map((item, idx) => (
+                  <tr key={idx}>
+                    <td><b>{item.category}</b></td>
+                    <td>{item.scope}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
           <div className="qscopebrief">
             <div>
               <b>{floors.length}</b>
@@ -4114,19 +4172,6 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
               <span>Proposal Value</span>
             </div>
           </div>
-          {!decidedSwitch && (
-            <div className="qnextstep">
-              <b>Proposed Automation Scope Summary</b>
-              <span>
-                {floors
-                  .map(
-                    (f: R) =>
-                      `${f.name} (${(f.rooms || []).map((r: R) => r.name).join(", ")})`,
-                  )
-                  .join(" · ")}
-              </span>
-            </div>
-          )}
           {decidedSwitch && (
             <div className="qdecidedswitchshowcase">
               <div className="qdecidedswitchhead">
@@ -4272,9 +4317,25 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                       })}
                     </tbody>
                   </table>
+                  <div className="qroomtotalbar">
+                    <span>{room.name} Total</span>
+                    <b>{money((room.items || []).reduce((acc: number, x: R) => acc + line(x).total, 0))}</b>
+                  </div>
                 </div>
               );
             })}
+
+            {scope.pageIndex === scope.pageCount - 1 && (
+              <div className="qfloortotalbar">
+                <div>
+                  <small>FLOOR SUB-TOTAL</small>
+                  <b>{scope.floor.name} Subtotal</b>
+                </div>
+                <strong>
+                  {money((scope.floor.rooms || []).flatMap((r: R) => r.items || []).reduce((acc: number, x: R) => acc + line(x).total, 0))}
+                </strong>
+              </div>
+            )}
 
             {foot(
               `${scope.floor.name} scope${scope.pageCount > 1 ? ` · Page ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`,
@@ -4457,60 +4518,88 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </table>
         </div>
 
-        <div className="qcommercialbreakdown">
-          <div className="qcalcrows">
-            <div className="qcalcrow">
-              <span>Product &amp; System Subtotal</span>
-              <b>{money(totals.subtotal)}</b>
-            </div>
-            {totals.discount > 0 && (
-              <div className="qcalcrow qdiscountrow">
-                <span>Special Project Discount</span>
-                <b>- {money(totals.discount)}</b>
-              </div>
-            )}
-            <div className="qcalcrow qtaxablerow">
-              <span>Net Taxable Value</span>
-              <b>{money(totals.taxable)}</b>
-            </div>
-            {snap.taxMode !== "Non-GST" && (
-              <>
-                <div className="qcalcrow">
-                  <span>CGST (9%)</span>
-                  <b>{money(totals.tax / 2)}</b>
-                </div>
-                <div className="qcalcrow">
-                  <span>SGST (9%)</span>
-                  <b>{money(totals.tax / 2)}</b>
-                </div>
-              </>
-            )}
-            <div className="qcalcrow qgrandtotalrow">
-              <div>
-                <span>Grand Total (All Inclusive)</span>
-                <small>
-                  {snap.taxMode === "Non-GST"
-                    ? "Non-GST Commercial Total"
-                    : "Includes 18% GST"}
-                </small>
-              </div>
-              <strong>{money(totals.grand)}</strong>
-            </div>
-            <div className="qwordsamount">
-              <span>AMOUNT IN WORDS: </span>
-              {inWords(totals.grand)}
-            </div>
-          </div>
+        {/* PROJECT SUMMARY TABLE */}
+        <div className="qprojectsummarytablebox">
+          <table className="qprojectsummarytable">
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left" }}>Description</th>
+                <th style={{ textAlign: "right", width: "130px" }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <b>Products &amp; Hardware Supply</b>
+                  <small>Smart modular touch panels, controllers, sensors and accessories</small>
+                </td>
+                <td style={{ textAlign: "right" }}>{money(totals.subtotal)}</td>
+              </tr>
+              <tr>
+                <td>
+                  <b>Installation &amp; Commissioning</b>
+                  <small>Mounting, backbox termination, mesh pairing, testing and handover</small>
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  {snap.details?.installationFee ? money(Number(snap.details.installationFee)) : "Included in Package"}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <b>Configuration &amp; Programming</b>
+                  <small>App configuration, voice assistants (Alexa/Google), smart scene routines</small>
+                </td>
+                <td style={{ textAlign: "right" }}>Included</td>
+              </tr>
+              {totals.discount > 0 && (
+                <tr className="qdiscountrow">
+                  <td>
+                    <b>Special Project Discount</b>
+                  </td>
+                  <td style={{ textAlign: "right" }}>- {money(totals.discount)}</td>
+                </tr>
+              )}
+              <tr className="qsubtotalrow">
+                <td>
+                  <b>Subtotal (Net Taxable Value)</b>
+                </td>
+                <td style={{ textAlign: "right" }}><b>{money(totals.taxable)}</b></td>
+              </tr>
+              {snap.taxMode !== "Non-GST" && (
+                <>
+                  <tr>
+                    <td>CGST (9%)</td>
+                    <td style={{ textAlign: "right" }}>{money(totals.tax / 2)}</td>
+                  </tr>
+                  <tr>
+                    <td>SGST (9%)</td>
+                    <td style={{ textAlign: "right" }}>{money(totals.tax / 2)}</td>
+                  </tr>
+                </>
+              )}
+              <tr className="qgrandtotalrow">
+                <td>
+                  <strong>Grand Total ({snap.taxMode === "Non-GST" ? "Non-GST Commercial Total" : "Inclusive of 18% GST"})</strong>
+                  <small>AMOUNT IN WORDS: {inWords(totals.grand)}</small>
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  <strong>{money(totals.grand)}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          <aside className="qcommercialnotes">
-            <small>COMMERCIAL ASSURANCES</small>
-            <ul>
-              <li>Prices apply to the exact configurations, modules, and quantities listed in this proposal.</li>
-              <li>GST input tax credit is claimable against valid GSTIN invoice provided prior to dispatch.</li>
-              <li>Changes to scope, finishes, technology, or site conditions will be formalized in a revised quotation.</li>
-              <li>Execution commences upon written confirmation and receipt of the applicable project advance.</li>
-            </ul>
-          </aside>
+        {/* INSTALLATION CHARGES & SCOPE NOTE */}
+        <div className="qinstallationchargesbox">
+          <div className="qinstallicon">🔧</div>
+          <div>
+            <b>Installation &amp; Commissioning Scope</b>
+            <p>
+              Installation includes mounting, wiring assistance, device configuration, system commissioning, testing and basic user handover.
+              Specialized services such as gate automation motor brackets or carpenter wooden mortise alignment are coordinated with site trades.
+            </p>
+          </div>
         </div>
 
         {/* PAYMENT MILESTONES */}
@@ -4523,9 +4612,10 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             {(snap.paymentPlan && snap.paymentPlan.length
               ? snap.paymentPlan
               : [
-                  { name: "Advance", percent: 20, condition: "Order confirmation & procurement" },
-                  { name: "Procurement", percent: 60, condition: "On arrival of hardware / dispatch" },
-                  { name: "Handover", percent: 20, condition: "Testing, commissioning & handover" },
+                  { name: "Advance", percent: 50, condition: "Order confirmation & procurement" },
+                  { name: "Installation Commencement", percent: 20, condition: "At commencement of installation" },
+                  { name: "Handover", percent: 20, condition: "On commissioning & client handover" },
+                  { name: "Retention", percent: 10, condition: "After 1 month from handover" },
                 ]
             ).map((m: R, index: number) => (
               <article key={m.name || index}>
@@ -4543,12 +4633,23 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </div>
         </div>
 
-        {/* COMMERCIAL TERMS */}
+        {/* PROJECT TIMELINE */}
+        <div className="qprojecttimelinebox">
+          <span className="qtimelineicon">⏱️</span>
+          <div>
+            <b>Project Timeline</b>
+            <p>
+              Estimated Installation Duration: <b>3–5 working days</b> (subject to site readiness and availability of required electrical/network infrastructure).
+            </p>
+          </div>
+        </div>
+
+        {/* COMMERCIAL TERMS (CONCISE) */}
         <div className="qcommercialtermsbox">
-          <small>TERMS &amp; CONDITIONS</small>
+          <small>COMMERCIAL TERMS</small>
           <p>
             {snap.terms ||
-              "1. Quotation validity is 30 calendar days from the date of issue. 2. Delivery lead time is 2 to 3 weeks upon receipt of confirmed advance. 3. Taxes are charged in accordance with Indian GST regulations. 4. Techomie reserves the right to revise commercial quotes if the floor plan or room switchboard point count changes during execution."}
+              "1. Quotation validity is 30 calendar days from issue. 2. Payment follows the agreed milestone schedule. 3. GST 18% is billed in compliance with Indian tax laws. 4. Standard delivery lead time is 2 to 3 weeks upon confirmed advance."}
           </p>
         </div>
 
@@ -4576,54 +4677,68 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </div>
         </div>
 
-        {/* Scope of Work & Prerequisites */}
+        {/* WHAT IS INCLUDED & WHAT IS NOT INCLUDED */}
         <div className="qscopetwocol">
-          <article className="qscopebox">
-            <small>WHAT'S INCLUDED (TECHOMIE SCOPE OF WORK)</small>
-            <ul>
-              <li>Supply of genuine smart touch switches, gateways, sensors, and controllers.</li>
-              <li>Precision retrofitting and termination in existing or new switch backboxes.</li>
-              <li>Wireless mesh (Zigbee / Wi-Fi) pairing for zero-latency point response.</li>
-              <li>Setup of Techomie Mobile App on client smartphones (iOS &amp; Android).</li>
-              <li>Integration with voice assistants (Amazon Alexa &amp; Google Home).</li>
-              <li>Programming smart routines: Morning Wakeup, Cinema Mode, All-Off &amp; Away.</li>
-              <li>Full system live demonstration, handover, and user guidance.</li>
+          <article className="qscopebox qincludedbox">
+            <small>WHAT IS INCLUDED</small>
+            <ul className="qchecklist">
+              <li><span className="qcheck">✓</span> Supply of quoted products</li>
+              <li><span className="qcheck">✓</span> Installation</li>
+              <li><span className="qcheck">✓</span> Configuration</li>
+              <li><span className="qcheck">✓</span> App setup</li>
+              <li><span className="qcheck">✓</span> Automation programming</li>
+              <li><span className="qcheck">✓</span> Testing &amp; commissioning</li>
+              <li><span className="qcheck">✓</span> Customer demonstration</li>
+              <li><span className="qcheck">✓</span> Basic user training</li>
+              <li><span className="qcheck">✓</span> Warranty support</li>
             </ul>
           </article>
 
-          <article className="qscopebox">
-            <small>WHAT'S NOT INCLUDED &amp; SITE PREREQUISITES</small>
-            <ul>
-              <li>Standard metal or PVC switch backboxes with adequate depth.</li>
-              <li><b>Mandatory Neutral Line:</b> Neutral wire must be present in every switchboard.</li>
-              <li>Continuous, stable 2.4 GHz Wi-Fi broadband router powered on at the premises.</li>
-              <li>Carpenter coordination for wooden door mortise preparation for smart locks.</li>
-              <li>Welding / fabricator support on site for gate motor bracket mounting and alignment.</li>
-              <li>Uninterrupted AC power supply during installation and testing phases.</li>
+          <article className="qscopebox qexcludedbox">
+            <small>WHAT IS NOT INCLUDED (EXCLUSIONS)</small>
+            <ul className="qcrosslist">
+              <li><span className="qcross">✕</span> Civil work</li>
+              <li><span className="qcross">✕</span> Painting work</li>
+              <li><span className="qcross">✕</span> False ceiling modifications</li>
+              <li><span className="qcross">✕</span> Electrical wiring unless specifically mentioned</li>
+              <li><span className="qcross">✕</span> Internet connection</li>
+              <li><span className="qcross">✕</span> Electrical DB modifications</li>
+              <li><span className="qcross">✕</span> Carpenter work unless mentioned</li>
+              <li><span className="qcross">✕</span> Welding work for gate automation unless mentioned</li>
+              <li><span className="qcross">✕</span> Scaffolding / lifting equipment</li>
+              <li><span className="qcross">✕</span> Any additional material not mentioned in quotation</li>
             </ul>
           </article>
         </div>
 
-        <div className="qexclusionbar">
-          <small>EXCLUSIONS (NOT INCLUDED):</small>
-          <span>Civil masonry, conduit chasing, repainting, structural wall cutting, or main electrical meter wiring.</span>
+        {/* SITE READINESS / CLIENT RESPONSIBILITY */}
+        <div className="qsitereadinessbox">
+          <div className="qsitereadinessicon">📋</div>
+          <div>
+            <b>Site Readiness / Client Responsibility</b>
+            <p>
+              All required electrical points, power supply, conduits, network points and other site infrastructure shall be completed before installation. Any additional work required due to site conditions will be charged separately.
+            </p>
+          </div>
         </div>
 
-        {/* Warranty Assurance Cards */}
+        {/* WARRANTY ASSURANCE CARDS */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
-            <div className="qwarrantybadge"><strong>2+4</strong></div>
+            <div className="qwarrantybadge"><strong>6-YR</strong></div>
             <div>
               <small>STANDARD SMART PRODUCTS</small>
-              <b><strong className="qwarranty-years">2+4 Years</strong> Warranty</b>
+              <b>6-Year Warranty</b>
+              <span>2 Years Full Replacement + 4 Years Service Warranty</span>
             </div>
           </article>
 
           <article className="qwarrantycard gold">
-            <div className="qwarrantybadge"><strong>10+10</strong></div>
+            <div className="qwarrantybadge"><strong>10-YR</strong></div>
             <div>
-              <small>ROYAL EDGE &amp; TOUCH SERIES</small>
-              <b><strong className="qwarranty-years">10+10 Years</strong> Warranty</b>
+              <small>ROYAL EDGE &amp; LUXURY TOUCH SERIES</small>
+              <b>10-Year Warranty</b>
+              <span>5 Years Full Replacement + 5 Years Service Warranty</span>
             </div>
           </article>
         </div>
