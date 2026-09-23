@@ -803,11 +803,18 @@ function QuoteWorkspace({
                 el.style.display = "inline-flex";
                 el.style.alignItems = "center";
                 el.style.justifyContent = "center";
-                el.style.paddingTop = "0px";
-                el.style.paddingBottom = "1px";
-                el.style.lineHeight = "1";
                 el.style.height = "14px";
+                el.style.padding = "0 5px";
+                el.style.lineHeight = "1";
                 el.style.boxSizing = "border-box";
+              });
+              const texts = clonedDoc.querySelectorAll(".qpilltext");
+              texts.forEach((t) => {
+                const el = t as HTMLElement;
+                el.style.display = "inline-block";
+                el.style.position = "relative";
+                el.style.top = "-2.5px";
+                el.style.lineHeight = "1";
               });
             },
           });
@@ -4113,42 +4120,14 @@ const whyTechomiePoints = [
                                 <small>{item.description}</small>
                               )}
                               <div className="qitem-pills">
-                                {item.series && (
-                                  <span className="item-pill-badge series">
-                                    {item.series}
-                                  </span>
-                                )}
-                                {item.technology && (
-                                  <span className="item-pill-badge tech">
-                                    {item.technology}
-                                  </span>
-                                )}
-                                {item.material && (
-                                  <span className="item-pill-badge mat">
-                                    {item.material}
-                                  </span>
-                                )}
-                                {item.edgeColor && (
-                                  <span className="item-pill-badge edge">
-                                    {item.edgeColor}
-                                  </span>
-                                )}
-                                {item.panelColor && (
-                                  <span className="item-pill-badge panel">
-                                    {item.panelColor}
-                                  </span>
-                                )}
-                                {item.module && (
-                                  <span className="item-pill-badge mod">
-                                    {item.module}
-                                  </span>
-                                )}
-                                {getItemFeatureTag(item) && (
-                                  <span className="item-pill-badge feature">
-                                    ✦ {getItemFeatureTag(item)}
-                                  </span>
-                                )}
-                                {item.sku && <span className="qitemsku">{item.sku}</span>}
+                                {item.series && <span className="item-pill-badge series"><span className="qpilltext">{item.series}</span></span>}
+                                {item.technology && <span className="item-pill-badge tech"><span className="qpilltext">{item.technology}</span></span>}
+                                {item.material && <span className="item-pill-badge mat"><span className="qpilltext">{item.material}</span></span>}
+                                {item.edgeColor && <span className="item-pill-badge edge"><span className="qpilltext">{item.edgeColor}</span></span>}
+                                {item.panelColor && <span className="item-pill-badge panel"><span className="qpilltext">{item.panelColor}</span></span>}
+                                {item.module && <span className="item-pill-badge mod"><span className="qpilltext">{item.module}</span></span>}
+                                {getItemFeatureTag(item) && <span className="item-pill-badge feature"><span className="qpilltext">✦ {getItemFeatureTag(item)}</span></span>}
+                                {item.sku && <span className="qitemsku"><span className="qpilltext">{item.sku}</span></span>}
                               </div>
                             </td>
                             <td className="td-qty">{wholeQty(item.qty)}</td>

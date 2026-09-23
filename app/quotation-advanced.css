@@ -2616,3 +2616,11 @@
   color: #166534;
   line-height: 1.4;
 }
+
+/* Inner text centering helper for pills */
+.qpilltext {
+  display: inline-block !important;
+  line-height: 1 !important;
+  position: relative !important;
+  top: -1px !important;
+}
