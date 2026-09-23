@@ -670,35 +670,46 @@
 }
 
 .qboqtable .qitem-pills {
-  display: block !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 3px 4px !important;
   margin-top: 3px !important;
-  line-height: 1.6 !important;
+  line-height: 1 !important;
 }
 .qboqtable .item-pill-badge {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   vertical-align: middle !important;
-  font-size: 6.5px !important;
-  line-height: 1.2 !important;
-  padding: 2px 5px !important;
+  font-size: 7.5px !important;
+  line-height: 1 !important;
+  height: 14px !important;
+  padding: 0 5px 1px 5px !important;
   border-radius: 3px !important;
-  margin: 1px 3px 1px 0 !important;
+  margin: 1px 0 !important;
   font-weight: 600 !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: 0.01em !important;
   white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 .qboqtable .qitemsku {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   vertical-align: middle !important;
-  font-size: 6.5px !important;
-  line-height: 1.2 !important;
-  color: #64748b !important;
+  font-size: 7px !important;
+  line-height: 1 !important;
+  height: 14px !important;
+  color: #475569 !important;
   font-family: inherit !important;
   background: #f1f5f9 !important;
-  padding: 1px 5px !important;
-  margin: 1px 0 1px 2px !important;
+  padding: 0 5px 1px 5px !important;
+  margin: 1px 0 !important;
   border-radius: 3px !important;
   border: 1px solid #cbd5e1 !important;
   white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 .qboqsubtotalrow td {
   background: #f1f5f9 !important;
@@ -2082,14 +2093,17 @@
 }
 
 .qboqtable .item-pill-badge.feature {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-weight: 700;
-  font-size: 6.5px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  letter-spacing: 0.02em;
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 700 !important;
+  font-size: 7.5px !important;
+  line-height: 1 !important;
+  height: 14px !important;
+  padding: 0 5px 1px 5px !important;
+  border-radius: 3px !important;
+  letter-spacing: 0.01em !important;
+  box-sizing: border-box !important;
 }
 
 /* Section Title Header Layout (Zero Overlap Guaranteed) */

@@ -796,6 +796,20 @@ function QuoteWorkspace({
             imageTimeout: 15000,
             width: 794,
             windowWidth: 794,
+            onclone: (clonedDoc: Document) => {
+              const pills = clonedDoc.querySelectorAll(".item-pill-badge, .qitemsku");
+              pills.forEach((p) => {
+                const el = p as HTMLElement;
+                el.style.display = "inline-flex";
+                el.style.alignItems = "center";
+                el.style.justifyContent = "center";
+                el.style.paddingTop = "0px";
+                el.style.paddingBottom = "1px";
+                el.style.lineHeight = "1";
+                el.style.height = "14px";
+                el.style.boxSizing = "border-box";
+              });
+            },
           });
           const imgData = canvas.toDataURL("image/jpeg", 0.98);
           pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "SLOW");
