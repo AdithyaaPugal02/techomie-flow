@@ -3602,14 +3602,14 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       badge: "Lighting",
       icon: "💡",
       features: [
-        "Control lights from mobile app (iOS & Android)",
-        "Individual switch circuit and group room-wise control",
-        "Familiar manual switch operation preserved with soft backlights",
-        "Automated ON/OFF scheduling and astronomical countdown timers",
-        "Scene-based control for every mood (Dinner, Reading, Movie, Party)",
-        "Voice control via Amazon Alexa & Google Assistant",
-        "Remote control and live status monitoring when away from home",
-        "Automation based on sensors, schedules, and daily routines",
+        "Control lights from mobile",
+        "Individual and group control",
+        "Manual switch operation",
+        "ON/OFF scheduling",
+        "Scene-based control",
+        "Voice control where supported",
+        "Remote control when away from home",
+        "Automation based on sensors and routines",
       ],
     });
   }
@@ -3623,11 +3623,11 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       badge: "Curtains",
       icon: "🪟",
       features: [
-        "Open/close curtains remotely from mobile or bedside",
-        "Scheduled opening at sunrise and closing at sunset",
-        "Scene-based curtain control synchronized with room lighting",
-        "Manual control with soft-touch pull to start auto-glide",
-        "Integration with other smart-home automations and voice assistants",
+        "Open/close curtains remotely",
+        "Scheduled opening and closing",
+        "Scene-based curtain control",
+        "Manual control",
+        "Integration with other automation",
       ],
     });
   }
@@ -3641,14 +3641,14 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       badge: "Door Locks",
       icon: "🔐",
       features: [
-        "Keyless entry with instant high-speed verification",
-        "Fingerprint access with high-accuracy biometric sensor",
-        "PIN/password access with anti-peep virtual code protection",
-        "RFID/card access where applicable for elderly and staff",
-        "Mobile/app access with remote unlock & live doorbell talk",
-        "Temporary access options and timed OTPs for visitors & staff",
-        "Door status monitoring, lock history logs & tamper alarm alerts",
-        "Mechanical key backup and emergency USB-C power jumpstart",
+        "Keyless entry",
+        "Fingerprint access",
+        "PIN/password access",
+        "RFID/card access where applicable",
+        "Mobile/app access where supported",
+        "Temporary access options",
+        "Door status monitoring",
+        "Mechanical key backup",
       ],
     });
   }
@@ -3662,13 +3662,13 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       badge: "Security",
       icon: "🛡️",
       features: [
-        "Door/window monitoring with instant magnetic contact alerts",
-        "Motion and human radar presence detection without false alarms",
-        "Instant intrusion alerts and push notifications on your phone",
-        "Siren/alarm integration for immediate deterrent response",
-        "Mobile notifications for state changes and perimeter events",
-        "CCTV integration and video door phone monitoring where included",
-        "Security automation scenarios (Night Perimeter, Vacation Simulation)",
+        "Door/window monitoring",
+        "Motion detection",
+        "Intrusion alerts",
+        "Siren/alarm integration",
+        "Mobile notifications",
+        "CCTV integration where included",
+        "Security automation scenarios",
       ],
     });
   }
@@ -3682,11 +3682,11 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       badge: "Gate Automation",
       icon: "⛩️",
       features: [
-        "Automated gate opening and closing without stepping out of vehicle",
-        "Remote operation via encrypted high-frequency wireless transmitters",
-        "Vehicle/person access control tailored to your perimeter",
-        "Safety features based on the selected controller (photocell obstacle protection)",
-        "Integration with smart-home controls and welcome pathway lighting",
+        "Automated gate opening/closing",
+        "Remote operation",
+        "Vehicle/person access control where applicable",
+        "Safety features based on the selected controller",
+        "Integration with smart-home controls where supported",
       ],
     });
   }
@@ -4347,7 +4347,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       {/* 4. FEATURES & BENEFITS — WHAT YOU GET */}
       {subsystems.length > 0 && (
         <section className="qpaperfeatures">
-          {head("FEATURES & BENEFITS")}
+          {head("4. FEATURES & BENEFITS — WHAT YOU GET")}
           <div className="qsectiontitle">
             <small>SOLUTION ARCHITECTURE &amp; VALUE</small>
             <h2>What You Get With Your Techomie Smart Home</h2>
@@ -4386,17 +4386,17 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             </span>
           </div>
 
-          {foot("Features & Benefits — What You Get")}
+          {foot("4. Features & Benefits — What You Get")}
         </section>
       )}
 
       {/* 5. SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE */}
       {(
         <section className="qpaperadvantage">
-          {head("CAPABILITIES & ADVANTAGE")}
+          {head("5. YOUR TECHOMIE ADVANTAGE")}
           <div className="qsectiontitle">
             <small>INTELLIGENT ROUTINES &amp; SERVICE ASSURANCE</small>
-            <h2>System Capabilities &amp; Your Techomie Advantage</h2>
+            <h2>Your Techomie Advantage &amp; Smart Scenes</h2>
             <span>
               Dynamic scene automations and our dedicated end-to-end service commitments
             </span>
@@ -4406,7 +4406,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           <div className="qscenescapsblock">
             <div className="qscenescapstitle">
               <small>SYSTEM CAPABILITIES</small>
-              <b>Pre-Programmed Smart Scenes Included With Your System</b>
+              <b>Smart Scenes (Example Automations)</b>
               <p>
                 Tailored specifically for the modules in your proposal and programmed during on-site commissioning:
               </p>
@@ -4458,7 +4458,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             </div>
           </div>
 
-          {foot("System Capabilities & The Techomie Advantage")}
+          {foot("5. Your Techomie Advantage")}
         </section>
       )}
 
