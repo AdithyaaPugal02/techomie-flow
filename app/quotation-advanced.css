@@ -3317,3 +3317,602 @@
 .qboqtable td.td-amt {
   color: #0284c7 !important;
 }
+
+
+/* ==========================================================================
+   ULTRA-PREMIUM ARCHITECTURAL LUXURY PROPOSAL DESIGN SYSTEM
+   Bespoke Obsidian, Champagne Gold & Precision Typography
+   ========================================================================== */
+
+/* 1. Global Document Precision */
+.qpaperpremium {
+  -webkit-font-smoothing: antialiased !important;
+  text-rendering: optimizeLegibility !important;
+  color: #0f172a !important;
+}
+
+/* 2. Executive Obsidian & Champagne Gold Cover Page */
+.qpaperpremium .qcover {
+  box-shadow: inset 0 0 0 1px rgba(200, 170, 114, 0.25) !important;
+}
+
+.qpaperpremium .qcover > header {
+  border-bottom: 1px solid rgba(200, 170, 114, 0.35) !important;
+  padding-bottom: 6.5mm !important;
+}
+
+.qpaperpremium .qcover > header img {
+  border: 1px solid rgba(200, 170, 114, 0.4) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+.qpaperpremium .qcover > header b {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  color: #ffffff !important;
+}
+
+.qpaperpremium .qcover > header small {
+  color: #c8aa72 !important;
+  letter-spacing: 0.22em !important;
+  font-weight: 700 !important;
+  font-size: 7.2px !important;
+}
+
+.qpaperpremium .qcoverbody > small {
+  background: rgba(200, 170, 114, 0.14) !important;
+  border: 1px solid rgba(200, 170, 114, 0.5) !important;
+  color: #c8aa72 !important;
+  padding: 3px 12px !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.16em !important;
+  font-weight: 800 !important;
+  font-size: 7.5px !important;
+  display: inline-block !important;
+}
+
+.qpaperpremium .qcoverbody h1 {
+  font-size: 38px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em !important;
+  color: #ffffff !important;
+  text-shadow: 0 6px 28px rgba(0, 0, 0, 0.5) !important;
+  margin-top: 2mm !important;
+}
+
+.qpaperpremium .qcovermeta {
+  background: rgba(7, 21, 34, 0.88) !important;
+  border: 1px solid rgba(200, 170, 114, 0.55) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+.qpaperpremium .qcovermeta small {
+  color: #c8aa72 !important;
+  font-size: 6.8px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+}
+
+.qpaperpremium .qcovermeta b {
+  font-size: 9.5px !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.qpaperpremium .qcoverproposed {
+  background: rgba(14, 165, 233, 0.05) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border-radius: 9px !important;
+}
+
+.qpaperpremium .qcoverscopetag {
+  background: rgba(14, 165, 233, 0.16) !important;
+  color: #e0f2fe !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+  border-radius: 999px !important;
+  padding: 3.5px 10px !important;
+  font-size: 7.5px !important;
+  font-weight: 600 !important;
+}
+
+.qpaperpremium .qcover > footer {
+  border-top: 1px solid rgba(200, 170, 114, 0.35) !important;
+  padding-top: 5mm !important;
+}
+
+.qpaperpremium .qcover > footer span {
+  font-size: 20px !important;
+  letter-spacing: 0.18em !important;
+  color: #ffffff !important;
+}
+
+.qpaperpremium .qcover > footer small {
+  color: #c8aa72 !important;
+  letter-spacing: 0.16em !important;
+  font-size: 7.5px !important;
+}
+
+/* 3. Architectural Page Header & Footer */
+.qpaperpremium .qpdfhead {
+  height: 13.5mm !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 2px solid #071522 !important;
+  padding-bottom: 3.5mm !important;
+  margin-bottom: 5.5mm !important;
+  box-sizing: border-box !important;
+}
+
+.qpaperpremium .qpdfhead img {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 2px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.qpaperpremium .qpdfhead b {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: #071522 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.qpaperpremium .qpdfhead small {
+  color: #c8aa72 !important;
+  font-size: 7.2px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+.qpaperpremium .qpdffoot {
+  border-top: 1px solid #cbd5e1 !important;
+  padding-top: 2.5mm !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 7px !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* 4. Luxury Room Banner & BOQ Table */
+.qroombanner {
+  background: #071522 !important;
+  border-left: 4px solid #c8aa72 !important;
+  border-radius: 6px 6px 0 0 !important;
+  padding: 4.5px 10px !important;
+  box-shadow: 0 2px 6px rgba(7, 21, 34, 0.08) !important;
+}
+
+.qroombanner b {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.02em !important;
+}
+
+.qroomcap-tag {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #bae6fd !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 999px !important;
+  padding: 1.5px 8px !important;
+  font-size: 6.8px !important;
+  font-weight: 600 !important;
+  margin-right: 6px !important;
+  display: inline-block !important;
+}
+
+.qboqtable {
+  border: 1px solid #cbd5e1 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border-radius: 0 0 8px 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.qboqtable thead th {
+  background: #071522 !important;
+  color: #ffffff !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  border-bottom: 2px solid #c8aa72 !important;
+  padding: 6px 4px !important;
+}
+
+.qboqtable tbody tr:nth-child(even) td {
+  background: #f8fafc !important;
+}
+
+.qboqtable tbody tr:hover td {
+  background: #f0f7ff !important;
+}
+
+.qboqtable .qboqimgwrap {
+  width: 115px !important;
+  height: 78px !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 3px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.qboqtable .qboqimgwrap img {
+  max-width: 109px !important;
+  max-height: 72px !important;
+  object-fit: contain !important;
+}
+
+.qboqtable td.td-details b {
+  color: #071522 !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+.qboqtable td.td-details small {
+  color: #475569 !important;
+  font-size: 7px !important;
+  line-height: 1.35 !important;
+  margin-top: 2px !important;
+}
+
+/* Specification Badges Luxury Styling */
+.qboqtable .item-pill-badge {
+  border-radius: 4px !important;
+  height: 15px !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  padding: 0 6px !important;
+}
+
+.qboqtable .item-pill-badge.series {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.qboqtable .item-pill-badge.tech {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.qboqtable .item-pill-badge.mat {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.qboqtable .item-pill-badge.edge {
+  background: #fefce8 !important;
+  color: #a16207 !important;
+  border: 1px solid #fef08a !important;
+}
+
+.qboqtable .item-pill-badge.panel {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.qboqtable .item-pill-badge.feature {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.qboqtable .qitemsku {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
+  height: 15px !important;
+  padding: 0 6px !important;
+}
+
+.qboqtable td.td-rate {
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.qboqtable td.td-amt {
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  color: #0284c7 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* 5. Room & Floor Totals Polish */
+.qroomtotalbar {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-top: 0 !important;
+  border-radius: 0 0 8px 8px !important;
+  padding: 2mm 3.5mm !important;
+}
+
+.qroomtotalbar span {
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  letter-spacing: 0.04em !important;
+}
+
+.qroomtotalbar b {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  color: #0284c7 !important;
+}
+
+.qfloortotalbar {
+  background: linear-gradient(135deg, #071522 0%, #0d283e 100%) !important;
+  border: 1px solid rgba(200, 170, 114, 0.45) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(7, 21, 34, 0.15) !important;
+  padding: 2.8mm 5mm !important;
+}
+
+.qfloortotalbar small {
+  color: #c8aa72 !important;
+  font-size: 6.8px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+}
+
+.qfloortotalbar b {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.qfloortotalbar strong {
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+}
+
+/* 6. Section 4: Features & Benefits Cards Luxury Polish */
+.qsubsystemcard {
+  border-radius: 9px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-top-width: 3.5px !important;
+}
+
+.qsubsystemcard:nth-child(1) { border-top-color: #0284c7 !important; }
+.qsubsystemcard:nth-child(2) { border-top-color: #d97706 !important; }
+.qsubsystemcard:nth-child(3) { border-top-color: #059669 !important; }
+.qsubsystemcard:nth-child(4) { border-top-color: #e11d48 !important; }
+.qsubsystemcard:nth-child(5) { border-top-color: #7c3aed !important; }
+
+.qsubsystemicon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.qbulletcheck {
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  color: #16a34a !important;
+  border-radius: 50% !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 7.5px !important;
+  font-weight: 800 !important;
+  flex-shrink: 0 !important;
+}
+
+.qsubsystemfeaturelist li span:last-child {
+  color: #0f172a !important;
+  font-size: 7.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.qfeaturesfooterbar {
+  background: #071522 !important;
+  border: 1px solid rgba(200, 170, 114, 0.4) !important;
+  border-radius: 7px !important;
+  box-shadow: 0 4px 14px rgba(7, 21, 34, 0.15) !important;
+  padding: 2.5mm 4.5mm !important;
+}
+
+.qfeaturesfooterbar span {
+  color: #f1f5f9 !important;
+  font-size: 7.5px !important;
+  font-weight: 600 !important;
+}
+
+/* 7. Section 5: Smart Scenes & Advantage Cards */
+.qscenecardnew {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.qscenesteps {
+  background: #f0f9ff !important;
+  border-left: 3px solid #0284c7 !important;
+  border-radius: 4px !important;
+  padding: 1.8mm 2.8mm !important;
+}
+
+.qscenesteps code {
+  color: #0369a1 !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+}
+
+.qwhytechomieblock {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.qwhybadge {
+  background: #071522 !important;
+  color: #ffffff !important;
+  border: 1px solid #c8aa72 !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 7px !important;
+  font-weight: 800 !important;
+}
+
+.qlocalcontrolcard {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.06) !important;
+  border-left-width: 4px !important;
+}
+
+/* 8. Commercial Summary Table & Milestones */
+.qprojectsummarytablebox {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+}
+
+.qprojectsummarytable th {
+  background: #071522 !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #c8aa72 !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+}
+
+.qprojectsummarytable .qgrandtotalrow td {
+  background: linear-gradient(90deg, #071522 0%, #0d283e 100%) !important;
+  color: #ffffff !important;
+  padding: 3.5mm 4.5mm !important;
+}
+
+.qprojectsummarytable .qgrandtotalrow strong {
+  font-size: 11.5px !important;
+  color: #ffffff !important;
+}
+
+.qprojectsummarytable .qgrandtotalrow small {
+  color: #cbd5e1 !important;
+  font-size: 7.5px !important;
+}
+
+.qprojectsummarytable .qgrandtotalrow td:last-child strong {
+  font-size: 16px !important;
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+}
+
+.qmilestones article {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.qmilestones article > i {
+  background: #071522 !important;
+  color: #38bdf8 !important;
+  border: 1px solid #c8aa72 !important;
+  font-weight: 800 !important;
+}
+
+.qmilestones article strong {
+  color: #0284c7 !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+}
+
+/* 9. Standards, Dual Warranty & Official Sign-off */
+.qwarrantycard.gold {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border: 1.5px solid #f59e0b !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12) !important;
+}
+
+.qbankcard {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.qbankhead {
+  background: #071522 !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #c8aa72 !important;
+  padding: 2mm 4mm !important;
+}
+
+.qbankhead b {
+  color: #ffffff !important;
+  font-size: 8.5px !important;
+}
+
+.qbankhead span {
+  color: #c8aa72 !important;
+  font-size: 7px !important;
+}
+
+.qsignbox {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  padding: 3.5mm 4.5mm !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.qsignline {
+  border-top: 1.5px dotted #94a3b8 !important;
+  padding-top: 2mm !important;
+}
+
+.qclosingbanner {
+  background: linear-gradient(135deg, #071522 0%, #0d283e 100%) !important;
+  border: 1px solid rgba(200, 170, 114, 0.4) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(7, 21, 34, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.qclosingbanner small {
+  color: #c8aa72 !important;
+  font-size: 7px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+}
+
+.qclosingbanner h2 {
+  color: #ffffff !important;
+}
+
+.qclosingbanner p {
+  color: #94a3b8 !important;
+}
