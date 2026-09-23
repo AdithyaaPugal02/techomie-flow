@@ -3784,6 +3784,94 @@ const whyTechomiePoints = [
   "Future expansion capability",
 ];
 
+
+interface DecidedSwitchInfo {
+  series: string;
+  image: string;
+  label: string;
+  description: string;
+}
+
+function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
+  const floors = snap.floors || [];
+  const allItems: R[] = [
+    ...floors.flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || [])),
+    ...(snap.projectItems || []),
+  ];
+
+  const counts: Record<string, number> = {};
+  for (const item of allItems) {
+    const raw = (item.series || item.parsedAttributes?.series || item.name || "").toLowerCase();
+    if (raw.includes("luxeray") || raw.includes("titan")) {
+      counts["Noviq Luxeray"] = (counts["Noviq Luxeray"] || 0) + 1;
+    } else if (raw.includes("royal edge color")) {
+      counts["Royal Edge Color"] = (counts["Royal Edge Color"] || 0) + 1;
+    } else if (raw.includes("royal edge")) {
+      counts["Royal Edge"] = (counts["Royal Edge"] || 0) + 1;
+    } else if (raw.includes("edge color")) {
+      counts["Edge Color"] = (counts["Edge Color"] || 0) + 1;
+    } else if (raw.includes("edge")) {
+      counts["Edge"] = (counts["Edge"] || 0) + 1;
+    } else if (raw.includes("touch plus") || raw.includes("color touch")) {
+      counts["Touch Plus"] = (counts["Touch Plus"] || 0) + 1;
+    } else if (raw.includes("touch panel") || raw.includes("touch")) {
+      counts["Touch Panel"] = (counts["Touch Panel"] || 0) + 1;
+    }
+  }
+
+  let bestSeries = "";
+  let maxCount = 0;
+  for (const [s, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      bestSeries = s;
+    }
+  }
+
+  if (!bestSeries) return null;
+
+  switch (bestSeries) {
+    case "Royal Edge":
+      return {
+        series: "Royal Edge",
+        image: "/products/switches/royal-edge-series.png",
+        label: "Noviq Royal Edge Collection",
+        description: "Signature gold base accent bar with crystal tempered glass & multi-color icon illumination",
+      };
+    case "Royal Edge Color":
+    case "Edge Color":
+      return {
+        series: "Edge Color",
+        image: "/products/switches/edge-color-series.png",
+        label: "Noviq Edge Color Series",
+        description: "Ultra-slim metallic gold bezel with vibrant dual-color backlit touch icons & precision dimming",
+      };
+    case "Edge":
+      return {
+        series: "Edge",
+        image: "/products/switches/edge-series.png",
+        label: "Noviq Edge Series",
+        description: "Minimalist circular ring touch sensors encased in an anodized champagne gold metallic frame",
+      };
+    case "Touch Plus":
+    case "Touch Panel":
+      return {
+        series: "Touch Plus",
+        image: "/products/switches/touch-plus-series.png",
+        label: "Noviq Touch Plus Series",
+        description: "Frameless pure black crystal glass with cyan glowing square capacitive touch points",
+      };
+    case "Noviq Luxeray":
+    default:
+      return {
+        series: "Noviq Luxeray",
+        image: "/products/switches/noviq-luxeray-series.png",
+        label: "Noviq Luxeray Series",
+        description: "Architectural luxury frameless glass with branded NOVIQ insignia & custom laser engraved icons",
+      };
+  }
+}
+
   const paginateFloor = (floor: R) => {
     const pages: R[] = [];
     let currentPageRooms: R[] = [];
@@ -3879,6 +3967,7 @@ const whyTechomiePoints = [
 
   const subsystems = detectQuoteSubsystems(snap);
   const smartScenes = synthesizeSmartScenes(subsystems);
+  const decidedSwitch = getDecidedSwitchSeries(snap);
 
   return (
     <article
@@ -4011,6 +4100,20 @@ const whyTechomiePoints = [
                 .join(" · ")}
             </span>
           </div>
+          {decidedSwitch && (
+            <div className="qdecidedswitchshowcase">
+              <div className="qdecidedswitchhead">
+                <div>
+                  <small>SELECTED HARDWARE AESTHETICS</small>
+                  <b>{decidedSwitch.label}</b>
+                </div>
+                <span>{decidedSwitch.description}</span>
+              </div>
+              <div className="qdecidedswitchimgbox">
+                <img src={decidedSwitch.image} alt={decidedSwitch.label} />
+              </div>
+            </div>
+          )}
           {foot("Proposal overview")}
         </section>
       )}
@@ -4168,6 +4271,15 @@ const whyTechomiePoints = [
           <div className={`qsubsystemsgrid qcols-${Math.min(subsystems.length, 2)}`}>
             {subsystems.map((sub) => (
               <article key={sub.id} className="qsubsystemcard">
+                {sub.id === "lighting" && decidedSwitch && (
+                  <div className="qsubswitchhero">
+                    <img src={decidedSwitch.image} alt={decidedSwitch.label} />
+                    <div className="qsubswitchherolabel">
+                      <small>SPECIFIED AESTHETIC</small>
+                      <b>{decidedSwitch.label}</b>
+                    </div>
+                  </div>
+                )}
                 <div className="qsubsystemhead">
                   <span className="qsubsystemicon">{sub.icon}</span>
                   <div className="qsubsystemtitlewrap">
