@@ -111,7 +111,9 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     [showPayment, setShowPayment] = useState(false),
     [showNote, setShowNote] = useState(false),
     [showFinalise, setShowFinalise] = useState(false),
-    [branding, setBranding] = useState<Record<string, any>>({});
+    [branding, setBranding] = useState<Record<string, any>>({}),
+    [showList, setShowList] = useState(true),
+    [zoom, setZoom] = useState<"fit" | "100" | "85" | "75">("fit");
   const [draft, setDraft] = useState({
     customerId: "",
     invoiceDate: today(),
@@ -258,7 +260,7 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
             "-",
           ),
           image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 10000, logging: false },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 10000, logging: false, scrollY: 0, scrollX: 0 },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
           pagebreak: {
             mode: ["css", "legacy"],
@@ -453,7 +455,7 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
           <button onClick={() => setMessage("")}>×</button>
         </div>
       )}
-      <div className="invoiceworkspace">
+      <div className={`invoiceworkspace ${!showList ? "register-collapsed" : ""}`}>
         <aside className="invoiceregister">
           <div className="registerhead">
             <b>Invoice register</b>
@@ -511,14 +513,33 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
           {selected ? (
             <>
               <div className="invoiceactionbar">
-                <div>
-                  <b>{selected.number || "Draft invoice"}</b>
-                  <span>
-                    {selected.status}
-                    {selected.pdf_key ? " · Permanent PDF stored" : ""}
-                  </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="togglelistbtn"
+                    onClick={() => setShowList(!showList)}
+                    title={showList ? "Collapse register to expand invoice preview" : "Show invoice register"}
+                  >
+                    {showList ? "◧ Hide list" : `☰ Invoices (${invoices.length})`}
+                  </button>
+                  <div>
+                    <b>{selected.number || "Draft invoice"}</b>
+                    <span>
+                      {selected.status}
+                      {selected.pdf_key ? " · Permanent PDF stored" : ""}
+                    </span>
+                  </div>
                 </div>
                 <div>
+                  <label className="documenttemplateselect">
+                    <span>Zoom</span>
+                    <select value={zoom} onChange={e => setZoom(e.target.value as any)}>
+                      <option value="fit">Fit width</option>
+                      <option value="100">100% (A4)</option>
+                      <option value="85">85%</option>
+                      <option value="75">75%</option>
+                    </select>
+                  </label>
                   <label className="documenttemplateselect">
                     <span>PDF design</span>
                     <select disabled={selected.status !== "Draft"} value={invoiceTemplate(selected, branding)} onChange={e => selectTemplate(e.target.value)}>
@@ -576,7 +597,7 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                     )}
                   </div>
               </div>
-              <InvoicePaper invoice={selected} branding={branding} />
+              <InvoicePaper invoice={selected} branding={branding} zoom={zoom} />
             </>
           ) : (
             <div className="invoiceplaceholder">
@@ -943,7 +964,7 @@ function invoiceSnapshot(invoice: Invoice) {
 function invoiceTemplate(invoice: Invoice, branding: Record<string, any>) {
   return String(invoiceSnapshot(invoice).templateId || branding.defaultInvoiceTemplate || "executive");
 }
-function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Record<string, any> }) {
+function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice; branding: Record<string, any>; zoom?: string }) {
   const items = i.items || [],
     payments = i.payments || [],
     notes = i.notes || [],
@@ -976,12 +997,12 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
 
   return (
     <article
-      className={`taxinvoicepaper invoicetemplate-${templateId}`}
+      className={`taxinvoicepaper invoicetemplate-${templateId} zoom-${zoom}`}
       id="tax-invoice-paper"
       style={paperStyle}
     >
       {/* Top Brand & Title Bar */}
-      <header className="invpaperhead">
+      <div className="invpaperhead">
         <div className="paperbrand">
           <img src="/techomie-logo.jpg" alt="Techomie" />
           <div>
@@ -1003,7 +1024,7 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
           <b>{i.number || "DRAFT — NOT A TAX INVOICE"}</b>
           <span className={`invstatuspill ${statusClass}`}>{statusLabel}</span>
         </div>
-      </header>
+      </div>
 
       {/* 3-Column Party & Supply Info */}
       <div className="paperinfogrid">
@@ -1097,7 +1118,7 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
                     : "—"}
                 </td>
                 <td style={{ textAlign: "right" }}>{money(x.taxable_value)}</td>
-                <td style={{ textAlign: "center" }}>
+                <td style={{ textAlign: "center", fontWeight: 700, color: "#0369a1" }}>
                   <span className="gstpill">{Number(x.gst_rate)}%</span>
                 </td>
                 <td style={{ textAlign: "right", fontWeight: 800 }}>
@@ -1213,7 +1234,7 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
       )}
 
       {/* Signature & Declaration Footer */}
-      <footer className="invpaperfooter">
+      <div className="invpaperfooter">
         <div className="invdeclaration">
           <b>DECLARATION:</b>
           <span>
@@ -1234,7 +1255,7 @@ function InvoicePaper({ invoice: i, branding }: { invoice: Invoice; branding: Re
           </div>
           <div className="invsignline">Authorised Signatory</div>
         </div>
-      </footer>
+      </div>
 
       <div className="paperlock">
         {i.status === "Draft"

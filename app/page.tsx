@@ -918,7 +918,7 @@ export default function Home() {
             </div>
           </>
         ) : module === "Quotations" ? (
-          <QuotationsModule role={auth.user.role} />
+          <QuotationsModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : module === "Overview" ? (
           <OverviewModule role={auth.user.role} onNavigate={(target, filter) => { setModuleFilter(filter || {}); setModule(target); if (target === "Quotations") setQuoteScreen("list"); }} />
         ) : module === "Projects" ? (
@@ -944,7 +944,15 @@ export default function Home() {
         ) : module === "Expenses" ? (
           <ExpensesModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : module === "Site Visits" ? (
-          <SiteVisitsModule role={auth.user.role} initialFilter={moduleFilter} />
+          <SiteVisitsModule
+            role={auth.user.role}
+            initialFilter={moduleFilter}
+            onNavigate={(target, filter) => {
+              setModuleFilter(filter || {});
+              setModule(target);
+              if (target === "Quotations") setQuoteScreen("list");
+            }}
+          />
         ) : module === "Settings" ? (
           <SettingsModule role={auth.user.role} currentEmail={auth.user.email} />
         ) : module === "Reports" ? (
@@ -2331,6 +2339,7 @@ const moduleData: Record<string, { stats: string[]; rows: string[][] }> = {
 function OperationsModule({ name,role,initialFilter={} }: { name: string;role:string;initialFilter?:Record<string,string> }) {
   const endpoint:Record<string,string>={Leads:"/api/leads",Customers:"/api/customers",Projects:"/api/records/projects",Tasks:"/api/records/tasks",Payments:"/api/records/payments",Procurement:"/api/records/materials",Expenses:"/api/records/expenses",Service:"/api/records/service"};
   const [rows,setRows]=useState<Record<string,unknown>[]>([]),[search,setSearch]=useState(Object.values(initialFilter).join(" ")),[open,setOpen]=useState(false),[editing,setEditing]=useState<Record<string,unknown>|null>(null),[toast,setToast]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
+  const [taskFilter, setTaskFilter] = useState<"all"|"today"|"overdue"|"completed">("all");
   const [paymentLookups,setPaymentLookups]=useState<{customers:Record<string,unknown>[];projects:Record<string,unknown>[];quotations:Record<string,unknown>[]}>({customers:[],projects:[],quotations:[]});
   const [taskLookups,setTaskLookups]=useState<{projects:Record<string,unknown>[];users:Record<string,unknown>[]}>({projects:[],users:[]});
   const singular=name==="Customers"?"customer":name==="Leads"?"lead":name==="Procurement"?"material":name==="Service"?"service ticket":name.endsWith("s")?name.slice(0,-1).toLowerCase():name.toLowerCase();
@@ -2341,6 +2350,7 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
   const archive=async(row:Record<string,unknown>)=>{if(!confirm(`Archive this ${singular}?`))return;const r=await fetch(`${endpoint[name]}?id=${row.id}`,{method:"DELETE"});if(r.ok){setToast(`${singular} archived`);load()}else setToast("Unable to archive record")};
   const removePermanent=async(row:Record<string,unknown>)=>{if(!confirm(`Permanently delete this ${singular}? This action cannot be undone.`))return;const url=endpoint[name]?.includes("/records/")?`${endpoint[name]}?id=${row.id}&permanent=1`:`${endpoint[name]}?id=${row.id}`;const r=await fetch(url,{method:"DELETE"});if(r.ok){setToast(`${singular} deleted permanently`);load()}else{const d=await r.json().catch(()=>({}));setToast(d.error||"Unable to delete record")}};
   const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>[name==="Tasks"?taskLookups.projects.find(p=>String(p.id)===String(r.project_id))?.title:null,r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
+  const displayId=(r:Record<string,unknown>)=>{const raw=String(r.id||r.number||"—");if(raw.length>18&&raw.includes("-")){const prefix=name==="Tasks"?"TAS":name.slice(0,3).toUpperCase();return `${prefix}-${raw.slice(0,8)}`;}return raw;};
   const paymentFields:Field[]=name==="Payments"?[
     {key:"customer_selector",label:"Customer name",required:true,options:paymentLookups.customers.map(c=>({value:String(c.id),label:String(c.name)}))},
     {key:"project_id",label:"Project / site",dependsOn:"customer_selector",options:paymentLookups.projects.map(p=>({value:String(p.id),label:`${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`,parent:String(p.customer_id)}))},
@@ -2358,6 +2368,17 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
   const modalInitial=editing?Object.fromEntries(Object.entries(editing).map(([k,v])=>[k,String(v??"")])):undefined;
   if(modalInitial&&name==="Payments"){const linked=paymentLookups.projects.find(p=>String(p.id)===modalInitial.project_id)||paymentLookups.quotations.find(q=>String(q.id)===modalInitial.quotation_id);if(linked)modalInitial.customer_selector=String(linked.customer_id)}
   if(!allowed)return <div className="modulepage"><div className="modulehero"><div><small>RESTRICTED</small><h1>{name}</h1><p>Your role does not have permission to access this financial area.</p></div></div></div>;
+  const filteredRows = rows.filter((r) => {
+    const matchesSearch = !search || JSON.stringify(r).toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (name !== "Tasks" || taskFilter === "all") return true;
+    const today = new Date().toISOString().slice(0, 10);
+    const isCompleted = String(r.status).toLowerCase() === "completed";
+    if (taskFilter === "today") return !isCompleted && String(r.due_at || "").slice(0, 10) === today;
+    if (taskFilter === "overdue") return !isCompleted && String(r.due_at || "9999") < new Date().toISOString();
+    if (taskFilter === "completed") return isCompleted;
+    return true;
+  });
   return (
     <div className="modulepage">
       <div className="modulehero">
@@ -2369,13 +2390,46 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
         {name!=="Overview"&&<button className="primary" onClick={() => {setEditing(null);setOpen(true)}}>＋ Add {singular}</button>}
       </div>
       {toast && <div className="toast">✓ {toast}</div>}
-      <div className="statgrid"><article><small>{name==="Tasks"?"TOTAL TASKS":"LIVE RECORDS"}</small><b>{rows.length}</b></article><article><small>{name==="Tasks"?"DUE TODAY":"ACTIVE / OPEN"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"").slice(0,10)===new Date().toISOString().slice(0,10)&&String(r.status).toLowerCase()!=="completed").length:rows.filter(r=>!["closed","completed","lost","inactive"].includes(String(r.status||"").toLowerCase())).length}</b></article><article><small>{name==="Tasks"?"OVERDUE":"UPDATED"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"9999")<new Date().toISOString()&&String(r.status).toLowerCase()!=="completed").length:loading?"Loading…":"Now"}</b></article><article><small>{name==="Tasks"?"COMPLETED":"DATA SOURCE"}</small><b>{name==="Tasks"?rows.filter(r=>String(r.status).toLowerCase()==="completed").length:"Secure database"}</b></article></div>
+      <div className="statgrid">
+        <article
+          style={name === "Tasks" ? { cursor: "pointer", outline: taskFilter === "all" ? "2px solid #1769ff" : undefined, background: taskFilter === "all" ? "#f8faff" : undefined } : undefined}
+          onClick={() => name === "Tasks" && setTaskFilter("all")}
+          title={name === "Tasks" ? "Click to view all tasks" : undefined}
+        >
+          <small>{name==="Tasks"?"TOTAL TASKS":"LIVE RECORDS"}</small>
+          <b>{rows.length}</b>
+        </article>
+        <article
+          style={name === "Tasks" ? { cursor: "pointer", outline: taskFilter === "today" ? "2px solid #1769ff" : undefined, background: taskFilter === "today" ? "#f8faff" : undefined } : undefined}
+          onClick={() => name === "Tasks" && setTaskFilter("today")}
+          title={name === "Tasks" ? "Click to filter due today" : undefined}
+        >
+          <small>{name==="Tasks"?"DUE TODAY":"ACTIVE / OPEN"}</small>
+          <b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"").slice(0,10)===new Date().toISOString().slice(0,10)&&String(r.status).toLowerCase()!=="completed").length:rows.filter(r=>!["closed","completed","lost","inactive"].includes(String(r.status||"").toLowerCase())).length}</b>
+        </article>
+        <article
+          style={name === "Tasks" ? { cursor: "pointer", outline: taskFilter === "overdue" ? "2px solid #1769ff" : undefined, background: taskFilter === "overdue" ? "#f8faff" : undefined } : undefined}
+          onClick={() => name === "Tasks" && setTaskFilter("overdue")}
+          title={name === "Tasks" ? "Click to filter overdue tasks" : undefined}
+        >
+          <small>{name==="Tasks"?"OVERDUE":"UPDATED"}</small>
+          <b>{name==="Tasks"?rows.filter(r=>String(r.due_at||"9999")<new Date().toISOString()&&String(r.status).toLowerCase()!=="completed").length:loading?"Loading…":"Now"}</b>
+        </article>
+        <article
+          style={name === "Tasks" ? { cursor: "pointer", outline: taskFilter === "completed" ? "2px solid #1769ff" : undefined, background: taskFilter === "completed" ? "#f8faff" : undefined } : undefined}
+          onClick={() => name === "Tasks" && setTaskFilter("completed")}
+          title={name === "Tasks" ? "Click to filter completed tasks" : undefined}
+        >
+          <small>{name==="Tasks"?"COMPLETED":"DATA SOURCE"}</small>
+          <b>{name==="Tasks"?rows.filter(r=>String(r.status).toLowerCase()==="completed").length:"Secure database"}</b>
+        </article>
+      </div>
       <div className="records">
         <div className="recordtools">
           <h2>
             {name === "Overview"
               ? "Upcoming activity"
-              : `Recent ${name.toLowerCase()}`}
+              : `Recent ${name.toLowerCase()}${name === "Tasks" && taskFilter !== "all" ? ` (${taskFilter})` : ""}`}
           </h2>
           <input
             value={search}
@@ -2383,15 +2437,33 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
             placeholder="Search records"
           />
         </div>
-        {error&&<p className="formerror">{error}</p>}{!loading&&!error&&rows.length===0&&<p className="emptyrow">No records yet. Add the first {singular}.</p>}{rows.filter(r=>JSON.stringify(r).toLowerCase().includes(search.toLowerCase())).map((r,i)=><div className="record" key={String(r.id||i)}><span>{String(r.id||r.number||"—")}</span><b>{titleOf(r)}</b><small>{detailOf(r)||"Saved record"}</small><span className="rowactions"><button onClick={()=>{setEditing(r);setOpen(true)}}>{name==="Tasks"?"Update":"Edit"}</button>{name!=="Overview"&&name!=="Tasks"&&<button className="danger" onClick={()=>archive(r)}>Archive</button>}{role==="admin"&&name!=="Overview"&&<button className="danger" onClick={()=>removePermanent(r)}>🗑 Delete</button>}</span></div>)}
+        {error&&<p className="formerror">{error}</p>}
+        {!loading&&!error&&filteredRows.length===0&&<p className="emptyrow">No records found. {taskFilter !== "all" ? <button type="button" style={{ border: 0, background: "none", color: "#1769ff", cursor: "pointer", textDecoration: "underline", marginLeft: "6px" }} onClick={() => setTaskFilter("all")}>Clear filter</button> : `Add the first ${singular}.`}</p>}
+        {filteredRows.map((r,i)=>(
+          <div className="record" key={String(r.id||i)}>
+            <span className="recordid" title={String(r.id||r.number||"")}>{displayId(r)}</span>
+            <b title={titleOf(r)}>{titleOf(r)}</b>
+            <small title={detailOf(r)}>{detailOf(r)||"Saved record"}</small>
+            <span className="rowactions">
+              <button type="button" onClick={()=>{setEditing(r);setOpen(true)}}>{name==="Tasks"?"Update":"Edit"}</button>
+              {name!=="Overview"&&name!=="Tasks"&&<button type="button" className="danger" onClick={()=>archive(r)}>Archive</button>}
+              {(role==="admin"||name==="Tasks")&&name!=="Overview"&&(
+                <button type="button" className="danger" onClick={()=>removePermanent(r)} title={`Permanently delete this ${singular}`}>
+                  🗑 Delete
+                </button>
+              )}
+            </span>
+          </div>
+        ))}
       </div>
       {open && (
         <RecordModal
-          title={`Add ${singular}`}
+          title={`${editing ? "Update" : "Add"} ${singular}`}
           fields={paymentFields}
           initial={modalInitial}
-          onClose={() => setOpen(false)}
+          onClose={() => { setOpen(false); setEditing(null); }}
           onSave={save}
+          onDelete={editing && (role === "admin" || name === "Tasks") ? () => { const target = editing; setOpen(false); setEditing(null); removePermanent(target); } : undefined}
         />
       )}
     </div>
@@ -2916,12 +2988,14 @@ function RecordModal({
   fields,
   onClose,
   onSave,
+  onDelete,
   initial,
 }: {
   title: string;
   fields: Field[];
   onClose: () => void;
   onSave: (v: Record<string, string>) => void;
+  onDelete?: () => void;
   initial?: Record<string,string>;
 }) {
   const [values, setValues] = useState<Record<string, string>>(initial||{});
@@ -2934,6 +3008,14 @@ function RecordModal({
       return;
     }
     onSave(values);
+  };
+  const getInputValue = (f: Field) => {
+    const raw = values[f.key] ?? "";
+    if (f.type === "datetime-local" && raw) {
+      if (raw.length === 10) return `${raw}T09:00`;
+      if (raw.includes("T")) return raw.slice(0, 16);
+    }
+    return raw;
   };
   return (
     <div
@@ -2982,7 +3064,7 @@ function RecordModal({
                 <input
                   type={f.type || "text"}
                   placeholder={f.placeholder}
-                  value={values[f.key] || ""}
+                  value={getInputValue(f)}
                   onChange={(e) =>
                     setValues((v) => ({ ...v, [f.key]: e.target.value }))
                   }
@@ -2993,6 +3075,16 @@ function RecordModal({
         </div>
         {error && <p className="formerror">{error}</p>}
         <div className="modalactions">
+          {onDelete && (
+            <button
+              type="button"
+              className="danger"
+              style={{ marginRight: "auto", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              onClick={onDelete}
+            >
+              🗑 Delete
+            </button>
+          )}
           <button type="button" onClick={onClose}>
             Cancel
           </button>

@@ -90,24 +90,38 @@ export default function CustomersModule({
     [form, setForm] = useState<R>(blank),
     [msg, setMsg] = useState("");
   const load = async () => {
-    const p = new URLSearchParams(Object.entries(filter).filter(([, v]) => v));
-    const r = await fetch(`/api/customers?${p}`),
-      d = await r.json();
-    if (r.ok) {
-      setRows(d.customers);
-      setUsers(d.users || []);
-    } else setMsg(d.error);
+    try {
+      const p = new URLSearchParams(Object.entries(filter).filter(([, v]) => v));
+      const r = await fetch(`/api/customers?${p}`);
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setMsg(d.error || `Failed to load customers (${r.status})`);
+        return;
+      }
+      const d = await r.json();
+      setRows(Array.isArray(d.customers) ? d.customers : []);
+      setUsers(Array.isArray(d.users) ? d.users : []);
+    } catch (e: any) {
+      setMsg(e?.message || "Failed to connect to server. Please check your connection or restart the dev server.");
+    }
   };
   useEffect(() => {
     load();
   }, [filter]);
   const open = async (id: any) => {
-    const r = await fetch(`/api/customers?id=${id}`),
-      d = await r.json();
-    if (r.ok) {
+    try {
+      const r = await fetch(`/api/customers?id=${id}`);
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setMsg(d.error || `Failed to load customer (${r.status})`);
+        return;
+      }
+      const d = await r.json();
       setDetail(d);
       setTab("Overview");
-    } else setMsg(d.error);
+    } catch (e: any) {
+      setMsg(e?.message || "Unable to reach server");
+    }
   };
   const create = async (force = false) => {
     setCreateBusy(true);
@@ -117,7 +131,7 @@ export default function CustomersModule({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...form, allowDuplicate: force }),
       });
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
       if (r.status === 409 && confirm(`${d.error}. Create anyway?`)) {
         setCreateBusy(false);
         return create(true);
@@ -144,20 +158,27 @@ export default function CustomersModule({
     }
   };
   const action = async (p: R) => {
-    const r = await fetch("/api/customers", {
+    if (!detail?.customer?.id) return false;
+    const customerId = detail.customer.id;
+    try {
+      const r = await fetch("/api/customers", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: detail.customer.id, ...p }),
-      }),
-      d = await r.json();
-    if (!r.ok) {
-      setMsg(d.error);
+        body: JSON.stringify({ id: customerId, ...p }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setMsg(d.error || "Failed to update customer");
+        return false;
+      }
+      setMsg("Customer record updated");
+      await open(customerId);
+      await load();
+      return true;
+    } catch (e: any) {
+      setMsg(e?.message || "Network error while updating customer");
       return false;
     }
-    setMsg("Customer record updated");
-    await open(detail.customer.id);
-    await load();
-    return true;
   };
   const addContact = () => {
     const name = prompt("Contact name"),
@@ -224,30 +245,40 @@ export default function CustomersModule({
     }
   };
   const upload = async (file: File) => {
-    const f = new FormData();
-    f.set("customerId", detail.customer.id);
-    f.set("file", file);
-    f.set("kind", "Customer document");
-    const r = await fetch("/api/customers/attachments", {
+    if (!detail?.customer?.id) return;
+    const customerId = detail.customer.id;
+    try {
+      const f = new FormData();
+      f.set("customerId", customerId);
+      f.set("file", file);
+      f.set("kind", "Customer document");
+      const r = await fetch("/api/customers/attachments", {
         method: "POST",
         body: f,
-      }),
-      d = await r.json();
-    if (!r.ok) return setMsg(d.error);
-    setMsg("Document uploaded permanently");
-    open(detail.customer.id);
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return setMsg(d.error || "Upload failed");
+      setMsg("Document uploaded permanently");
+      open(customerId);
+    } catch (e: any) {
+      setMsg(e?.message || "Network error while uploading document");
+    }
   };
   const deleteCustomer = async (id: number | string) => {
     if (!confirm(`Permanently delete customer "${detail?.customer?.name || id}" and all associated data? This action cannot be undone.`)) return;
-    const r = await fetch(`/api/customers?id=${id}`, { method: "DELETE" });
-    const d = await r.json();
-    if (!r.ok) {
-      setMsg(d.error || "Unable to delete customer");
-      return;
+    try {
+      const r = await fetch(`/api/customers?id=${id}`, { method: "DELETE" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setMsg(d.error || "Unable to delete customer");
+        return;
+      }
+      setMsg("Customer permanently deleted");
+      setDetail(null);
+      load();
+    } catch (e: any) {
+      setMsg(e?.message || "Network error while deleting customer");
     }
-    setMsg("Customer permanently deleted");
-    setDetail(null);
-    load();
   };
   return (
     <div className="customersmaster">

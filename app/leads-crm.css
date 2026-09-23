@@ -199,13 +199,15 @@
   box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
 }
 .leadhead {
-  background: #f8fafc;
-  text-transform: uppercase;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc !important;
+  text-transform: uppercase !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  position: static !important;
+  top: auto !important;
 }
 .leadrow {
   display: grid;

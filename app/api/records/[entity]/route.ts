@@ -293,7 +293,13 @@ export async function GET(req: Request) {
         bindings.push(...searchCols.map(() => `%${q}%`));
       }
     }
-    sql += " ORDER BY rowid DESC LIMIT 250";
+    const orderCol =
+      config.table === "customer_sites"
+        ? "id"
+        : config.table === "project_materials"
+          ? "updated_at"
+          : "created_at";
+    sql += ` ORDER BY ${orderCol} DESC LIMIT 250`;
     const result = await env.DB.prepare(sql)
       .bind(...bindings)
       .all<Record<string, unknown>>();
@@ -312,7 +318,10 @@ export async function GET(req: Request) {
   } catch (e) {
     return e instanceof Response
       ? e
-      : Response.json({ error: "Unable to load records" }, { status: 500 });
+      : Response.json(
+          { error: e instanceof Error ? e.message : "Unable to load records" },
+          { status: 500 },
+        );
   }
 }
 export async function POST(req: Request) {
@@ -432,9 +441,9 @@ export async function DELETE(req: Request) {
       permanent = url.searchParams.get("permanent") === "1" || url.searchParams.get("permanent") === "true";
     if (!id)
       return Response.json({ error: "Record id is required" }, { status: 400 });
-    if (permanent) {
-      if (user.role !== "admin") {
-        return Response.json({ error: "Admin access required for permanent delete" }, { status: 403 });
+    if (permanent || !config.archive) {
+      if (user.role !== "admin" && entity !== "tasks") {
+        return Response.json({ error: "Admin access required for delete" }, { status: 403 });
       }
       await env.DB.prepare(`DELETE FROM ${config.table} WHERE id=?`)
         .bind(id)
@@ -442,11 +451,6 @@ export async function DELETE(req: Request) {
       await writeAudit(user.id, `${entity}_deleted`, entity, id);
       return Response.json({ ok: true, deleted: true });
     }
-    if (!config.archive)
-      return Response.json(
-        { error: "Archiving is not supported" },
-        { status: 400 },
-      );
     await env.DB.prepare(`UPDATE ${config.table} SET archived=1 WHERE id=?`)
       .bind(id)
       .run();

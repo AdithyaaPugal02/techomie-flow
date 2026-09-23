@@ -114,15 +114,23 @@ export default function LeadsModule({
     [outcome, setOutcome] = useState<R | null>(null);
   const load = async () => {
     setLoading(true);
-    const p = new URLSearchParams(Object.entries(filters).filter(([, v]) => v));
-    const r = await fetch(`/api/leads?${p}`),
-      d = await r.json();
-    setLoading(false);
-    if (r.ok) {
-      setRows(d.leads);
+    try {
+      const p = new URLSearchParams(Object.entries(filters).filter(([, v]) => v));
+      const r = await fetch(`/api/leads?${p}`);
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setMessage(d.error || `Failed to load leads (${r.status})`);
+        return;
+      }
+      const d = await r.json();
+      setRows(d.leads || []);
       setUsers(d.users || []);
       setPagination(d.pagination);
-    } else setMessage(d.error);
+    } catch (e: any) {
+      setMessage(e?.message || "Failed to connect to server");
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
     const x = setTimeout(load, filters.q ? 250 : 0);

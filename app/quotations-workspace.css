@@ -226,7 +226,7 @@
   min-height: 100vh;
 }
 .quotationroute .qworkspace > header {
-  top: 0;
+  position: static !important;
 }
 .quotationroute > .qnotice {
   position: fixed;
@@ -243,13 +243,9 @@
   justify-content: space-between;
   gap: 12px 16px;
   padding: 14px 24px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
   border-bottom: 1px solid var(--border-subtle, #e2e8f0);
-  position: sticky;
-  top: 64px;
-  z-index: 10;
+  position: static !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 .qworkspace > header > button:first-child {
@@ -1377,11 +1373,8 @@
     margin-top: 18px;
   }
   .qworkspace > header {
-    top: 64px;
+    position: static !important;
     flex-wrap: wrap;
-  }
-  .quotationroute .qworkspace > header {
-    top: 0;
   }
   .qactions {
     width: 100%;

@@ -156,26 +156,33 @@ function parseSwitchSpecs(name?: string, attrs: Record<string, any> = {}): Switc
   return { moduleSize, switches, fan, hasHvSwitch, hasAny16A, plugs };
 }
 
-export default function QuotationsModule({ role }: { role: string }) {
-  const [view, setView] = useState<"list" | "quote">("list"),
+export default function QuotationsModule({ role, initialFilter }: { role: string; initialFilter?: R }) {
+  const [view, setView] = useState<"list" | "quote">(initialFilter?.id ? "quote" : "list"),
     [rows, setRows] = useState<R[]>([]),
     [filters, setFilters] = useState<R>({}),
     [q, setQ] = useState(""),
     [status, setStatus] = useState(""),
     [page, setPage] = useState(1),
     [pages, setPages] = useState(1),
-    [selected, setSelected] = useState<number | null>(null),
+    [selected, setSelected] = useState<number | null>(initialFilter?.id ? Number(initialFilter.id) : null),
     [msg, setMsg] = useState("");
   const load = useCallback(async () => {
-    const r = await fetch(
-        `/api/quotations?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&page=${page}`,
-      ),
-      d = await r.json();
-    if (r.ok) {
+    try {
+      const r = await fetch(
+          `/api/quotations?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&page=${page}`,
+        );
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setMsg(d.error || `Failed to load quotations (${r.status})`);
+        return;
+      }
+      const d = await r.json();
       setRows(d.quotations || []);
       setFilters(d.filters || {});
       setPages(d.pagination?.pages || 1);
-    } else setMsg(d.error);
+    } catch (e: any) {
+      setMsg(e?.message || "Failed to connect to server");
+    }
   }, [q, status, page]);
   useEffect(() => {
     if (view === "list") {

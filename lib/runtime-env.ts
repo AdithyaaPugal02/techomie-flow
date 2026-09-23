@@ -24,13 +24,16 @@ function translate(source: string) {
   let query = source.replace(/\?/g, () => `$${++index}`);
   query = query
     .replace(/INSERT\s+OR\s+IGNORE\s+INTO/gi, "INSERT INTO")
-    .replace(/date\('now'\s*,\s*'\+([0-9]+) day'\)/gi, "(CURRENT_DATE + INTERVAL '$1 day')")
-    .replace(/date\('now'\s*,\s*'-([0-9]+) day'\)/gi, "(CURRENT_DATE - INTERVAL '$1 day')")
-    .replace(/date\('now'\)/gi, "CURRENT_DATE")
-    .replace(/datetime\('now'\)/gi, "CURRENT_TIMESTAMP")
+    .replace(/date\('now'\s*,\s*'\+([0-9]+) day'\)/gi, "(CURRENT_DATE + INTERVAL '$1 day')::text")
+    .replace(/date\('now'\s*,\s*'-([0-9]+) day'\)/gi, "(CURRENT_DATE - INTERVAL '$1 day')::text")
+    .replace(/date\('now'\)/gi, "CURRENT_DATE::text")
+    .replace(/datetime\('now'\)/gi, "CURRENT_TIMESTAMP::text")
+    .replace(/<CURRENT_TIMESTAMP\b/gi, "<CURRENT_TIMESTAMP::text")
+    .replace(/<\s*CURRENT_TIMESTAMP\b/gi, "< CURRENT_TIMESTAMP::text")
     .replace(/json_extract\(([^,]+),\s*'\$\.([^']+)'\)/gi, "($1::jsonb #>> '{$2}')")
     .replace(/group_concat\(([^,)]+)\)/gi, "string_agg(($1)::text, ',')")
     .replace(/\bIFNULL\s*\(/gi, "COALESCE(")
+    .replace(/\browid\b/gi, "id")
     .replace(
       /(insert\s+into\s+"(?:activities|audit_log|customers|products|quotations|sites|variants)"\s*\(\s*"id"[^)]*\)\s*values\s*)\(\s*null\s*,/i,
       "$1(DEFAULT,",
