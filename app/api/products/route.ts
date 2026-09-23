@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     }
     const p = Math.max(1, Number(x.searchParams.get("page") || 1)),
       reqLimit = Number(x.searchParams.get("limit")),
-      limit = reqLimit > 0 ? Math.min(1000, reqLimit) : 25,
+      limit = reqLimit > 0 ? Math.min(3500, reqLimit) : 25,
       where = ["1=1"],
       args: unknown[] = [];
     for (const [k, col] of [

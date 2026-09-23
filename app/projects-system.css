@@ -1384,6 +1384,23 @@
   border-radius: 4px;
   font-weight: 700;
 }
+.taskcard-assignees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+.taskcard-assignees span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.taskcard-assignees b {
+  color: #0f172a;
+  font-weight: 600;
+}
 .taskcard-actions {
   display: flex;
   align-items: center;

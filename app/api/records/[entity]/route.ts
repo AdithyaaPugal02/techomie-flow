@@ -83,6 +83,7 @@ const configs: Record<string, Config> = {
       "project_id",
       "title",
       "assigned_to",
+      "assigned_by",
       "status",
       "due_at",
       "mandatory",
@@ -250,7 +251,7 @@ const writeAudit = async (
     .run();
 const optionalForeignKeys = new Set([
   "vendor_id", "quotation_item_id", "quotation_id", "customer_id",
-  "site_id", "project_id", "warranty_id", "assigned_to",
+  "site_id", "project_id", "warranty_id", "assigned_to", "assigned_by",
 ]);
 const clean = (config: Config, p: Record<string, unknown>) =>
   Object.fromEntries(

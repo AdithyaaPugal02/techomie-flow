@@ -878,6 +878,7 @@ function ProjectDetail({
     category: "Installation",
     dueAt: "",
     assignedTo: p.manager_id || "",
+    assignedBy: p.manager_id || "",
     priority: "Normal",
     mandatory: false,
     notes: "",
@@ -1210,7 +1211,7 @@ function ProjectDetail({
                       <div className="quicktaskinfo">
                         <span className="taskcat">{t.category}</span>
                         <b>{t.title}</b>
-                        <small>Due: {t.due_at || "Not scheduled"} · {t.assigned_name || "Unassigned"}</small>
+                        <small>Due: {t.due_at || "Not scheduled"} · To: {t.assigned_name || "Unassigned"} · By: {t.assigned_by_name || p.manager_name || "Manager"}</small>
                       </div>
                       <button
                         className="markdonebtn"
@@ -1367,6 +1368,22 @@ function ProjectDetail({
                 </select>
               </label>
               <label>
+                <span>Assigned By</span>
+                <select
+                  value={taskForm.assignedBy}
+                  onChange={(e) =>
+                    setTaskForm({ ...taskForm, assignedBy: e.target.value })
+                  }
+                >
+                  <option value="">Select assigner</option>
+                  {users.map((u: R) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} · {u.role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
                 <span>Due Date</span>
                 <input
                   type="date"
@@ -1406,6 +1423,7 @@ function ProjectDetail({
                     category: "Installation",
                     dueAt: "",
                     assignedTo: p.manager_id || "",
+                    assignedBy: p.manager_id || "",
                     priority: "Normal",
                     mandatory: false,
                     notes: "",
@@ -1776,7 +1794,11 @@ function ProjectTab({
                   {x.mandatory && <span className="taskmand">Mandatory</span>}
                 </div>
                 <b>{x.title}</b>
-                <small>Assigned to: {x.assigned_name || "Unassigned"} · Due: {x.due_at || "Not set"}</small>
+                <div className="taskcard-assignees">
+                  <span>👤 Assigned to: <b>{x.assigned_name || "Unassigned"}</b></span>
+                  <span>✍️ Assigned by: <b>{x.assigned_by_name || p.manager_name || "Manager"}</b></span>
+                  <span>📅 Due: <b>{x.due_at || "Not set"}</b></span>
+                </div>
                 {x.notes && <p className="tasknotes">{x.notes}</p>}
               </div>
               <div className="taskcard-actions">

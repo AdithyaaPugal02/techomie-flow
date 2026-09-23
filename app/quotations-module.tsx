@@ -16,14 +16,6 @@ const money = (n: any) =>
     maximumFractionDigits: 2,
   }).format(Number(n || 0));
 const wholeQty = (value: any) => Math.max(1, Math.round(Number(value) || 1));
-const normalizeQuantities = (snapshot: R) => {
-  const normalized = structuredClone(snapshot);
-  for (const floor of normalized.floors || [])
-    for (const room of floor.rooms || [])
-      for (const item of room.items || []) item.qty = wholeQty(item.qty);
-  for (const item of normalized.projectItems || []) item.qty = wholeQty(item.qty);
-  return normalized;
-};
 const today = () => new Date().toISOString().slice(0, 10);
 const later = (n: number) =>
   new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
@@ -47,6 +39,57 @@ const quotationTypes = [
   "Dealer / B2B Confidential Quotation",
   "Revision / Variation Quotation",
 ];
+const normalizeQuantities = (snapshot: R) => {
+  const normalized = structuredClone(snapshot || {});
+  if (!Array.isArray(normalized.floors) || normalized.floors.length === 0) {
+    normalized.floors = [
+      {
+        name: "Ground Floor",
+        rooms: [{ name: "Living Room", note: "", items: [] }],
+      },
+    ];
+  }
+  if (!Array.isArray(normalized.projectItems)) {
+    normalized.projectItems = [];
+  }
+  if (!Array.isArray(normalized.paymentPlan) || normalized.paymentPlan.length === 0) {
+    normalized.paymentPlan = [
+      { name: "Advance", percent: 50, condition: "Order confirmation & procurement" },
+      { name: "Inception of Installation", percent: 20, condition: "On arrival of hardware at site" },
+      { name: "On Handover", percent: 20, condition: "After system testing & commissioning" },
+      { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
+    ];
+  }
+  if (!normalized.details || typeof normalized.details !== "object") {
+    normalized.details = {
+      title: normalized.customerName ? `${normalized.customerName} Smart Home Proposal` : "Smart Home Automation Proposal",
+      quoteType: quotationTypes[0],
+      projectType: "Villa",
+      quoteDate: today(),
+      validUntil: later(30),
+      introduction: "We are pleased to present a premium smart-home automation proposal for your property.",
+      internalNotes: typeof snapshot?.details === "string" ? snapshot.details : "",
+    };
+  } else {
+    normalized.details.title = normalized.details.title || (normalized.customerName ? `${normalized.customerName} Smart Home Proposal` : "Smart Home Automation Proposal");
+    normalized.details.quoteType = normalized.details.quoteType || quotationTypes[0];
+    normalized.details.projectType = normalized.details.projectType || "Villa";
+    normalized.details.quoteDate = normalized.details.quoteDate || today();
+    normalized.details.validUntil = normalized.details.validUntil || later(30);
+  }
+  normalized.taxMode = normalized.taxMode || "GST";
+  normalized.warranty = normalized.warranty || "Standard Products: 2+4 Years Warranty\nRoyal Edge & Touch Series: 10+10 Years Warranty";
+
+  for (const floor of normalized.floors) {
+    if (!Array.isArray(floor.rooms)) floor.rooms = [];
+    for (const room of floor.rooms) {
+      if (!Array.isArray(room.items)) room.items = [];
+      for (const item of room.items) item.qty = wholeQty(item.qty);
+    }
+  }
+  for (const item of normalized.projectItems) item.qty = wholeQty(item.qty);
+  return normalized;
+};
 const scopeSectionLabels: Record<string, string> = {
   requirementSummary: "Requirement summary",
   proposedSolution: "Proposed solution",
@@ -62,6 +105,55 @@ const scopeSectionLabels: Record<string, string> = {
   handover: "Handover and training",
   support: "After-sales support",
 };
+
+const SMART_SWITCH_SERIES = [
+  { id: "Royal Edge", label: "Royal Edge", icon: "👑", match: /royal\s+edge(?!.*color)/i },
+  { id: "Royal Edge Color", label: "Royal Edge Color", icon: "🌟", match: /royal\s+edge\s+color/i },
+  { id: "Edge", label: "Edge", icon: "💎", match: /\bedge\b(?!.*color)/i },
+  { id: "Edge Color", label: "Edge Color", icon: "🎨", match: /\bedge\s+color\b/i },
+  { id: "Color Touch Panel", label: "Color Touch Panel", icon: "🌈", match: /color\s+touch/i },
+  { id: "Touch Panel", label: "Touch Panel", icon: "📱", match: /touch\s+panel/i },
+  { id: "Touch Plus", label: "Touch Plus", icon: "✨", match: /touch\s+plus/i },
+  { id: "Noviq Titan", label: "Noviq Titan", icon: "🛡️", match: /titan/i },
+  { id: "Noviq Luxeray", label: "Luxeray", icon: "🔆", match: /luxeray/i },
+];
+
+const SMART_SWITCH_EDGE_COLORS = [
+  { id: "Rose Gold Edge", label: "Rose Gold Edge", icon: "🌹", colorCode: "#b76e79" },
+  { id: "Gold Edge", label: "Gold Edge", icon: "🏆", colorCode: "#d4af37" },
+  { id: "Black Edge", label: "Black Edge", icon: "⚫", colorCode: "#1e293b" },
+  { id: "Silver Edge", label: "Silver Edge", icon: "⚪", colorCode: "#94a3b8" },
+  { id: "Rimless / Matching", label: "Rimless / Matching", icon: "◻️", colorCode: "#cbd5e1" },
+];
+
+const SMART_SWITCH_PANEL_COLORS = [
+  { id: "Pure Black", label: "Pure Black", icon: "⚫", colorCode: "#0f172a" },
+  { id: "Pure White", label: "Pure White", icon: "⚪", colorCode: "#ffffff" },
+  { id: "Space Grey", label: "Space Grey", icon: "🔘", colorCode: "#64748b" },
+  { id: "Custom Colour", label: "Custom Colour", icon: "🎨", colorCode: "#8b5cf6" },
+];
+
+function normalizeSwitchSeries(raw?: string): string {
+  if (!raw) return "";
+  for (const s of SMART_SWITCH_SERIES) {
+    if (s.id.toLowerCase() === raw.toLowerCase() || s.match.test(raw)) return s.id;
+  }
+  return raw;
+}
+
+function getSwitchBaseName(rawName: string): string {
+  let s = (rawName || "").trim();
+  s = s.replace(/^noviq\s+/i, "");
+  s = s.replace(/royal\s+edge\s+color\s+(touch\s+)?/i, "");
+  s = s.replace(/royal\s+edge\s+/i, "");
+  s = s.replace(/edge\s+color\s+(touch\s+)?/i, "");
+  s = s.replace(/\bedge\s+/i, "");
+  s = s.replace(/color\s+touch\s+(panel\s+)?/i, "");
+  s = s.replace(/touch\s+panel\s+/i, "");
+  s = s.replace(/touch\s+plus\s+/i, "");
+  s = s.trim();
+  return s ? `Noviq ${s}` : rawName;
+}
 
 const SMART_SWITCH_TECHNOLOGIES = [
   { id: "Remote based", label: "Remote based", icon: "📡", match: /remote/i },
@@ -1557,7 +1649,15 @@ function Builder({ snap, set, locked, openPicker }: R) {
     [editingItem, setEditingItem] = useState(""),
     floors = snap.floors || [],
     mut = (fn: (n: R) => void) => {
-      const n = structuredClone(snap);
+      const n = structuredClone(snap || {});
+      if (!Array.isArray(n.floors)) n.floors = [];
+      if (!Array.isArray(n.projectItems)) n.projectItems = [];
+      for (const floor of n.floors) {
+        if (!Array.isArray(floor.rooms)) floor.rooms = [];
+        for (const room of floor.rooms) {
+          if (!Array.isArray(room.items)) room.items = [];
+        }
+      }
       fn(n);
       set(n);
     };
@@ -1679,8 +1779,11 @@ function Builder({ snap, set, locked, openPicker }: R) {
                       <span>
                         <b>
                           {x.name}
+                          {x.series && <span className="item-pill-badge series">{x.series}</span>}
                           {x.technology && <span className="item-pill-badge tech">{x.technology}</span>}
                           {x.material && <span className="item-pill-badge mat">{x.material}</span>}
+                          {x.edgeColor && <span className="item-pill-badge edge">{x.edgeColor}</span>}
+                          {x.panelColor && <span className="item-pill-badge panel">{x.panelColor}</span>}
                           {x.module && <span className="item-pill-badge mod">{x.module}M</span>}
                         </b>
                         <small>
@@ -1748,91 +1851,191 @@ function Builder({ snap, set, locked, openPicker }: R) {
                       )}
                     </div>
                     {editingItem === itemKey && <div className="qitemedit">
-                      {Array.isArray(x.availableVariants) && x.availableVariants.length > 1 && (
-                        <div className="qitemeditvariantbox">
-                          <h4>Switch Variant Selection (Technology & Material)</h4>
-                          <div className="qitemeditvariantrows">
-                            <div className="variantgroup">
-                              <span className="variantgrouplabel">Technology</span>
-                              <div className="variantpills">
-                                {SMART_SWITCH_TECHNOLOGIES.map(t => {
-                                  const isAvail = x.availableVariants.some((v: R) => v.technology === t.id);
-                                  const isSelected = x.technology === t.id;
-                                  return (
-                                    <button
-                                      key={t.id}
-                                      type="button"
-                                      className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
-                                      disabled={!isAvail}
-                                      onClick={() => {
-                                        const match = x.availableVariants.find((v: R) => v.technology === t.id && v.material === x.material)
-                                                   || x.availableVariants.find((v: R) => v.technology === t.id);
-                                        if (match) {
-                                          mut((n) => {
-                                            const it = n.floors[fi].rooms[ri].items[ii];
-                                            it.variantId = match.variantId;
-                                            it.productId = match.productId || it.productId;
-                                            it.sku = match.sku;
-                                            it.price = match.price;
-                                            it.purchaseCost = match.purchaseCost;
-                                            it.technology = match.technology;
-                                            it.material = match.material;
-                                            it.variantSummary = `${match.technology} · ${match.material}${it.module ? ` · ${it.module} Module` : ""}`;
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      <span className="pillicon">{t.icon}</span>
-                                      <span className="pilllabel">{t.label}</span>
-                                      {isSelected && <span className="pillcheck">✓</span>}
-                                      {!isAvail && <small className="pillna">(N/A)</small>}
-                                    </button>
-                                  );
-                                })}
+                      <div className="qitemeditvariantbox">
+                        <h4>Switch Variant & Customization</h4>
+                        <div className="qitemeditvariantrows">
+                          {Array.isArray(x.availableVariants) && x.availableVariants.length > 1 && (
+                            <>
+                              <div className="variantgroup">
+                                <span className="variantgrouplabel">Switch Variant / Series</span>
+                                <div className="variantpills">
+                                  {SMART_SWITCH_SERIES.map((s) => {
+                                    const isAvail = x.availableVariants.some((v: R) => v.series === s.id);
+                                    const isSelected = x.series === s.id;
+                                    return (
+                                      <button
+                                        key={s.id}
+                                        type="button"
+                                        className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                        disabled={!isAvail}
+                                        onClick={() => {
+                                          const match = x.availableVariants.find((v: R) => v.series === s.id && v.technology === x.technology && v.material === x.material)
+                                                     || x.availableVariants.find((v: R) => v.series === s.id && v.technology === x.technology)
+                                                     || x.availableVariants.find((v: R) => v.series === s.id);
+                                          if (match) {
+                                            mut((n) => {
+                                              const it = n.floors[fi].rooms[ri].items[ii];
+                                              it.variantId = match.variantId;
+                                              it.productId = match.productId || it.productId;
+                                              it.sku = match.sku;
+                                              it.price = match.price;
+                                              it.purchaseCost = match.purchaseCost;
+                                              it.series = match.series;
+                                              it.technology = match.technology;
+                                              it.material = match.material;
+                                              it.variantSummary = `${match.series} · ${match.technology} · ${match.material}${it.edgeColor ? ` · ${it.edgeColor}` : ""}${it.panelColor ? ` · ${it.panelColor}` : ""}${it.module ? ` · ${it.module} Module` : ""}`;
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <span className="pillicon">{s.icon}</span>
+                                        <span className="pilllabel">{s.label}</span>
+                                        {isSelected && <span className="pillcheck">✓</span>}
+                                        {!isAvail && <small className="pillna">(N/A)</small>}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
+
+                              <div className="variantgroup">
+                                <span className="variantgrouplabel">Technology</span>
+                                <div className="variantpills">
+                                  {SMART_SWITCH_TECHNOLOGIES.map(t => {
+                                    const isAvail = x.availableVariants.some((v: R) => (!x.series || v.series === x.series) && v.technology === t.id);
+                                    const isSelected = x.technology === t.id;
+                                    return (
+                                      <button
+                                        key={t.id}
+                                        type="button"
+                                        className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                        disabled={!isAvail}
+                                        onClick={() => {
+                                          const match = x.availableVariants.find((v: R) => (!x.series || v.series === x.series) && v.technology === t.id && v.material === x.material)
+                                                     || x.availableVariants.find((v: R) => (!x.series || v.series === x.series) && v.technology === t.id);
+                                          if (match) {
+                                            mut((n) => {
+                                              const it = n.floors[fi].rooms[ri].items[ii];
+                                              it.variantId = match.variantId;
+                                              it.productId = match.productId || it.productId;
+                                              it.sku = match.sku;
+                                              it.price = match.price;
+                                              it.purchaseCost = match.purchaseCost;
+                                              it.technology = match.technology;
+                                              it.material = match.material;
+                                              it.variantSummary = `${it.series || ""} · ${match.technology} · ${match.material}${it.edgeColor ? ` · ${it.edgeColor}` : ""}${it.panelColor ? ` · ${it.panelColor}` : ""}${it.module ? ` · ${it.module} Module` : ""}`;
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <span className="pillicon">{t.icon}</span>
+                                        <span className="pilllabel">{t.label}</span>
+                                        {isSelected && <span className="pillcheck">✓</span>}
+                                        {!isAvail && <small className="pillna">(N/A)</small>}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="variantgroup">
+                                <span className="variantgrouplabel">Material</span>
+                                <div className="variantpills">
+                                  {SMART_SWITCH_MATERIALS.map(m => {
+                                    const isAvail = x.availableVariants.some((v: R) => (!x.series || v.series === x.series) && v.material === m.id);
+                                    const isSelected = x.material === m.id;
+                                    return (
+                                      <button
+                                        key={m.id}
+                                        type="button"
+                                        className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                        disabled={!isAvail}
+                                        onClick={() => {
+                                          const match = x.availableVariants.find((v: R) => (!x.series || v.series === x.series) && v.material === m.id && v.technology === x.technology)
+                                                     || x.availableVariants.find((v: R) => (!x.series || v.series === x.series) && v.material === m.id);
+                                          if (match) {
+                                            mut((n) => {
+                                              const it = n.floors[fi].rooms[ri].items[ii];
+                                              it.variantId = match.variantId;
+                                              it.productId = match.productId || it.productId;
+                                              it.sku = match.sku;
+                                              it.price = match.price;
+                                              it.purchaseCost = match.purchaseCost;
+                                              it.material = match.material;
+                                              it.variantSummary = `${it.series || ""} · ${it.technology || ""} · ${match.material}${it.edgeColor ? ` · ${it.edgeColor}` : ""}${it.panelColor ? ` · ${it.panelColor}` : ""}${it.module ? ` · ${it.module} Module` : ""}`;
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <span className="pillicon">{m.icon}</span>
+                                        <span className="pilllabel">{m.label}</span>
+                                        {isSelected && <span className="pillcheck">✓</span>}
+                                        {!isAvail && <small className="pillna">(N/A)</small>}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          <div className="variantgroup">
+                            <span className="variantgrouplabel">Edge / Bezel Colour</span>
+                            <div className="variantpills">
+                              {SMART_SWITCH_EDGE_COLORS.map((ec) => {
+                                const isSelected = x.edgeColor === ec.id;
+                                return (
+                                  <button
+                                    key={ec.id}
+                                    type="button"
+                                    className={`variantpill ${isSelected ? "active" : ""}`}
+                                    onClick={() => {
+                                      mut((n) => {
+                                        const it = n.floors[fi].rooms[ri].items[ii];
+                                        it.edgeColor = ec.id;
+                                        it.variantSummary = `${it.series || ""} · ${it.technology || ""} · ${it.material || ""} · ${ec.id}${it.panelColor ? ` · ${it.panelColor}` : ""}${it.module ? ` · ${it.module} Module` : ""}`;
+                                      });
+                                    }}
+                                  >
+                                    <span className="pillcolorindicator" style={{ backgroundColor: ec.colorCode }} />
+                                    <span className="pillicon">{ec.icon}</span>
+                                    <span className="pilllabel">{ec.label}</span>
+                                    {isSelected && <span className="pillcheck">✓</span>}
+                                  </button>
+                                );
+                              })}
                             </div>
-                            <div className="variantgroup">
-                              <span className="variantgrouplabel">Material</span>
-                              <div className="variantpills">
-                                {SMART_SWITCH_MATERIALS.map(m => {
-                                  const isAvail = x.availableVariants.some((v: R) => v.material === m.id);
-                                  const isSelected = x.material === m.id;
-                                  return (
-                                    <button
-                                      key={m.id}
-                                      type="button"
-                                      className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
-                                      disabled={!isAvail}
-                                      onClick={() => {
-                                        const match = x.availableVariants.find((v: R) => v.material === m.id && v.technology === x.technology)
-                                                   || x.availableVariants.find((v: R) => v.material === m.id);
-                                        if (match) {
-                                          mut((n) => {
-                                            const it = n.floors[fi].rooms[ri].items[ii];
-                                            it.variantId = match.variantId;
-                                            it.productId = match.productId || it.productId;
-                                            it.sku = match.sku;
-                                            it.price = match.price;
-                                            it.purchaseCost = match.purchaseCost;
-                                            it.technology = match.technology;
-                                            it.material = match.material;
-                                            it.variantSummary = `${match.technology} · ${match.material}${it.module ? ` · ${it.module} Module` : ""}`;
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      <span className="pillicon">{m.icon}</span>
-                                      <span className="pilllabel">{m.label}</span>
-                                      {isSelected && <span className="pillcheck">✓</span>}
-                                      {!isAvail && <small className="pillna">(N/A)</small>}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                          </div>
+
+                          <div className="variantgroup">
+                            <span className="variantgrouplabel">Plate / Panel Colour</span>
+                            <div className="variantpills">
+                              {SMART_SWITCH_PANEL_COLORS.map((pc) => {
+                                const isSelected = x.panelColor === pc.id;
+                                return (
+                                  <button
+                                    key={pc.id}
+                                    type="button"
+                                    className={`variantpill ${isSelected ? "active" : ""}`}
+                                    onClick={() => {
+                                      mut((n) => {
+                                        const it = n.floors[fi].rooms[ri].items[ii];
+                                        it.panelColor = pc.id;
+                                        it.variantSummary = `${it.series || ""} · ${it.technology || ""} · ${it.material || ""}${it.edgeColor ? ` · ${it.edgeColor}` : ""} · ${pc.id}${it.module ? ` · ${it.module} Module` : ""}`;
+                                      });
+                                    }}
+                                  >
+                                    <span className="pillcolorindicator" style={{ backgroundColor: pc.colorCode }} />
+                                    <span className="pillicon">{pc.icon}</span>
+                                    <span className="pilllabel">{pc.label}</span>
+                                    {isSelected && <span className="pillcheck">✓</span>}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
-                      )}
+                      </div>
                       <label><span>Item title</span><input value={x.name || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].name = e.target.value)} /></label>
                       <label><span>Unit</span><input value={x.unit || "Nos"} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].unit = e.target.value)} /></label>
                       <label><span>GST rate %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
@@ -1883,20 +2086,29 @@ function Builder({ snap, set, locked, openPicker }: R) {
               const name = adding.name.trim();
               if (!name) return;
               if (adding.kind === "room")
-                mut((n) =>
-                  n.floors[adding.floor!].rooms.push({
+                mut((n) => {
+                  if (!Array.isArray(n.floors)) n.floors = [];
+                  const floorIdx = adding.floor ?? 0;
+                  if (!n.floors[floorIdx]) {
+                    n.floors[floorIdx] = { name: "Ground Floor", rooms: [] };
+                  }
+                  if (!Array.isArray(n.floors[floorIdx].rooms)) {
+                    n.floors[floorIdx].rooms = [];
+                  }
+                  n.floors[floorIdx].rooms.push({
                     name,
                     note: "",
                     items: [],
-                  }),
-                );
+                  });
+                });
               else
-                mut((n) =>
+                mut((n) => {
+                  if (!Array.isArray(n.floors)) n.floors = [];
                   n.floors.push({
                     name,
                     rooms: [{ name: "Room", note: "", items: [] }],
-                  }),
-                );
+                  });
+                });
               setAdding(null);
             }}
           >
@@ -1970,6 +2182,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     [items, setItems] = useState<R[]>([]),
     [loading, setLoading] = useState(false),
     [category, setCategory] = useState("Smart switches"),
+    [seriesFilter, setSeriesFilter] = useState(""),
     [model, setModel] = useState(""),
     [technology, setTechnology] = useState(""),
     [material, setMaterial] = useState(""),
@@ -1981,14 +2194,14 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     [added, setAdded] = useState(0),
     [showCustom, setShowCustom] = useState(false),
     [custom, setCustom] = useState<R>({ name: "", description: "", qty: 1, unit: "Nos", price: 0, discount: 0, gst: 18, warranty: "", note: "" }),
-    [modelSelections, setModelSelections] = useState<Record<string, { technology?: string; material?: string; qty?: number }>>({});
+    [modelSelections, setModelSelections] = useState<Record<string, { series?: string; technology?: string; material?: string; edgeColor?: string; panelColor?: string; qty?: number }>>({});
 
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
       const query = encodeURIComponent(q);
       const catParam = category ? `&category=${encodeURIComponent(category)}` : "";
-      const limitParam = category === "Smart switches" ? 1000 : 500;
+      const limitParam = category === "Smart switches" ? 3500 : 500;
       try {
         const [masterResponse, legacyResponse] = await Promise.all([
           fetch(`/api/item-master?view=quotation&q=${query}`),
@@ -2019,12 +2232,14 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
     }
     const normTech = normalizeSwitchTech(attrs.technology);
     const normMat = normalizeSwitchMat(attrs.material || attrs.finish);
+    const normSeries = normalizeSwitchSeries(item.series || attrs.series || item.name);
     const switchSpecs = parseSwitchSpecs(item.name, attrs);
     return {
       ...item,
       parsedAttributes: attrs,
       normTech,
       normMat,
+      normSeries,
       switchSpecs,
     };
   });
@@ -2047,12 +2262,11 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
       regularItems.push(item);
       continue;
     }
-    const mod = item.parsedAttributes.module || "std";
-    const key = `${item.name}__${item.series || ""}__${mod}`;
+    const baseName = getSwitchBaseName(item.name);
+    const mod = item.switchSpecs?.moduleSize || item.parsedAttributes.module || "std";
+    const key = `${baseName}__${mod}`;
     if (!switchModelsMap.has(key)) {
-      const displayName = /^noviq\s/i.test(item.name)
-        ? item.name
-        : (item.brand === "Noviq" || item.brand === "Noviq OEM" ? `Noviq ${item.name}` : item.name);
+      const displayName = baseName;
       const specs = parseSwitchSpecs(displayName, item.parsedAttributes);
       switchModelsMap.set(key, {
         key,
@@ -2061,7 +2275,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         rawName: item.name,
         brand: item.brand,
         category: item.category,
-        series: item.series,
+        series: item.normSeries || item.series,
         module: specs.moduleSize || item.parsedAttributes.module || "",
         specs,
         shortDescription: item.short_description || item.description,
@@ -2107,6 +2321,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   });
 
   const activeSwitchFiltersCount = [
+    seriesFilter,
     moduleSize,
     switchCount,
     fanCount,
@@ -2115,6 +2330,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   ].filter(Boolean).length;
 
   const resetSwitchFilters = () => {
+    setSeriesFilter("");
     setModuleSize("");
     setSwitchCount("");
     setFanCount("");
@@ -2124,6 +2340,10 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
 
   const filteredSwitchModels = allSwitchModels.filter((m) => {
     if (category && category !== "Smart switches") return false;
+    if (seriesFilter) {
+      const hasSeries = m.variants.some((v: R) => (v.normSeries || v.series) === seriesFilter);
+      if (!hasSeries) return false;
+    }
     if (model && m.key !== model && String(m.productId) !== model) return false;
     if (technology) {
       const hasTech = m.variants.some((v: R) => v.normTech === technology);
@@ -2269,6 +2489,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         <div className="itempickerfilters">
           <select value={category} onChange={(e) => {
             setCategory(e.target.value);
+            setSeriesFilter("");
             setModel("");
             setTechnology("");
             setMaterial("");
@@ -2277,6 +2498,14 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
             <option value="">All categories</option>
             {categories.map((value) => <option key={value} value={value}>{value}</option>)}
           </select>
+          {(!category || category === "Smart switches") && (
+            <select value={seriesFilter} onChange={(e) => setSeriesFilter(e.target.value)}>
+              <option value="">All switch series</option>
+              {SMART_SWITCH_SERIES.map((s) => (
+                <option key={s.id} value={s.id}>{s.icon} {s.label}</option>
+              ))}
+            </select>
+          )}
           <select value={model} onChange={(e) => { setModel(e.target.value); }}>
             <option value="">All models ({modelOptions.length})</option>
             {modelOptions.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
@@ -2425,19 +2654,62 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
             <p style={{ padding: "20px", color: "#667085" }}>Searching Items…</p>
           ) : (
             <>
-              {/* Render Smart Switch models with interactive Technology & Material option pills */}
+              {/* Render Smart Switch models with interactive Series, Technology, Material, Edge Colour & Panel Colour option pills */}
               {filteredSwitchModels.map((m) => {
                 const curSel = modelSelections[m.key] || {};
-                const chosenTech = curSel.technology || technology || "Wi-Fi";
-                const chosenMat = curSel.material || material || "Acrylic";
+                const availableSeries = new Set(m.variants.map((v: R) => v.normSeries || v.series).filter(Boolean));
+                const availableTechs = new Set(m.variants.map((v: R) => v.normTech).filter(Boolean));
+                const availableMats = new Set(m.variants.map((v: R) => v.normMat).filter(Boolean));
 
-                const availableTechs = new Set(m.variants.map((v: R) => v.normTech));
-                const availableMats = new Set(m.variants.map((v: R) => v.normMat));
+                // Determine active series
+                const preferredSeriesOrder = ["Royal Edge", "Royal Edge Color", "Edge", "Edge Color", "Touch Panel", "Color Touch Panel", "Touch Plus", "Noviq Titan", "Noviq Luxeray"];
+                let chosenSeries = curSel.series || (seriesFilter && availableSeries.has(seriesFilter) ? seriesFilter : "");
+                if (!chosenSeries || !availableSeries.has(chosenSeries)) {
+                  chosenSeries = ((preferredSeriesOrder.find((s) => availableSeries.has(s)) || Array.from(availableSeries)[0] || "") as unknown as string);
+                }
 
-                let activeVariant = m.variants.find((v: R) => v.normTech === chosenTech && v.normMat === chosenMat);
-                if (!activeVariant) activeVariant = m.variants.find((v: R) => v.normTech === chosenTech);
-                if (!activeVariant) activeVariant = m.variants.find((v: R) => v.normMat === chosenMat);
-                if (!activeVariant) activeVariant = m.variants[0];
+                // Determine active tech and mat
+                let chosenTech = curSel.technology || technology || "Wi-Fi";
+                let chosenMat = curSel.material || material || "Acrylic";
+
+                // Determine Edge colour and Panel colour
+                const isEdgeSeries = /edge/i.test(chosenSeries);
+                const chosenEdge = curSel.edgeColor || (isEdgeSeries ? "Rose Gold Edge" : "Rimless / Matching");
+                const chosenPanel = curSel.panelColor || "Pure Black";
+
+                let activeVariant = m.variants.find((v: R) =>
+                  (!chosenSeries || (v.normSeries || v.series) === chosenSeries) &&
+                  (!chosenTech || v.normTech === chosenTech) &&
+                  (!chosenMat || v.normMat === chosenMat)
+                );
+                if (!activeVariant) {
+                  activeVariant = m.variants.find((v: R) =>
+                    (!chosenSeries || (v.normSeries || v.series) === chosenSeries) &&
+                    (!chosenTech || v.normTech === chosenTech)
+                  );
+                }
+                if (!activeVariant) {
+                  activeVariant = m.variants.find((v: R) =>
+                    (!chosenSeries || (v.normSeries || v.series) === chosenSeries) &&
+                    (!chosenMat || v.normMat === chosenMat)
+                  );
+                }
+                if (!activeVariant) {
+                  activeVariant = m.variants.find((v: R) => (!chosenSeries || (v.normSeries || v.series) === chosenSeries));
+                }
+                if (!activeVariant) {
+                  activeVariant = m.variants.find((v: R) => v.normTech === chosenTech && v.normMat === chosenMat);
+                }
+                if (!activeVariant) {
+                  activeVariant = m.variants.find((v: R) => v.normTech === chosenTech);
+                }
+                if (!activeVariant) {
+                  activeVariant = m.variants[0];
+                }
+
+                const currentSeries = activeVariant.normSeries || activeVariant.series || chosenSeries;
+                const currentTech = activeVariant.normTech || chosenTech;
+                const currentMat = activeVariant.normMat || chosenMat;
 
                 const qty = curSel.qty || 1;
                 const currentPrice = Number(activeVariant.selling_price || 0);
@@ -2448,7 +2720,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                     <div className="switchmodelhead">
                       <img src={activeVariant.image_key || m.image || "/techomie-logo.jpg"} alt={m.name} />
                       <div className="switchmodeldetails">
-                        <small>{m.brand} · {m.category}{m.series ? ` · ${m.series}` : ""}</small>
+                        <small>{m.brand} · {m.category}{currentSeries ? ` · ${currentSeries}` : ""}</small>
                         <b>{m.name || activeVariant.name || activeVariant.sku || "Smart Switch"}</b>
                         <div className="switchspecstags">
                           {m.module && <span className="modulebadge">{m.module} Module Panel</span>}
@@ -2471,11 +2743,40 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
 
                     <div className="variantoptionscontainer">
                       <div className="variantgroup">
+                        <span className="variantgrouplabel">Switch Variant / Series</span>
+                        <div className="variantpills">
+                          {SMART_SWITCH_SERIES.map((s) => {
+                            const isAvail = availableSeries.has(s.id);
+                            const isSelected = currentSeries === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                className={`variantpill ${isSelected ? "active" : ""} ${!isAvail ? "disabled" : ""}`}
+                                disabled={!isAvail}
+                                onClick={() =>
+                                  setModelSelections((prev) => ({
+                                    ...prev,
+                                    [m.key]: { ...(prev[m.key] || {}), series: s.id },
+                                  }))
+                                }
+                              >
+                                <span className="pillicon">{s.icon}</span>
+                                <span className="pilllabel">{s.label}</span>
+                                {isSelected && <span className="pillcheck">✓</span>}
+                                {!isAvail && <small className="pillna">(N/A)</small>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="variantgroup">
                         <span className="variantgrouplabel">Technology Option</span>
                         <div className="variantpills">
                           {SMART_SWITCH_TECHNOLOGIES.map((t) => {
-                            const isAvail = availableTechs.has(t.id);
-                            const isSelected = activeVariant.normTech === t.id;
+                            const isAvail = m.variants.some((v: R) => (!currentSeries || (v.normSeries || v.series) === currentSeries) && v.normTech === t.id);
+                            const isSelected = currentTech === t.id;
                             return (
                               <button
                                 key={t.id}
@@ -2503,8 +2804,8 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                         <span className="variantgrouplabel">Material Option</span>
                         <div className="variantpills">
                           {SMART_SWITCH_MATERIALS.map((mat) => {
-                            const isAvail = availableMats.has(mat.id);
-                            const isSelected = activeVariant.normMat === mat.id;
+                            const isAvail = m.variants.some((v: R) => (!currentSeries || (v.normSeries || v.series) === currentSeries) && v.normMat === mat.id);
+                            const isSelected = currentMat === mat.id;
                             return (
                               <button
                                 key={mat.id}
@@ -2522,6 +2823,60 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                                 <span className="pilllabel">{mat.label}</span>
                                 {isSelected && <span className="pillcheck">✓</span>}
                                 {!isAvail && <small className="pillna">(N/A)</small>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="variantgroup">
+                        <span className="variantgrouplabel">Edge / Bezel Colour</span>
+                        <div className="variantpills">
+                          {SMART_SWITCH_EDGE_COLORS.map((ec) => {
+                            const isSelected = chosenEdge === ec.id;
+                            return (
+                              <button
+                                key={ec.id}
+                                type="button"
+                                className={`variantpill ${isSelected ? "active" : ""}`}
+                                onClick={() =>
+                                  setModelSelections((prev) => ({
+                                    ...prev,
+                                    [m.key]: { ...(prev[m.key] || {}), edgeColor: ec.id },
+                                  }))
+                                }
+                              >
+                                <span className="pillcolorindicator" style={{ backgroundColor: ec.colorCode }} />
+                                <span className="pillicon">{ec.icon}</span>
+                                <span className="pilllabel">{ec.label}</span>
+                                {isSelected && <span className="pillcheck">✓</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="variantgroup">
+                        <span className="variantgrouplabel">Plate / Panel Colour</span>
+                        <div className="variantpills">
+                          {SMART_SWITCH_PANEL_COLORS.map((pc) => {
+                            const isSelected = chosenPanel === pc.id;
+                            return (
+                              <button
+                                key={pc.id}
+                                type="button"
+                                className={`variantpill ${isSelected ? "active" : ""}`}
+                                onClick={() =>
+                                  setModelSelections((prev) => ({
+                                    ...prev,
+                                    [m.key]: { ...(prev[m.key] || {}), panelColor: pc.id },
+                                  }))
+                                }
+                              >
+                                <span className="pillcolorindicator" style={{ backgroundColor: pc.colorCode }} />
+                                <span className="pillicon">{pc.icon}</span>
+                                <span className="pilllabel">{pc.label}</span>
+                                {isSelected && <span className="pillcheck">✓</span>}
                               </button>
                             );
                           })}
@@ -2567,18 +2922,22 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                               name: m.name,
                               brand: m.brand,
                               category: m.category,
+                              series: currentSeries,
+                              edgeColor: chosenEdge,
+                              panelColor: chosenPanel,
                               sku: activeVariant.sku,
                               image: activeVariant.image_key || m.image,
                               description: m.shortDescription || m.description || m.name,
                               technicalNotes: "",
-                              technology: activeVariant.normTech,
-                              material: activeVariant.normMat,
+                              technology: currentTech,
+                              material: currentMat,
                               module: m.module,
-                              variantSummary: `${activeVariant.normTech} · ${activeVariant.normMat}${m.module ? ` · ${m.module} Module` : ""}`,
+                              variantSummary: `${currentSeries} · ${currentTech} · ${currentMat}${chosenEdge ? ` · ${chosenEdge}` : ""}${chosenPanel ? ` · ${chosenPanel}` : ""}${m.module ? ` · ${m.module} Module` : ""}`,
                               availableVariants: m.variants.map((v: R) => ({
                                 variantId: v.variant_id,
                                 productId: v.product_id,
                                 sku: v.sku,
+                                series: v.normSeries || v.series,
                                 technology: v.normTech,
                                 material: v.normMat,
                                 price: Number(v.selling_price),
@@ -3588,6 +3947,11 @@ function getItemFeatureTag(item: R): string | null {
                                 <small>{item.description}</small>
                               )}
                               <div className="qitem-pills">
+                                {item.series && (
+                                  <span className="item-pill-badge series">
+                                    {item.series}
+                                  </span>
+                                )}
                                 {item.technology && (
                                   <span className="item-pill-badge tech">
                                     {item.technology}
@@ -3596,6 +3960,16 @@ function getItemFeatureTag(item: R): string | null {
                                 {item.material && (
                                   <span className="item-pill-badge mat">
                                     {item.material}
+                                  </span>
+                                )}
+                                {item.edgeColor && (
+                                  <span className="item-pill-badge edge">
+                                    {item.edgeColor}
+                                  </span>
+                                )}
+                                {item.panelColor && (
+                                  <span className="item-pill-badge panel">
+                                    {item.panelColor}
                                   </span>
                                 )}
                                 {item.module && (
@@ -4165,9 +4539,9 @@ const line = (x: R) => {
   return { base, discount, taxable, tax, total: taxable + tax };
 };
 const calc = (s: R) => {
-  const items = (s.floors || [])
-      .flatMap((f: R) => f.rooms.flatMap((r: R) => r.items || []))
-      .concat(s.projectItems || []),
+  const items = (s?.floors || [])
+      .flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || []))
+      .concat(s?.projectItems || []),
     r = items.reduce(
       (a: R, x: R) => {
         const y = line(x);

@@ -42,6 +42,35 @@ const money = (v: any) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(Number(v || 0));
+export const parseReqCategories = (val: unknown): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String).filter(Boolean);
+  if (typeof val === "string") {
+    let s = val.trim();
+    if (!s) return [];
+    while ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+      try {
+        const unwrapped = JSON.parse(s);
+        if (typeof unwrapped === "string") s = unwrapped.trim();
+        else if (Array.isArray(unwrapped)) return unwrapped.map(String).filter(Boolean);
+        else break;
+      } catch {
+        break;
+      }
+    }
+    if (s.startsWith("[") && s.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+      } catch {}
+    }
+    if (s.includes(",")) {
+      return s.split(",").map((x) => x.trim()).filter(Boolean);
+    }
+    return [s];
+  }
+  return [];
+};
 const dt = () => new Date(Date.now() + 86400000).toISOString().slice(0, 16);
 const empty = {
   customerName: "",
@@ -263,7 +292,7 @@ export default function LeadsModule({
     if (type === "WhatsApp") {
       const text = prompt(
         "Edit WhatsApp message",
-        `Hello ${detail.lead.customer_name}, this is Techomie Smart Devices regarding your ${detail.lead.requirement_categories?.join(", ") || "smart home"} enquiry.`,
+        `Hello ${detail.lead.customer_name}, this is Techomie Smart Devices regarding your ${parseReqCategories(detail.lead.requirement_categories).join(", ") || "smart home"} enquiry.`,
       );
       if (!text) return;
       window.open(
@@ -683,8 +712,7 @@ function LeadRow({ l, open, role, onDelete }: { l: R; open: () => void; communic
       <span>
         <b>{l.site_name || l.city || "Site pending"}</b>
         <small>
-          {(l.requirement_categories || []).slice(0, 2).join(" · ") ||
-            "Requirement pending"}
+          {parseReqCategories(l.requirement_categories).slice(0, 2).join(" · ") || "Requirement pending"}
         </small>
       </span>
       <span>
@@ -866,25 +894,26 @@ function LeadForm({
       />
       <div className="wide reqchecks">
         <span>Requirement categories</span>
-        {requirements.map((x) => (
-          <label key={x}>
-            <input
-              type="checkbox"
-              checked={(v.requirementCategories || []).includes(x)}
-              onChange={(e) =>
-                setV({
-                  ...v,
-                  requirementCategories: e.target.checked
-                    ? [...(v.requirementCategories || []), x]
-                    : (v.requirementCategories || []).filter(
-                        (y: string) => y !== x,
-                      ),
-                })
-              }
-            />
-            {x}
-          </label>
-        ))}
+        {requirements.map((x) => {
+          const currentReqs = parseReqCategories(v.requirementCategories);
+          return (
+            <label key={x}>
+              <input
+                type="checkbox"
+                checked={currentReqs.includes(x)}
+                onChange={(e) =>
+                  setV({
+                    ...v,
+                    requirementCategories: e.target.checked
+                      ? [...currentReqs, x]
+                      : currentReqs.filter((y: string) => y !== x),
+                  })
+                }
+              />
+              {x}
+            </label>
+          );
+        })}
       </div>
       <label className="wide">
         <span>Requirement details</span>
@@ -1135,7 +1164,7 @@ function Detail({
             <section>
               <h3>Requirement</h3>
               <div className="detailtags">
-                {(l.requirement_categories || []).map((x: string) => (
+                {parseReqCategories(l.requirement_categories).map((x: string) => (
                   <span key={x}>{x}</span>
                 ))}
               </div>

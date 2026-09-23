@@ -2349,7 +2349,21 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
   const save=async(v:Record<string,string>)=>{try{let payload:Record<string,unknown>={...v};if(name==="Leads")payload={...v,customerName:v.name};const url=endpoint[name],method=editing?"PATCH":"POST";if(editing)payload.id=editing.id;const r=await fetch(url,{method,headers:{"content-type":"application/json"},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.error||"Unable to save record");setOpen(false);setEditing(null);setToast(`${singular} saved`);load()}catch(e){setToast(e instanceof Error?e.message:"Unable to save record")}};
   const archive=async(row:Record<string,unknown>)=>{if(!confirm(`Archive this ${singular}?`))return;const r=await fetch(`${endpoint[name]}?id=${row.id}`,{method:"DELETE"});if(r.ok){setToast(`${singular} archived`);load()}else setToast("Unable to archive record")};
   const removePermanent=async(row:Record<string,unknown>)=>{if(!confirm(`Permanently delete this ${singular}? This action cannot be undone.`))return;const url=endpoint[name]?.includes("/records/")?`${endpoint[name]}?id=${row.id}&permanent=1`:`${endpoint[name]}?id=${row.id}`;const r=await fetch(url,{method:"DELETE"});if(r.ok){setToast(`${singular} deleted permanently`);load()}else{const d=await r.json().catch(()=>({}));setToast(d.error||"Unable to delete record")}};
-  const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>[name==="Tasks"?taskLookups.projects.find(p=>String(p.id)===String(r.project_id))?.title:null,r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
+  const titleOf=(r:Record<string,unknown>)=>String(r.customerName||r.customer_name||r.name||r.title||r.problem||r.sku||r.invoice_number||r.id||"Record"),detailOf=(r:Record<string,unknown>)=>{
+    if(name==="Tasks"){
+      const pTitle=taskLookups.projects.find(p=>String(p.id)===String(r.project_id))?.title;
+      const toUser=taskLookups.users.find(u=>String(u.id)===String(r.assigned_to))?.name||(r.assigned_name as string|undefined);
+      const byUser=taskLookups.users.find(u=>String(u.id)===String(r.assigned_by))?.name||(r.assigned_by_name as string|undefined);
+      return [
+        pTitle,
+        toUser ? `To: ${toUser}` : null,
+        byUser ? `By: ${byUser}` : null,
+        r.status,
+        r.due_at ? `Due: ${r.due_at}` : null,
+      ].filter(Boolean).join(" · ");
+    }
+    return [r.status,r.phone,r.site_name,r.mode,r.date,r.due_at].filter(Boolean).join(" · ");
+  };
   const displayId=(r:Record<string,unknown>)=>{const raw=String(r.id||r.number||"—");if(raw.length>18&&raw.includes("-")){const prefix=name==="Tasks"?"TAS":name.slice(0,3).toUpperCase();return `${prefix}-${raw.slice(0,8)}`;}return raw;};
   const paymentFields:Field[]=name==="Payments"?[
     {key:"customer_selector",label:"Customer name",required:true,options:paymentLookups.customers.map(c=>({value:String(c.id),label:String(c.name)}))},
@@ -2360,6 +2374,7 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
     {key:"project_id",label:"Project / customer",required:true,options:taskLookups.projects.map(p=>({value:String(p.id),label:`${String(p.customer_name)} · ${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`}))},
     {key:"title",label:"Task",required:true},
     {key:"assigned_to",label:"Assign to",required:true,options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
+    {key:"assigned_by",label:"Assigned by",options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
     {key:"due_at",label:"Due date and time",type:"datetime-local",required:true},
     {key:"status",label:"Status",required:true,options:["To Do","In Progress","Waiting","Completed"]},
     {key:"mandatory",label:"Priority",options:[{value:"0",label:"Normal"},{value:"1",label:"Priority / mandatory"}]},

@@ -103,9 +103,9 @@
 }
 .pickeritems article.switchmodelcard .variantoptionscontainer,
 .variantoptionscontainer {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
   padding: 12px 14px !important;
   background: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
@@ -113,11 +113,15 @@
   width: 100% !important;
   box-sizing: border-box !important;
 }
-@media (max-width: 640px) {
-  .pickeritems article.switchmodelcard .variantoptionscontainer,
-  .variantoptionscontainer {
-    grid-template-columns: 1fr !important;
-  }
+.pillcolorindicator {
+  display: inline-block !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(0, 0, 0, 0.22) !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12) !important;
+  margin-right: 1px !important;
 }
 .variantgroup {
   display: flex !important;
@@ -358,6 +362,21 @@
 .item-pill-badge.mod {
   background: #f4f3ff;
   color: #5925dc;
+}
+.item-pill-badge.series {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.item-pill-badge.edge {
+  background: #fdf4ff;
+  color: #a21caf;
+  border: 1px solid #f0abfc;
+}
+.item-pill-badge.panel {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 .qitemeditvariantbox {
   grid-column: 1 / -1;
