@@ -2081,7 +2081,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                 <div className="qitems">
                   {(r.items || []).map((x: R, ii: number) => {
                     const itemKey = `${fi}-${ri}-${ii}`;
-                    const showVariants = editingItem === itemKey;
+                    const isEditing = editingItem === itemKey;
                     return <article className="qitemcard" key={itemKey}>
                     {/* ── Top row: image / name / pills / qty / price / disc / total / actions ── */}
                     <div className="qitem">
@@ -2223,19 +2223,33 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           <button disabled={ii === 0} title="Move up" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii-1],a[ii]]=[a[ii],a[ii-1]]})}>↑</button>
                           <button disabled={ii === r.items.length - 1} title="Move down" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii],a[ii+1]]=[a[ii+1],a[ii]]})}>↓</button>
                           <button
-                            title={showVariants ? "Hide variants" : "Variants / swap"}
-                            className={showVariants ? "active" : ""}
-                            onClick={() => setEditingItem(showVariants ? "" : itemKey)}
+                            type="button"
+                            title={isEditing ? "Close edit details" : "Edit item details"}
+                            className={`qitemeditbtn ${isEditing ? "active" : ""}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "4px 10px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              borderRadius: "6px",
+                              background: isEditing ? "#eff6ff" : "#ffffff",
+                              color: isEditing ? "#1d4ed8" : "#475467",
+                              border: isEditing ? "1.5px solid #3b82f6" : "1px solid #cbd5e1",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => setEditingItem(isEditing ? "" : itemKey)}
                           >
-                            {showVariants ? "▲ Variants" : "▼ Variants"}
+                            ✏️ {isEditing ? "Done" : "Edit"}
                           </button>
                           <button className="danger" title="Remove item" onClick={() => mut((n) => n.floors[fi].rooms[ri].items.splice(ii, 1))}>×</button>
                         </div>
                       )}
                     </div>
 
-                    {/* ── Always-visible inline editable detail fields ── */}
-                    {!locked && (
+                    {/* ── Inline editable detail fields (opens ONLY when Edit is clicked) ── */}
+                    {!locked && isEditing && (
                       <div className="qiteminline">
                         <label><span>Description</span><textarea rows={2} value={x.description || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].description = e.target.value)} /></label>
                         <label><span>Line note / exclusions</span><textarea rows={2} value={x.note || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].note = e.target.value)} /></label>
@@ -2247,8 +2261,8 @@ function Builder({ snap, set, locked, openPicker }: R) {
                       </div>
                     )}
 
-                    {/* ── Variant selector (collapsible) ── */}
-                    {showVariants && <div className="qitemedit">
+                    {/* ── Variant selector (collapsible, opens with Edit) ── */}
+                    {isEditing && <div className="qitemedit">
                       <div className="qitemeditvariantbox">
                         <h4>Switch Variant &amp; Customization</h4>
                         <div className="qitemeditvariantrows">
