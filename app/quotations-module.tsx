@@ -1421,11 +1421,20 @@ function QuoteWorkspace({
           target={picker}
           role={role}
           taxMode={snap.taxMode || "GST"}
+          floors={snap.floors || []}
+          onSelectTarget={(t: R) => setPicker(t)}
           close={() => setPicker(null)}
           add={(item: any) => {
             const next = structuredClone(snap);
-            const floor = next.floors[picker.floor],
-              room = floor.rooms[picker.room];
+            if (!next.floors[picker.floor]) {
+              next.floors[picker.floor] = { name: picker.floorName || "Ground Floor", rooms: [] };
+            }
+            const floor = next.floors[picker.floor];
+            if (!floor.rooms[picker.room]) {
+              floor.rooms[picker.room] = { name: picker.roomName || "Living Room", note: "", items: [] };
+            }
+            const room = floor.rooms[picker.room];
+            if (!Array.isArray(room.items)) room.items = [];
             room.items.push(item);
             change(next);
           }}
@@ -1869,24 +1878,91 @@ function Builder({ snap, set, locked, openPicker }: R) {
   return (
     <div className="qbuilder">
       <section className="qtaxmodebar">
-        <div><b>Quotation billing mode</b><span>Applies to every item in this quotation</span></div>
-        <select
-          disabled={locked}
-          value={snap.taxMode || "GST"}
-          onChange={(e) => {
-            const taxMode = e.target.value;
-            mut((next) => {
-              next.taxMode = taxMode;
-              for (const floor of next.floors || [])
-                for (const room of floor.rooms || [])
-                  for (const item of room.items || []) item.taxMode = taxMode;
-              for (const item of next.projectItems || []) item.taxMode = taxMode;
-            });
-          }}
-        >
-          <option value="GST">GST Bill</option>
-          <option value="Non-GST">Non-GST Bill</option>
-        </select>
+        <div>
+          <b>Quotation billing mode</b>
+          <span>Applies to every item in this quotation</span>
+        </div>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <select
+            disabled={locked}
+            value={snap.taxMode || "GST"}
+            onChange={(e) => {
+              const taxMode = e.target.value;
+              mut((next) => {
+                next.taxMode = taxMode;
+                for (const floor of next.floors || [])
+                  for (const room of floor.rooms || [])
+                    for (const item of room.items || []) item.taxMode = taxMode;
+                for (const item of next.projectItems || []) item.taxMode = taxMode;
+              });
+            }}
+          >
+            <option value="GST">GST Bill</option>
+            <option value="Non-GST">Non-GST Bill</option>
+          </select>
+          {!locked && (
+            <>
+              <button
+                type="button"
+                className="primary"
+                style={{
+                  padding: "9px 18px",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  borderRadius: "8px",
+                  background: "#0284c7",
+                  color: "#ffffff",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 4px rgba(2, 132, 199, 0.2)",
+                  whiteSpace: "nowrap",
+                }}
+                onClick={() => {
+                  if (!floors || floors.length === 0) {
+                    mut((n) => {
+                      n.floors = [{ name: "Ground Floor", rooms: [{ name: "Living Room", note: "", items: [] }] }];
+                    });
+                    openPicker({ floor: 0, room: 0, floorName: "Ground Floor", roomName: "Living Room" });
+                  } else if (!floors[0].rooms || floors[0].rooms.length === 0) {
+                    mut((n) => {
+                      n.floors[0].rooms = [{ name: "Living Room", note: "", items: [] }];
+                    });
+                    openPicker({ floor: 0, room: 0, floorName: floors[0].name, roomName: "Living Room" });
+                  } else {
+                    openPicker({ floor: 0, room: 0, floorName: floors[0].name, roomName: floors[0].rooms[0].name });
+                  }
+                }}
+              >
+                ＋ Add item
+              </button>
+              <button
+                type="button"
+                style={{
+                  padding: "9px 14px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  borderRadius: "8px",
+                  background: "#ffffff",
+                  color: "#1e293b",
+                  border: "1px solid #cbd5e1",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                onClick={() =>
+                  setAdding({
+                    kind: "floor",
+                    name: floors.length ? `Floor ${floors.length + 1}` : "Ground Floor",
+                  })
+                }
+              >
+                ＋ Add floor
+              </button>
+            </>
+          )}
+        </div>
       </section>
       {floors.map((f: R, fi: number) => (
         <section className="qfloor" key={fi}>
@@ -1905,6 +1981,33 @@ function Builder({ snap, set, locked, openPicker }: R) {
             </b>
             {!locked && (
               <>
+                <button
+                  type="button"
+                  style={{
+                    background: "#0284c7",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                  onClick={() => {
+                    if (!f.rooms || f.rooms.length === 0) {
+                      mut((n) => {
+                        n.floors[fi].rooms = [{ name: "Living Room", note: "", items: [] }];
+                      });
+                      openPicker({ floor: fi, room: 0, floorName: f.name, roomName: "Living Room" });
+                    } else {
+                      openPicker({ floor: fi, room: 0, floorName: f.name, roomName: f.rooms[0].name });
+                    }
+                  }}
+                >
+                  ＋ Add item
+                </button>
                 <button
                   onClick={() => mut((n) => n.floors.push(structuredClone(f)))}
                 >
@@ -2340,6 +2443,27 @@ function Builder({ snap, set, locked, openPicker }: R) {
           {!locked && (
             <div className="qflooractions">
               <button
+                type="button"
+                style={{
+                  background: "#f0f9ff",
+                  color: "#0284c7",
+                  borderColor: "#bae6fd",
+                  fontWeight: 600,
+                }}
+                onClick={() => {
+                  if (!f.rooms || f.rooms.length === 0) {
+                    mut((n) => {
+                      n.floors[fi].rooms = [{ name: "Living Room", note: "", items: [] }];
+                    });
+                    openPicker({ floor: fi, room: 0, floorName: f.name, roomName: "Living Room" });
+                  } else {
+                    openPicker({ floor: fi, room: 0, floorName: f.name, roomName: f.rooms[0].name });
+                  }
+                }}
+              >
+                ＋ Add item to {f.name}
+              </button>
+              <button
                 onClick={() =>
                   setAdding({ kind: "room", floor: fi, name: roomNames[0] })
                 }
@@ -2465,7 +2589,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
     </div>
   );
 }
-function ItemPicker({ target, role, taxMode, close, add }: R) {
+function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget }: R) {
   const [q, setQ] = useState(""),
     [items, setItems] = useState<R[]>([]),
     [loading, setLoading] = useState(false),
@@ -2803,12 +2927,38 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         <header>
           <div>
             <small>ITEMS MASTER</small>
-            <h2>
-              Add item
-              {target?.roomName ? (
-                <> → <span className="itempicker-location">{target.floorName && <>{target.floorName} · </>}{target.roomName}</span></>
-              ) : " to selected room"}
-            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginTop: "2px" }}>
+              <h2 style={{ margin: 0 }}>Add item</h2>
+              {floors && floors.length > 0 && onSelectTarget ? (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f8fafc", padding: "4px 10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
+                  <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Room:</span>
+                  <select
+                    style={{ background: "transparent", border: "none", outline: "none", fontSize: "13px", fontWeight: 700, color: "#0284c7", cursor: "pointer" }}
+                    value={`${target?.floor ?? 0}-${target?.room ?? 0}`}
+                    onChange={(e) => {
+                      const [fi, ri] = e.target.value.split("-").map(Number);
+                      const fl = floors[fi];
+                      const rm = fl?.rooms?.[ri];
+                      if (fl && rm) {
+                        onSelectTarget({ floor: fi, room: ri, floorName: fl.name, roomName: rm.name });
+                      }
+                    }}
+                  >
+                    {floors.flatMap((fl: R, fi: number) =>
+                      (fl.rooms || []).map((rm: R, ri: number) => (
+                        <option key={`${fi}-${ri}`} value={`${fi}-${ri}`}>
+                          {fl.name} → {rm.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              ) : target?.roomName ? (
+                <span className="itempicker-location" style={{ fontSize: "14px", fontWeight: 600, color: "#0284c7" }}>
+                  → {target.floorName && <>{target.floorName} · </>}{target.roomName}
+                </span>
+              ) : null}
+            </div>
           </div>
           <div className="itemdrawerclose">
             <span>{added ? `${added} item${added === 1 ? "" : "s"} added` : "Add multiple items, then close"}</span>
