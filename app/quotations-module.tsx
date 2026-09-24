@@ -3135,7 +3135,7 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
               </div>
 
               <div className="switchspecitem">
-                <label><span>🌀 Fan</span></label>
+                <label><span>🌀 Fan (4-Speed)</span></label>
                 <select
                   className={fanCount ? "active-filter" : ""}
                   value={fanCount}
@@ -3143,9 +3143,9 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
                 >
                   <option value="">All fans</option>
                   <option value="0">Without Fan (0)</option>
-                  <option value="with_fan">With Fan (Any)</option>
-                  <option value="1">1 Fan</option>
-                  <option value="2">2 Fans</option>
+                  <option value="with_fan">With Fan (4-Speed)</option>
+                  <option value="1">1 Fan (4-Speed)</option>
+                  <option value="2">2 Fans (4-Speed)</option>
                 </select>
               </div>
 
@@ -3281,7 +3281,7 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
                             <span className="specbadge switchbadge">🔘 {m.specs.switches} Switch</span>
                           )}
                           {m.specs?.fan && m.specs.fan !== "0" && (
-                            <span className="specbadge fanbadge">🌀 {m.specs.fan} Fan</span>
+                            <span className="specbadge fanbadge">🌀 {m.specs.fan} Fan (4-Speed)</span>
                           )}
                           {m.specs?.hasHvSwitch && (
                             <span className="specbadge hvbadge">⚡ 16A HV</span>
@@ -3962,7 +3962,7 @@ function getRoomCapabilities(room: R): string[] {
     caps.push("Ambient Lighting Scenes");
   }
   if (text.includes("fan")) {
-    caps.push("Step-less Fan Speed");
+    caps.push("4-Speed Fan Regulation");
   }
   if (text.includes("lock")) {
     caps.push("Keyless Digital Access");
@@ -3992,7 +3992,7 @@ function getItemFeatureTag(item: R): string | null {
   if (full.includes("dimmer") || full.includes("dimming"))
     return "Smooth Dimming & Mood Control";
   if (full.includes("curtain")) return "Auto Open/Close & Timers";
-  if (full.includes("fan")) return "5-Speed Hum-Free Regulation";
+  if (full.includes("fan")) return "4-Speed Hum-Free Regulation";
   if (full.includes("lock")) return "Biometric, PIN & App Access";
   if (full.includes("gate") || full.includes("barrier"))
     return "Remote & App Gate Operation";
