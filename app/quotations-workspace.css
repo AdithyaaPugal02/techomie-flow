@@ -638,7 +638,7 @@
 }
 .qitem {
   display: grid;
-  grid-template-columns: 48px minmax(180px, 1fr) 64px 94px 74px 94px 180px;
+  grid-template-columns: 48px minmax(180px, 1fr) 56px 115px 65px 105px 180px;
   gap: 10px;
   align-items: center;
   padding: 10px 8px;
@@ -679,14 +679,24 @@
 }
 .qitem label input {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border-subtle, #e2e8f0);
   border-radius: 7px;
-  padding: 7px 9px;
+  padding: 6px 8px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary, #0f172a);
   background: #ffffff;
   transition: border-color 0.15s ease;
+}
+.qitem input[type="number"]::-webkit-outer-spin-button,
+.qitem input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qitem input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .qitem label input:focus {
   outline: none;

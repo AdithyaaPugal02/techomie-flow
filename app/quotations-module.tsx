@@ -2190,6 +2190,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <input
                           disabled={locked}
                           type="number"
+                          step="any"
                           value={x.price}
                           onChange={(e) =>
                             mut(
@@ -2205,6 +2206,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <input
                           disabled={locked}
                           type="number"
+                          step="any"
                           min="0"
                           max="100"
                           value={x.discount || 0}
