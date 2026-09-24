@@ -1223,19 +1223,22 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
                 <span>Account Name:</span> <b>Techomie Smart Devices</b>
               </div>
               <div>
-                <span>Bank:</span> <b>HDFC Bank</b>
+                <span>Bank:</span> <b>Bank of India</b>
               </div>
               <div>
-                <span>A/C No:</span> <b>50200084928192</b>
+                <span>A/C No:</span> <b>824320110000389</b>
               </div>
               <div>
-                <span>IFSC:</span> <b>HDFC0000281</b>
+                <span>IFSC:</span> <b>BKID0008243</b>
               </div>
               <div>
                 <span>Branch:</span> <b>Peelamedu, Coimbatore</b>
               </div>
               <div>
-                <span>UPI ID:</span> <b>techomie@hdfcbank</b>
+                <span>Account Type:</span> <b>Current Account</b>
+              </div>
+              <div>
+                <span>UPI ID:</span> <b>7598883121@ybl</b>
               </div>
             </div>
             <p className="invtermstext">

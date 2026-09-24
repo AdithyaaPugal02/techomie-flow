@@ -439,13 +439,13 @@
 }
 .qfloormap small {
   color: #475569;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
 .qfloormaptext {
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 600;
   color: #0f172a;
   letter-spacing: 0.02em;
@@ -457,18 +457,18 @@
   background: #0f172a;
   color: #ffffff;
   border-radius: 6px 6px 0 0;
-  padding: 4px 8px;
+  padding: 5px 9px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 .qroombanner b {
-  font-size: 9.5px;
+  font-size: 12px;
   color: #ffffff;
   letter-spacing: 0.02em;
 }
 .qroombanner span {
-  font-size: 7px;
+  font-size: 9.5px;
   color: #38bdf8;
   font-weight: 600;
 }
@@ -479,7 +479,7 @@
   border-collapse: collapse !important;
   table-layout: fixed !important;
   margin-bottom: 3.5mm !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   border: 1px solid #e2e8f0 !important;
   border-top: 0 !important;
   box-sizing: border-box !important;
@@ -490,7 +490,7 @@
 }
 .qboqtable th {
   padding: 6px 4px !important;
-  font-size: 6.5px !important;
+  font-size: 8px !important;
   font-weight: 800 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
@@ -503,7 +503,7 @@
   padding: 5px 4px !important;
   border-bottom: 1px solid #e2e8f0 !important;
   vertical-align: middle !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   color: #334155 !important;
   box-sizing: border-box !important;
 }
@@ -522,7 +522,7 @@
   color: #64748b !important;
   text-align: center !important;
   vertical-align: middle !important;
-  font-size: 8px !important;
+  font-size: 9.5px !important;
   padding: 5px 2px !important;
   box-sizing: border-box !important;
 }
@@ -577,14 +577,14 @@
 }
 .qboqtable td.td-details b {
   display: block !important;
-  font-size: 8.5px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
   line-height: 1.35 !important;
 }
 .qboqtable td.td-details small {
   display: block !important;
-  font-size: 6.8px !important;
+  font-size: 8.5px !important;
   color: #64748b !important;
   line-height: 1.35 !important;
   margin-top: 2px !important;
@@ -600,7 +600,7 @@
   vertical-align: middle !important;
   padding: 5px 2px !important;
   font-weight: 700 !important;
-  font-size: 8px !important;
+  font-size: 10px !important;
   color: #0f172a !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
@@ -616,7 +616,7 @@
   vertical-align: middle !important;
   padding: 5px 2px !important;
   color: #64748b !important;
-  font-size: 7.5px !important;
+  font-size: 9px !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
 }
@@ -631,7 +631,7 @@
   vertical-align: middle !important;
   padding: 5px 4px !important;
   font-family: inherit !important;
-  font-size: 8px !important;
+  font-size: 9.5px !important;
   font-weight: 600 !important;
   color: #334155 !important;
   white-space: nowrap !important;
@@ -648,7 +648,7 @@
   vertical-align: middle !important;
   padding: 5px 2px !important;
   color: #64748b !important;
-  font-size: 7.5px !important;
+  font-size: 9px !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
 }
@@ -663,7 +663,7 @@
   vertical-align: middle !important;
   padding: 5px 4px !important;
   font-weight: 800 !important;
-  font-size: 8.5px !important;
+  font-size: 10px !important;
   color: #0f172a !important;
   white-space: nowrap !important;
   box-sizing: border-box !important;
@@ -682,9 +682,9 @@
   align-items: center !important;
   justify-content: center !important;
   vertical-align: middle !important;
-  font-size: 7.5px !important;
+  font-size: 8.5px !important;
   line-height: 1 !important;
-  height: 14px !important;
+  height: 16px !important;
   padding: 0 5px 1px 5px !important;
   border-radius: 3px !important;
   margin: 1px 0 !important;
@@ -698,9 +698,9 @@
   align-items: center !important;
   justify-content: center !important;
   vertical-align: middle !important;
-  font-size: 7px !important;
+  font-size: 8px !important;
   line-height: 1 !important;
-  height: 14px !important;
+  height: 16px !important;
   color: #475569 !important;
   font-family: inherit !important;
   background: #f1f5f9 !important;
@@ -716,11 +716,11 @@
   border-top: 1.5px solid #cbd5e1;
   border-bottom: 1.5px solid #cbd5e1;
   padding: 5px 7px;
-  font-size: 8px;
+  font-size: 9.5px !important;
 }
 .qboqsubtotalrow td strong {
   color: #0284c7;
-  font-size: 9px;
+  font-size: 11px !important;
   white-space: nowrap;
 }
 
@@ -765,7 +765,7 @@
   padding: 5px 10px;
   background: #0284c7;
   color: #ffffff;
-  font-size: 7.5px;
+  font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -774,7 +774,7 @@
   justify-content: space-between;
   padding: 5px 10px;
   border-bottom: 1px solid #f1f5f9;
-  font-size: 8.5px;
+  font-size: 10px;
   color: #334155;
 }
 .qfloorsummaryrow:nth-child(even) {
@@ -786,7 +786,7 @@
   padding: 6px 10px;
   background: #f0f9ff;
   border-top: 1.5px solid #0284c7;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 800;
   color: #0369a1;
 }
@@ -802,14 +802,14 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 8.5px;
+  font-size: 10px;
 }
 .qfloortable th {
   background: #0f172a;
   color: #ffffff;
   padding: 6px 10px;
   font-weight: 700;
-  font-size: 7.5px;
+  font-size: 9px;
   letter-spacing: 0.06em;
   text-align: left;
 }
@@ -843,14 +843,14 @@
 }
 .qfloortable td small {
   display: block;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #64748b;
   margin-top: 1px;
 }
 .qfloortable td:last-child b {
   font-variant-numeric: tabular-nums;
   color: #0f172a;
-  font-size: 9px;
+  font-size: 11px;
 }
 .qfloortable tr:nth-child(even) td {
   background: #f8fafc;
@@ -876,7 +876,7 @@
   align-items: center;
   padding: 5px 9px;
   border-bottom: 1px solid #f1f5f9;
-  font-size: 8.5px;
+  font-size: 10px;
   color: #334155;
 }
 .qcalcrow b {
@@ -900,12 +900,12 @@
   align-items: center;
 }
 .qcalcrow.qgrandtotalrow span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .qcalcrow.qgrandtotalrow small {
   display: block;
-  font-size: 6.5px;
+  font-size: 8.5px;
   color: #bae6fd;
 }
 .qcalcrow.qgrandtotalrow strong {
@@ -917,7 +917,7 @@
   padding: 4px 9px;
   background: #f0fdf4;
   border-bottom: 1px solid #bbf7d0;
-  font-size: 7.5px;
+  font-size: 9.5px;
   font-weight: 600;
   color: #15803d;
 }
@@ -929,14 +929,14 @@
 }
 .qcommercialnotes small {
   color: #0284c7;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
 }
 .qcommercialnotes ul {
   margin: 3mm 0 0 4mm;
   padding: 0;
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #475569;
   line-height: 1.6;
 }
@@ -957,13 +957,13 @@
 }
 .qpolicybox b {
   display: block;
-  font-size: 9.5px;
+  font-size: 11.5px;
   color: #1e3a8a;
   margin-bottom: 2px;
 }
 .qpolicybox p {
   margin: 0;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #1e40af;
   line-height: 1.5;
 }
@@ -981,7 +981,7 @@
 }
 .qscopebox small {
   display: block;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
   color: #0284c7;
@@ -990,7 +990,7 @@
 .qscopebox ul {
   margin: 0 0 0 4mm;
   padding: 0;
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #334155;
   line-height: 1.55;
 }
@@ -998,7 +998,7 @@
   padding: 3mm 4mm;
   background: #fff1f2;
   border-left: 3px solid #e11d48;
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #9f1239;
   display: flex;
   gap: 8px;
@@ -1045,14 +1045,14 @@
 }
 .qwarrantycard small {
   color: #64748b;
-  font-size: 6.8px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
   display: block;
 }
 .qwarrantycard b {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700 !important;
   color: #1e293b;
   margin: 1px 0 0;
@@ -1067,9 +1067,10 @@
   color: #b45309 !important;
   font-weight: 900 !important;
 }
-.qwarrantycard p {
+.qwarrantycard p,
+.qwarrantycard span {
   margin: 0;
-  font-size: 7.5px;
+  font-size: 10px;
   color: #475569;
   line-height: 1.45;
 }
@@ -1082,13 +1083,13 @@
 }
 .qcommercialtermsbox small {
   color: #0284c7;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
 }
 .qcommercialtermsbox p {
   margin: 2mm 0 0;
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #475569;
   line-height: 1.5;
 }
@@ -1110,12 +1111,12 @@
   margin-bottom: 3mm;
 }
 .qbankhead b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #0f172a;
   letter-spacing: 0.05em;
 }
 .qbankhead span {
-  font-size: 7px;
+  font-size: 9.5px;
   color: #64748b;
 }
 .qbankgrid {
@@ -1134,13 +1135,13 @@
 }
 .qbankgrid div small {
   display: block;
-  font-size: 6.5px;
+  font-size: 8.5px;
   color: #64748b;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
 .qbankgrid div b {
-  font-size: 8.5px;
+  font-size: 11px;
   color: #0f172a;
 }
 
@@ -1163,7 +1164,7 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 .qsigntitle {
-  font-size: 7.5px;
+  font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #0284c7;
@@ -1171,7 +1172,7 @@
 }
 .qacceptancetext {
   margin: 0;
-  font-size: 7px;
+  font-size: 9.5px;
   color: #475569;
   line-height: 1.45;
   min-height: 10mm;
@@ -1189,11 +1190,11 @@
   flex-direction: column;
 }
 .qsignline b {
-  font-size: 8.5px;
+  font-size: 11px;
   color: #0f172a;
 }
 .qsignline span {
-  font-size: 6.5px;
+  font-size: 9px;
   color: #64748b;
 }
 .qclosingbanner {
@@ -1206,18 +1207,18 @@
 }
 .qclosingbanner small {
   color: #38bdf8;
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.15em;
 }
 .qclosingbanner h2 {
   margin: 1.5mm 0;
-  font-size: 14px;
+  font-size: 16px;
   color: #ffffff;
 }
 .qclosingbanner p {
   margin: 0;
-  font-size: 7px;
+  font-size: 9.5px;
   color: #94a3b8;
 }
 .qpreparedbyfoot {
@@ -1226,7 +1227,7 @@
   margin-top: 3mm;
   padding-top: 2mm;
   border-top: 1px solid #e2e8f0;
-  font-size: 7px;
+  font-size: 9px;
   color: #64748b;
 }
 
@@ -1244,14 +1245,14 @@
 }
 .qsubheading small {
   color: #0284c7;
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .qsubheading h4 {
   margin: 0;
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -1280,7 +1281,7 @@
   border-radius: 50%;
   background: #0f172a;
   color: #38bdf8;
-  font-size: 7.5px;
+  font-size: 8.5px;
   font-weight: 800;
   font-style: normal;
   flex-shrink: 0;
@@ -1296,7 +1297,7 @@
 .qpaperfinance .qmilestones small {
   display: block;
   color: #aa8448;
-  font-size: 6.5px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1.25;
@@ -1304,7 +1305,7 @@
 }
 .qpaperfinance .qmilestones b {
   display: block;
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.4;
@@ -1316,14 +1317,14 @@
 .qpaperfinance .qmilestones em {
   display: block;
   color: #64748b;
-  font-size: 6.8px;
+  font-size: 9px;
   font-style: normal;
   line-height: 1.35;
   white-space: normal;
   overflow: visible;
 }
 .qpaperfinance .qmilestones strong {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 800;
   color: #0284c7;
   font-variant-numeric: tabular-nums;
@@ -1336,13 +1337,13 @@
 }
 .qpaperfinance .qcommercialtermsbox small {
   color: #0284c7;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
 .qpaperfinance .qcommercialtermsbox p {
   margin: 1mm 0 0;
-  font-size: 7.2px;
+  font-size: 9.5px;
   color: #475569;
   line-height: 1.4;
 }
@@ -1361,14 +1362,14 @@
   gap: 8px;
 }
 .qpaperclosing .qpolicyicon {
-  font-size: 15px;
+  font-size: 16px;
 }
 .qpaperclosing .qpolicybox b {
-  font-size: 8px;
+  font-size: 11px;
   margin-bottom: 1px;
 }
 .qpaperclosing .qpolicybox p {
-  font-size: 6.8px;
+  font-size: 9.5px;
   line-height: 1.35;
 }
 .qpaperclosing .qscopetwocol {
@@ -1379,17 +1380,17 @@
   padding: 2.5mm 3.5mm;
 }
 .qpaperclosing .qscopebox small {
-  font-size: 6.2px;
+  font-size: 8.5px;
   margin-bottom: 1mm;
 }
 .qpaperclosing .qscopebox ul {
-  font-size: 6.6px;
+  font-size: 9px;
   line-height: 1.35;
 }
 .qpaperclosing .qexclusionbar {
   padding: 1.5mm 3mm;
   margin-bottom: 2.5mm;
-  font-size: 6.8px;
+  font-size: 9px;
 }
 .qpaperclosing .qwarrantygrid {
   gap: 3.5mm;
@@ -1401,19 +1402,22 @@
   align-items: center;
 }
 .qpaperclosing .qwarrantybadge {
-  font-size: 10px;
-  padding: 3.5px 6.5px;
+  font-size: 11px;
+  padding: 4px 7px;
   font-weight: 900 !important;
 }
 .qpaperclosing .qwarrantycard small {
-  font-size: 6px;
+  font-size: 8px;
 }
 .qpaperclosing .qwarrantycard b {
-  font-size: 8.8px;
+  font-size: 11.5px;
   font-weight: 700 !important;
 }
+.qpaperclosing .qwarrantycard span {
+  font-size: 9.5px;
+}
 .qpaperclosing .qbankcard {
-  padding: 2mm 3.5mm;
+  padding: 2.5mm 3.5mm;
   margin-bottom: 2mm;
 }
 .qpaperclosing .qbankhead {
@@ -1421,22 +1425,22 @@
   margin-bottom: 1.5mm;
 }
 .qpaperclosing .qbankhead b {
-  font-size: 7.8px;
+  font-size: 11px;
 }
 .qpaperclosing .qbankhead span {
-  font-size: 6.2px;
+  font-size: 9px;
 }
 .qpaperclosing .qbankgrid {
   gap: 2mm;
 }
 .qpaperclosing .qbankgrid div {
-  padding: 1.5mm 2.5mm;
+  padding: 1.8mm 2.5mm;
 }
 .qpaperclosing .qbankgrid div small {
-  font-size: 5.5px;
+  font-size: 8px;
 }
 .qpaperclosing .qbankgrid div b {
-  font-size: 7.5px;
+  font-size: 10.5px;
 }
 .qpaperclosing .qacceptanceblock {
   gap: 3.5mm;
@@ -1447,40 +1451,40 @@
   padding: 2.5mm 3.5mm;
 }
 .qpaperclosing .qsigntitle {
-  font-size: 6.8px;
+  font-size: 9px;
   margin-bottom: 1mm;
 }
 .qpaperclosing .qacceptancetext {
-  font-size: 6.5px;
+  font-size: 9px;
   line-height: 1.3;
 }
 .qpaperclosing .qsignspace {
   min-height: 8mm;
 }
 .qpaperclosing .qsignline b {
-  font-size: 7.8px;
+  font-size: 10.5px;
 }
 .qpaperclosing .qsignline span {
-  font-size: 6.2px;
+  font-size: 8.5px;
 }
 .qpaperclosing .qclosingbanner {
   padding: 2mm 3.5mm;
   margin-top: 1.5mm;
 }
 .qpaperclosing .qclosingbanner small {
-  font-size: 5.8px;
+  font-size: 8px;
 }
 .qpaperclosing .qclosingbanner h2 {
-  font-size: 10px;
+  font-size: 13px;
   margin: 0.5mm 0;
 }
 .qpaperclosing .qclosingbanner p {
-  font-size: 6.2px;
+  font-size: 9px;
 }
 .qpaperclosing .qpreparedbyfoot {
   margin-top: 1.5mm;
   padding-top: 1mm;
-  font-size: 6.2px;
+  font-size: 8.5px;
 }
 
 /* ==========================================================
@@ -1549,7 +1553,7 @@
 }
 
 .qpaperpremium .qcover > header small {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.22em;
   color: #38bdf8;
   font-weight: 700;
@@ -1563,7 +1567,7 @@
 
 .qpaperpremium .qcoverbody > small {
   display: inline-block;
-  font-size: 8.5px;
+  font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.18em;
   color: #c8aa72;
@@ -1620,7 +1624,7 @@
 }
 
 .qpaperpremium .qcovermeta small {
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
   color: #c8aa72;
@@ -1628,7 +1632,7 @@
 }
 
 .qpaperpremium .qcovermeta b {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 0.02em;
@@ -1646,7 +1650,7 @@
 
 .qpaperpremium .qcoverproposed small {
   display: block;
-  font-size: 6.8px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: #38bdf8;
@@ -1668,7 +1672,7 @@
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 4px;
   padding: 3px 8px;
-  font-size: 7.5px;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -1693,7 +1697,7 @@
 }
 
 .qpaperpremium .qcover > footer small {
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.18em;
   color: #c8aa72;
@@ -1709,7 +1713,7 @@
 }
 .qpaperpremium .qintrohero > small {
   color: #0284c7;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.16em;
   display: block;
@@ -1730,7 +1734,7 @@
   max-width: 160mm;
   margin: 0;
   color: #475569;
-  font-size: 8.5px;
+  font-size: 10.5px;
   line-height: 1.6;
 }
 .qpaperpremium .qpdfcards {
@@ -1759,7 +1763,7 @@
 }
 .qpaperpremium .qpdfcards small {
   color: #0284c7;
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
 }
@@ -1770,13 +1774,13 @@
   color: #475569;
 }
 .qpaperpremium .qpdfcards b {
-  font-size: 10px;
+  font-size: 12px;
   color: #0f172a;
   font-weight: 700;
 }
 .qpaperpremium .qpdfcards span {
   color: #64748b;
-  font-size: 7.5px;
+  font-size: 9.5px;
   line-height: 1.4;
 }
 
@@ -1815,7 +1819,7 @@
 .qpaperpremium .qscopebrief span {
   margin-top: 3px;
   color: #94a3b8;
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1832,13 +1836,13 @@
   gap: 3px;
 }
 .qpaperpremium .qnextstep b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #0f172a;
   letter-spacing: 0.04em;
 }
 .qpaperpremium .qnextstep span {
   color: #475569;
-  font-size: 7.5px;
+  font-size: 10px;
   line-height: 1.5;
 }
 
@@ -1868,7 +1872,7 @@
   border-radius: 50%;
   background: #0f172a;
   color: #38bdf8;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 800;
   font-style: normal;
   flex-shrink: 0;
@@ -1884,7 +1888,7 @@
 .qpaperpremium .qmilestones small {
   display: block;
   color: #aa8448;
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1.25;
@@ -1892,7 +1896,7 @@
 }
 .qpaperpremium .qmilestones b {
   display: block;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.4;
@@ -1903,14 +1907,14 @@
 .qpaperpremium .qmilestones em {
   display: block;
   color: #64748b;
-  font-size: 7px;
+  font-size: 9.5px;
   font-style: normal;
   line-height: 1.35;
   white-space: normal;
   overflow: visible;
 }
 .qpaperpremium .qmilestones strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   color: #0284c7;
   font-variant-numeric: tabular-nums;
@@ -1971,15 +1975,15 @@
 .qpaperpremium .qpaperfinance .qmilestones article > i {
   width: 8mm !important;
   height: 8mm !important;
-  font-size: 7.5px !important;
+  font-size: 8.5px !important;
 }
 .qpaperpremium .qpaperfinance .qmilestones b {
-  font-size: 9.5px !important;
+  font-size: 11px !important;
   line-height: 1.4 !important;
   overflow: visible !important;
 }
 .qpaperpremium .qpaperfinance .qmilestones strong {
-  font-size: 10.5px !important;
+  font-size: 12px !important;
 }
 .qpaperpremium .qpaperfinance .qprojecttimelinebox {
   margin: 1.8mm 0 !important;
@@ -1991,7 +1995,7 @@
 }
 .qpaperpremium .qpaperfinance .qcommercialtermsbox p {
   margin: 1mm 0 0 !important;
-  font-size: 7.2px !important;
+  font-size: 9.5px !important;
   line-height: 1.38 !important;
 }
 
@@ -2005,17 +2009,17 @@
   align-items: center;
 }
 .qpaperpremium .qcalcrow.qgrandtotalrow span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   color: #ffffff;
 }
 .qpaperpremium .qcalcrow.qgrandtotalrow small {
   display: block;
-  font-size: 6.5px;
+  font-size: 8.5px;
   color: #94a3b8;
 }
 .qpaperpremium .qcalcrow.qgrandtotalrow strong {
-  font-size: 15px;
+  font-size: 16px;
   color: #38bdf8;
   font-variant-numeric: tabular-nums;
 }
@@ -2077,14 +2081,14 @@
 }
 
 .qexphead b {
-  font-size: 10px;
+  font-size: 12px;
   color: #0f172a;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .qexphead small {
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 600;
   color: #0284c7;
   text-transform: uppercase;
@@ -2093,7 +2097,7 @@
 
 .qexpcard p {
   margin: 0;
-  font-size: 7.5px;
+  font-size: 10px;
   color: #475467;
   line-height: 1.55;
 }
@@ -2109,14 +2113,14 @@
 }
 
 .qexpactions span {
-  font-size: 7px;
+  font-size: 9px;
   color: #64748b;
   font-weight: 500;
 }
 
 .qexpactions span:nth-child(even) {
   color: #cbd5e1;
-  font-size: 6px;
+  font-size: 8px;
 }
 
 /* Pre-Configured Lifestyle Automations Banner (Refined Architecture) */
@@ -2139,14 +2143,14 @@
 }
 
 .qsceneshead b {
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.08em;
 }
 
 .qsceneshead span {
-  font-size: 6.8px;
+  font-size: 9px;
   color: #0284c7;
   font-weight: 600;
 }
@@ -2171,14 +2175,14 @@
 }
 
 .qscenecol b {
-  font-size: 7.5px;
+  font-size: 10px;
   color: #0f172a;
   font-weight: 700;
 }
 
 .qscenecol p {
   margin: 0;
-  font-size: 6.8px;
+  font-size: 9px;
   color: #475467;
   line-height: 1.4;
 }
@@ -2192,7 +2196,7 @@
 
 .qroomcap-tag {
   display: inline-block !important;
-  font-size: 6.8px !important;
+  font-size: 8.5px !important;
   line-height: 1.2 !important;
   font-weight: 600 !important;
   color: #7dd3fc !important;
@@ -2217,9 +2221,9 @@
   color: #047857 !important;
   border: 1px solid #a7f3d0 !important;
   font-weight: 700 !important;
-  font-size: 7.5px !important;
+  font-size: 8.5px !important;
   line-height: 1 !important;
-  height: 14px !important;
+  height: 16px !important;
   padding: 0 5px 1px 5px !important;
   border-radius: 3px !important;
   letter-spacing: 0.01em !important;
@@ -2246,7 +2250,7 @@
 
 .qpaperpremium .qsectiontitle > small {
   display: block;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.16em;
   color: #0284c7;
@@ -2272,7 +2276,7 @@
   bottom: auto !important;
   display: block;
   color: #64748b;
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
   margin-top: 2px;
@@ -2435,7 +2439,7 @@
 
 .qpaperfeatures .qsectiontitle > small {
   color: #0284c7;
-  font-size: 7.5px;
+  font-size: 8.5px;
   font-weight: 800;
   letter-spacing: 0.14em;
   display: block;
@@ -2453,7 +2457,7 @@
 }
 
 .qpaperfeatures .qsectiontitle > span {
-  font-size: 8.5px;
+  font-size: 10px;
   color: #64748b;
   font-weight: 500;
 }
@@ -2584,7 +2588,7 @@
 }
 
 .qsubsystembadge {
-  font-size: 6.8px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.1em;
   color: #0284c7;
@@ -2608,14 +2612,14 @@
 }
 
 .qsubsystemhead b {
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.01em;
 }
 
 .qsubsystemhead small {
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #64748b;
   font-weight: 500;
 }
@@ -2633,7 +2637,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 8.5px;
+  font-size: 10px;
   line-height: 1.45;
   color: #1e293b;
   font-weight: 500;
@@ -2643,13 +2647,13 @@
   color: #0284c7;
   background: #e0f2fe;
   border-radius: 50%;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 8.5px;
+  font-size: 9.5px;
   flex-shrink: 0;
 }
 
@@ -2706,7 +2710,7 @@
 }
 
 .qscenescapstitle small {
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #0284c7;
@@ -2715,7 +2719,7 @@
 }
 
 .qscenescapstitle b {
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #0f172a;
   display: block;
@@ -2723,7 +2727,7 @@
 
 .qscenescapstitle p {
   margin: 2px 0 0 0;
-  font-size: 7.5px;
+  font-size: 10px;
   color: #64748b;
 }
 
@@ -2750,18 +2754,18 @@
 }
 
 .qsceneicon {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .qsceneheadnew b {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   color: #0f172a;
   display: block;
 }
 
 .qsceneheadnew small {
-  font-size: 7px;
+  font-size: 9.5px;
   font-weight: 600;
   color: #c8aa72;
 }
@@ -2775,7 +2779,7 @@
 
 .qscenesteps code {
   font-family: inherit;
-  font-size: 7.5px;
+  font-size: 10px;
   font-weight: 700;
   color: #0369a1;
   letter-spacing: -0.01em;
@@ -2785,7 +2789,7 @@
 
 .qscenedesc {
   margin: 0;
-  font-size: 7px;
+  font-size: 9.5px;
   color: #64748b;
   line-height: 1.4;
 }
@@ -2810,22 +2814,22 @@
 .qwhybadge {
   background: #0f172a;
   color: #ffffff;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
 }
 
 .qwhyhead b {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   color: #0f172a;
 }
 
 .qwhyhead span {
-  font-size: 7.5px;
+  font-size: 10px;
   color: #64748b;
   margin-left: auto;
 }
@@ -2840,7 +2844,7 @@
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  font-size: 7.5px;
+  font-size: 10px;
   color: #1e293b;
   line-height: 1.35;
 }
@@ -2848,7 +2852,7 @@
 .qwhycheck {
   color: #16a34a;
   font-weight: 700;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.35;
   flex-shrink: 0;
 }
@@ -2874,7 +2878,7 @@
 }
 
 .qlocalcontent b {
-  font-size: 8.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #14532d;
   display: block;
@@ -2882,7 +2886,7 @@
 
 .qlocalcontent p {
   margin: 1px 0 0 0;
-  font-size: 7.2px;
+  font-size: 10px;
   color: #166534;
   line-height: 1.4;
 }
@@ -2920,7 +2924,7 @@
 
 .qdecidedswitchhead small {
   display: block;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0;
   color: #c8aa72;
@@ -2929,7 +2933,7 @@
 }
 
 .qdecidedswitchhead b {
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 700;
   color: #ffffff;
   font-family: Arial, sans-serif;
@@ -2937,7 +2941,7 @@
 }
 
 .qdecidedswitchhead span {
-  font-size: 7.2px;
+  font-size: 9.5px;
   color: #94a3b8;
   font-family: Arial, sans-serif;
   letter-spacing: 0;
@@ -3029,7 +3033,7 @@
 }
 
 .qsubswitchherolabel small {
-  font-size: 6px;
+  font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #c8aa72;
@@ -3037,7 +3041,7 @@
 }
 
 .qsubswitchherolabel b {
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffffff;
 }
@@ -3068,7 +3072,7 @@
 }
 
 .qscopesummaryhead small {
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 800;
   color: #0284c7;
   letter-spacing: 0.1em;
@@ -3076,7 +3080,7 @@
 }
 
 .qscopesummaryhead b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #0f172a;
   font-weight: 700;
 }
@@ -3089,7 +3093,7 @@
 .qscopesummarytable th {
   padding: 1.5mm 4mm;
   background: #f1f5f9;
-  font-size: 7px;
+  font-size: 8.5px;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
@@ -3098,7 +3102,7 @@
 
 .qscopesummarytable td {
   padding: 2mm 4mm;
-  font-size: 7.5px;
+  font-size: 10px;
   color: #334155;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -3109,7 +3113,7 @@
 
 .qscopesummarytable td b {
   color: #0f172a;
-  font-size: 8px;
+  font-size: 10.5px;
 }
 
 /* Room Total Bar */
@@ -3127,14 +3131,14 @@
 }
 
 .qroomtotalbar span {
-  font-size: 7.5px;
+  font-size: 9.5px;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
 }
 
 .qroomtotalbar b {
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 800;
   color: #0284c7;
 }
@@ -3155,7 +3159,7 @@
 
 .qfloortotalbar small {
   display: block;
-  font-size: 6.5px;
+  font-size: 8.5px;
   font-weight: 800;
   color: #c8aa72;
   letter-spacing: 0.1em;
@@ -3163,13 +3167,13 @@
 }
 
 .qfloortotalbar b {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .qfloortotalbar strong {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: #38bdf8;
 }
@@ -3193,7 +3197,7 @@
   padding: 2.2mm 4.5mm;
   background: #071522;
   color: #ffffff;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -3201,20 +3205,20 @@
 
 .qprojectsummarytable td {
   padding: 2.5mm 4.5mm;
-  font-size: 8px;
+  font-size: 10px;
   color: #334155;
   border-bottom: 1px solid #f1f5f9;
 }
 
 .qprojectsummarytable td b {
   display: block;
-  font-size: 8.5px;
+  font-size: 11px;
   color: #0f172a;
 }
 
 .qprojectsummarytable td small {
   display: block;
-  font-size: 6.8px;
+  font-size: 8.5px;
   color: #64748b;
   margin-top: 1px;
 }
@@ -3242,7 +3246,7 @@
 }
 
 .qprojectsummarytable .qgrandtotalrow strong {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   color: #ffffff;
   display: block;
@@ -3250,13 +3254,13 @@
 
 .qprojectsummarytable .qgrandtotalrow small {
   color: #94a3b8;
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
   margin-top: 2px;
 }
 
 .qprojectsummarytable .qgrandtotalrow td:last-child strong {
-  font-size: 15px;
+  font-size: 16px;
   color: #38bdf8;
 }
 
@@ -3274,12 +3278,12 @@
 }
 
 .qinstallationchargesbox .qinstallicon {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
 }
 
 .qinstallationchargesbox b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #14532d;
   display: block;
   margin-bottom: 1px;
@@ -3287,7 +3291,7 @@
 
 .qinstallationchargesbox p {
   margin: 0;
-  font-size: 7.2px;
+  font-size: 9.5px;
   line-height: 1.45;
   color: #166534;
 }
@@ -3306,18 +3310,18 @@
 }
 
 .qprojecttimelinebox .qtimelineicon {
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .qprojecttimelinebox b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #1e3a8a;
   display: block;
 }
 
 .qprojecttimelinebox p {
   margin: 0;
-  font-size: 7.2px;
+  font-size: 9.5px;
   color: #1e40af;
 }
 
@@ -3335,12 +3339,12 @@
 }
 
 .qsitereadinessbox .qsitereadinessicon {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1;
 }
 
 .qsitereadinessbox b {
-  font-size: 8.5px;
+  font-size: 11.5px;
   color: #78350f;
   display: block;
   margin-bottom: 1px;
@@ -3348,7 +3352,7 @@
 
 .qsitereadinessbox p {
   margin: 0;
-  font-size: 7.2px;
+  font-size: 9.5px;
   line-height: 1.45;
   color: #92400e;
 }
@@ -3367,7 +3371,7 @@
   display: flex;
   align-items: baseline;
   gap: 5px;
-  font-size: 7.5px;
+  font-size: 9.5px;
   color: #334155;
   line-height: 1.35;
 }
@@ -3427,7 +3431,7 @@
 .qboqtable thead th {
   background: #071522 !important;
   color: #ffffff !important;
-  font-size: 7.5px !important;
+  font-size: 8.5px !important;
   font-weight: 700 !important;
   letter-spacing: 0.06em !important;
   border-bottom: 2px solid #c8aa72 !important;
@@ -3439,7 +3443,7 @@
 
 .qboqtable td.td-details b {
   color: #071522 !important;
-  font-size: 9px !important;
+  font-size: 11px !important;
 }
 
 .qboqtable td.td-rate,
@@ -3493,7 +3497,7 @@
   color: #c8aa72 !important;
   letter-spacing: 0.22em !important;
   font-weight: 700 !important;
-  font-size: 7.2px !important;
+  font-size: 9px !important;
 }
 
 .qpaperpremium .qcoverbody > small {
@@ -3504,7 +3508,7 @@
   border-radius: 999px !important;
   letter-spacing: 0.16em !important;
   font-weight: 800 !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   display: inline-block !important;
 }
 
@@ -3526,13 +3530,13 @@
 
 .qpaperpremium .qcovermeta small {
   color: #c8aa72 !important;
-  font-size: 6.8px !important;
+  font-size: 8.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
 }
 
 .qpaperpremium .qcovermeta b {
-  font-size: 9.5px !important;
+  font-size: 11px !important;
   color: #ffffff !important;
   font-weight: 700 !important;
 }
@@ -3549,7 +3553,7 @@
   border: 1px solid rgba(56, 189, 248, 0.45) !important;
   border-radius: 999px !important;
   padding: 3.5px 10px !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   font-weight: 600 !important;
 }
 
@@ -3567,7 +3571,7 @@
 .qpaperpremium .qcover > footer small {
   color: #c8aa72 !important;
   letter-spacing: 0.16em !important;
-  font-size: 7.5px !important;
+  font-size: 9px !important;
 }
 
 /* 3. Architectural Page Header & Footer */
@@ -3594,7 +3598,7 @@
 }
 
 .qpaperpremium .qpdfhead b {
-  font-size: 10px !important;
+  font-size: 11px !important;
   font-weight: 800 !important;
   color: #071522 !important;
   letter-spacing: 0.05em !important;
@@ -3603,7 +3607,7 @@
 
 .qpaperpremium .qpdfhead small {
   color: #c8aa72 !important;
-  font-size: 7.2px !important;
+  font-size: 8.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
@@ -3615,7 +3619,7 @@
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  font-size: 7px !important;
+  font-size: 8.5px !important;
   color: #64748b !important;
   font-weight: 600 !important;
   letter-spacing: 0.08em !important;
@@ -3632,7 +3636,7 @@
 }
 
 .qroombanner b {
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   letter-spacing: 0.02em !important;
@@ -3644,7 +3648,7 @@
   border: 1px solid rgba(56, 189, 248, 0.3) !important;
   border-radius: 999px !important;
   padding: 1.5px 8px !important;
-  font-size: 6.8px !important;
+  font-size: 8.5px !important;
   font-weight: 600 !important;
   margin-right: 6px !important;
   display: inline-block !important;
@@ -3662,7 +3666,7 @@
 .qboqtable thead th {
   background: #071522 !important;
   color: #ffffff !important;
-  font-size: 7.5px !important;
+  font-size: 8.5px !important;
   font-weight: 700 !important;
   letter-spacing: 0.06em !important;
   border-bottom: 2px solid #c8aa72 !important;
@@ -3699,14 +3703,14 @@
 
 .qboqtable td.td-details b {
   color: #071522 !important;
-  font-size: 9px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   line-height: 1.35 !important;
 }
 
 .qboqtable td.td-details small {
   color: #475569 !important;
-  font-size: 7px !important;
+  font-size: 8.5px !important;
   line-height: 1.35 !important;
   margin-top: 2px !important;
 }
@@ -3714,8 +3718,8 @@
 /* Specification Badges Luxury Styling */
 .qboqtable .item-pill-badge {
   border-radius: 4px !important;
-  height: 15px !important;
-  font-size: 7.5px !important;
+  height: 16px !important;
+  font-size: 8.5px !important;
   font-weight: 700 !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
   padding: 0 6px !important;
@@ -3763,19 +3767,19 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 4px !important;
   font-family: monospace !important;
-  height: 15px !important;
+  height: 16px !important;
   padding: 0 6px !important;
 }
 
 .qboqtable td.td-rate {
-  font-size: 8px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
   color: #334155 !important;
   font-variant-numeric: tabular-nums !important;
 }
 
 .qboqtable td.td-amt {
-  font-size: 9px !important;
+  font-size: 10px !important;
   font-weight: 800 !important;
   color: #0284c7 !important;
   font-variant-numeric: tabular-nums !important;
@@ -3791,14 +3795,14 @@
 }
 
 .qroomtotalbar span {
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
   color: #64748b !important;
   letter-spacing: 0.04em !important;
 }
 
 .qroomtotalbar b {
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 800 !important;
   color: #0284c7 !important;
 }
@@ -3813,19 +3817,19 @@
 
 .qfloortotalbar small {
   color: #c8aa72 !important;
-  font-size: 6.8px !important;
+  font-size: 8.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.12em !important;
 }
 
 .qfloortotalbar b {
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
 }
 
 .qfloortotalbar strong {
-  font-size: 13.5px !important;
+  font-size: 15px !important;
   font-weight: 800 !important;
   color: #38bdf8 !important;
 }
@@ -3860,19 +3864,19 @@
   border: 1px solid #bbf7d0 !important;
   color: #16a34a !important;
   border-radius: 50% !important;
-  width: 14px !important;
-  height: 14px !important;
+  width: 16px !important;
+  height: 16px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   font-weight: 800 !important;
   flex-shrink: 0 !important;
 }
 
 .qsubsystemfeaturelist li span:last-child {
   color: #0f172a !important;
-  font-size: 7.5px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
   line-height: 1.4 !important;
 }
@@ -3887,7 +3891,7 @@
 
 .qfeaturesfooterbar span {
   color: #f1f5f9 !important;
-  font-size: 7.5px !important;
+  font-size: 9.5px !important;
   font-weight: 600 !important;
 }
 
@@ -3907,7 +3911,7 @@
 
 .qscenesteps code {
   color: #0369a1 !important;
-  font-size: 7.5px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
 }
 
@@ -3922,8 +3926,8 @@
   color: #ffffff !important;
   border: 1px solid #c8aa72 !important;
   border-radius: 4px !important;
-  padding: 2px 8px !important;
-  font-size: 7px !important;
+  padding: 3px 8px !important;
+  font-size: 9px !important;
   font-weight: 800 !important;
 }
 
@@ -3945,7 +3949,7 @@
   background: #071522 !important;
   color: #ffffff !important;
   border-bottom: 2px solid #c8aa72 !important;
-  font-size: 7.5px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
 }
 
@@ -3956,13 +3960,13 @@
 }
 
 .qprojectsummarytable .qgrandtotalrow strong {
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   color: #ffffff !important;
 }
 
 .qprojectsummarytable .qgrandtotalrow small {
   color: #cbd5e1 !important;
-  font-size: 7.5px !important;
+  font-size: 9px !important;
 }
 
 .qprojectsummarytable .qgrandtotalrow td:last-child strong {
@@ -3985,7 +3989,7 @@
 
 .qmilestones article strong {
   color: #0284c7 !important;
-  font-size: 9.5px !important;
+  font-size: 12px !important;
   font-weight: 800 !important;
 }
 
@@ -4012,12 +4016,12 @@
 
 .qbankhead b {
   color: #ffffff !important;
-  font-size: 8.5px !important;
+  font-size: 11.5px !important;
 }
 
 .qbankhead span {
   color: #c8aa72 !important;
-  font-size: 7px !important;
+  font-size: 9.5px !important;
 }
 
 .qsignbox {
@@ -4043,7 +4047,7 @@
 
 .qclosingbanner small {
   color: #c8aa72 !important;
-  font-size: 7px !important;
+  font-size: 8.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
 }

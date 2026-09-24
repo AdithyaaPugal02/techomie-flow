@@ -190,7 +190,7 @@ const normalizeQuantities = (snapshot: R) => {
     normalized.details.validUntil = normalized.details.validUntil || later(30);
   }
   normalized.taxMode = normalized.taxMode || "GST";
-  normalized.warranty = normalized.warranty || "All Techomie Smart Products: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)\nRoyal Edge & Touch Series: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)";
+  normalized.warranty = normalized.warranty || "Techomie Smart Products: 2+4 Years Warranty (2 Years Full Replacement + 4 Years Service Warranty)\nRoyal Edge & Edge Series Switches: 10+10 Years Warranty (10 Years Full Replacement + 10 Years Service Warranty)";
 
   for (const floor of normalized.floors) {
     if (!Array.isArray(floor.rooms)) floor.rooms = [];
@@ -686,7 +686,7 @@ function QuoteWorkspace({
         { name: "One Month After Handover", percent: 10, condition: "Final sign-off & retention" },
       ],
       terms: "",
-      warranty: "All Techomie Smart Products: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)\nRoyal Edge & Touch Series: 10 Years Warranty (5 Years Full Replacement + 5 Years Service Warranty)",
+      warranty: "Techomie Smart Products: 2+4 Years Warranty (2 Years Full Replacement + 4 Years Service Warranty)\nRoyal Edge & Edge Series Switches: 10+10 Years Warranty (10 Years Full Replacement + 10 Years Service Warranty)",
       taxMode: "GST",
     }),
     [tab, setTab] = useState(initialTab),
@@ -3506,7 +3506,12 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
                               discount: 0,
                               gst: Number(activeVariant.tax_rate || 18),
                               taxMode,
-                              warranty: activeVariant.warranty || m.defaultWarranty || "",
+                              warranty:
+                                activeVariant.warranty ||
+                                m.defaultWarranty ||
+                                (/edge/i.test(`${m.name} ${m.series || ""} ${activeVariant.series || ""}`)
+                                  ? "10+10 Years"
+                                  : "2+4 Years"),
                               optional: false,
                               note: "",
                             })
@@ -3579,7 +3584,10 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
                             discount: 0,
                             gst: Number(x.tax_rate || 18),
                             taxMode,
-                            warranty: x.warranty || x.default_warranty || "",
+                            warranty:
+                              x.warranty ||
+                              x.default_warranty ||
+                              (/edge/i.test(`${x.name} ${x.series || ""}`) ? "10+10 Years" : "2+4 Years"),
                             optional: false,
                             note: "",
                           })
@@ -5139,20 +5147,20 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         {/* WARRANTY ASSURANCE CARDS */}
         <div className="qwarrantygrid">
           <article className="qwarrantycard">
-            <div className="qwarrantybadge"><strong>10-YR</strong></div>
+            <div className="qwarrantybadge"><strong>2+4 YR</strong></div>
             <div>
-              <small>ALL TECHOMIE SMART PRODUCTS</small>
-              <b>10-Year Warranty</b>
-              <span>5 Years Full Replacement + 5 Years Service Warranty</span>
+              <small>TECHOMIE SMART PRODUCTS</small>
+              <b>2+4 Years Warranty</b>
+              <span>2 Years Full Replacement + 4 Years Service Warranty</span>
             </div>
           </article>
 
           <article className="qwarrantycard gold">
-            <div className="qwarrantybadge"><strong>10-YR</strong></div>
+            <div className="qwarrantybadge"><strong>10+10 YR</strong></div>
             <div>
-              <small>ROYAL EDGE &amp; LUXURY TOUCH SERIES</small>
-              <b>10-Year Warranty</b>
-              <span>5 Years Full Replacement + 5 Years Service Warranty</span>
+              <small>ROYAL EDGE &amp; EDGE VARIANT SWITCHES</small>
+              <b>10+10 Year Warranty</b>
+              <span>10 Years Full Replacement + 10 Years Service Warranty</span>
             </div>
           </article>
         </div>
@@ -5170,23 +5178,27 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             </div>
             <div>
               <small>BANK NAME</small>
-              <b>{snap.company?.bankName || "HDFC Bank"}</b>
+              <b>{snap.company?.bankName || "Bank of India"}</b>
             </div>
             <div>
               <small>ACCOUNT NUMBER</small>
-              <b>{snap.company?.bankAccountNumber || "50200084928192"}</b>
+              <b>{snap.company?.bankAccountNumber || "824320110000389"}</b>
             </div>
             <div>
               <small>IFSC CODE</small>
-              <b>{snap.company?.bankIfsc || "HDFC0000281"}</b>
+              <b>{snap.company?.bankIfsc || "BKID0008243"}</b>
             </div>
             <div>
               <small>BRANCH</small>
               <b>{snap.company?.bankBranch || "Peelamedu, Coimbatore"}</b>
             </div>
             <div>
+              <small>ACCOUNT TYPE</small>
+              <b>{snap.company?.accountType || "Current Account"}</b>
+            </div>
+            <div>
               <small>UPI ID</small>
-              <b>{snap.company?.upiId || "techomie@hdfcbank"}</b>
+              <b>{snap.company?.upiId || "7598883121@ybl"}</b>
             </div>
           </div>
         </div>
