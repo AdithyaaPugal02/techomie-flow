@@ -175,6 +175,7 @@ export default function ExpensesModule({
     setSaving("Saving…");
     const payload = {
       ...form,
+      project_id: form.project_id && String(form.project_id).trim() ? String(form.project_id).trim() : null,
       amount: currentAmount,
       description: desc,
       vendor: vend,

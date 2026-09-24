@@ -53,4 +53,6 @@ yarn-error.log*
 
 # Scratch & temporary scripts
 /scratch/
+tsconfig.tsbuildinfo
+/tmp/updated_phlipton_parsed.txt
 

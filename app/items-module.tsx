@@ -7,8 +7,14 @@ const money = (v: any) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(Number(v || 0));
-const imageUrl = (v: string) =>
-  v?.startsWith("/") ? v : `/api/uploads/${v}`;
+export const imageUrl = (v?: string | null) => {
+  if (!v) return "";
+  const s = String(v).trim();
+  if (!s) return "";
+  if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("blob:")) return s;
+  if (s.startsWith("/")) return s;
+  return `/api/uploads/${s}`;
+};
 const blank = {
   name: "",
   variantName: "",
@@ -78,6 +84,7 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
     if (!edit) return;
     const body = {
         ...edit,
+        imageKey: edit.imageKey || edit.image_key || edit.image || null,
         sellingPrice: Number(edit.sellingPrice),
         purchaseCost: Number(edit.purchaseCost),
         minimumPrice: edit.minimumPrice ? Number(edit.minimumPrice) : null,
@@ -102,13 +109,18 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
     load();
   };
   const upload = async (file: File) => {
-    if (!edit) return;
     const x = new FormData();
     x.set("image", file);
     const r = await fetch("/api/uploads", { method: "POST", body: x }),
       d = await r.json();
-    if (r.ok) setEdit({ ...edit, imageKey: String(d.url).split("/").pop() });
-    else setMsg(d.error);
+    if (r.ok) {
+      const key = d.key || String(d.url).split("/").pop();
+      setEdit((prev: R | null) => (prev ? { ...prev, imageKey: key } : prev));
+      return { ok: true, key, url: d.url };
+    } else {
+      setMsg(d.error || "Upload failed");
+      return { ok: false, error: d.error || "Upload failed" };
+    }
   };
   const archive = async (v: R) => {
     if (
@@ -568,11 +580,29 @@ function ItemForm({
   upload,
 }: {
   v: R;
-  set: (x: R) => void;
+  set: (x: any) => void;
   close: () => void;
   save: () => void;
-  upload: (f: File) => void;
+  upload: (f: File) => Promise<{ ok: boolean; key?: string; error?: string }>;
 }) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    setUploadError("");
+    try {
+      const res = await upload(file);
+      if (!res.ok) {
+        setUploadError(res.error || "Upload failed");
+      }
+    } catch (err: any) {
+      setUploadError(err?.message || "Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const field = (k: string, l: string, type = "text") => (
     <label>
       <span>{l}</span>
@@ -580,10 +610,10 @@ function ItemForm({
         type={type}
         value={v[k] ?? ""}
         onChange={(e) =>
-          set({
-            ...v,
+          set((prev: R) => ({
+            ...prev,
             [k]: type === "checkbox" ? e.target.checked : e.target.value,
-          })
+          }))
         }
       />
     </label>
@@ -612,7 +642,7 @@ function ItemForm({
             <span>Item type</span>
             <select
               value={v.itemType}
-              onChange={(e) => set({ ...v, itemType: e.target.value })}
+              onChange={(e) => set((prev: R) => ({ ...prev, itemType: e.target.value }))}
             >
               {["Product", "Installation", "Service"].map((x) => (
                 <option key={x}>{x}</option>
@@ -623,7 +653,7 @@ function ItemForm({
             <span>Technology</span>
             <select
               value={v.technology}
-              onChange={(e) => set({ ...v, technology: e.target.value })}
+              onChange={(e) => set((prev: R) => ({ ...prev, technology: e.target.value }))}
             >
               {["", "ZigBee", "Wi-Fi", "Matter", "Other"].map((x) => (
                 <option key={x}>{x}</option>
@@ -636,7 +666,7 @@ function ItemForm({
             <span>Description</span>
             <textarea
               value={v.description}
-              onChange={(e) => set({ ...v, description: e.target.value })}
+              onChange={(e) => set((prev: R) => ({ ...prev, description: e.target.value }))}
             />
           </label>
           {field("hsn", "HSN/SAC")}
@@ -646,19 +676,138 @@ function ItemForm({
           {field("sellingPrice", "Selling price *", "number")}
           {field("purchaseCost", "Buying price *", "number")}
           {field("minimumPrice", "Minimum price", "number")}
-          <label>
-            <span>Upload / replace image</span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-            />
-          </label>
+
+          {/* ── Product Photo Section with Live Preview ── */}
+          <div className="wide itemform-photo-section" style={{
+            gridColumn: "1 / -1",
+            padding: "16px",
+            background: "#f8fafc",
+            border: "1px solid #cbd5e1",
+            borderRadius: "10px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, fontSize: "14px", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                📷 Product Photo {v.imageKey && <span style={{ fontSize: "11px", color: "#16a34a", background: "#dcfce7", padding: "2px 8px", borderRadius: "12px" }}>✓ Photo Attached</span>}
+              </span>
+              {v.imageKey && (
+                <button
+                  type="button"
+                  style={{
+                    background: "#fee2e2",
+                    color: "#dc2626",
+                    border: "1px solid #fca5a5",
+                    borderRadius: "6px",
+                    padding: "4px 10px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                  onClick={() => set((prev: R) => ({ ...prev, imageKey: "" }))}
+                >
+                  ✕ Remove Photo
+                </button>
+              )}
+            </div>
+
+            {uploadError && (
+              <div style={{ color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "8px 12px", borderRadius: "6px", fontSize: "13px" }}>
+                ⚠ {uploadError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+              {/* Thumbnail preview */}
+              <div style={{
+                width: "110px",
+                height: "110px",
+                borderRadius: "8px",
+                border: "2px dashed #cbd5e1",
+                background: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
+                position: "relative",
+              }}>
+                {v.imageKey ? (
+                  <img
+                    src={imageUrl(v.imageKey)}
+                    alt="Product preview"
+                    style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", padding: "8px" }}>
+                    No Photo
+                  </span>
+                )}
+                {isUploading && (
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "rgba(255,255,255,0.88)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#2563eb",
+                  }}>
+                    Uploading...
+                  </div>
+                )}
+              </div>
+
+              {/* Upload controls */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1, minWidth: "220px" }}>
+                <label style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  padding: "8px 16px",
+                  background: isUploading ? "#94a3b8" : "#2563eb",
+                  color: "#ffffff",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: isUploading ? "not-allowed" : "pointer",
+                  width: "fit-content",
+                }}>
+                  {isUploading ? "Uploading image..." : v.imageKey ? "🔄 Replace Product Photo" : "📁 Upload Product Photo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    style={{ display: "none" }}
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                  />
+                </label>
+                <small style={{ color: "#64748b", fontSize: "11px" }}>
+                  Supported formats: JPG, PNG, WebP, SVG (up to 15 MB). Displays immediately across catalog, quotations and PDF proposals.
+                </small>
+                {/* Manual image key / URL override */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                  <span style={{ fontSize: "11px", color: "#64748b", whiteSpace: "nowrap" }}>Image key / path:</span>
+                  <input
+                    type="text"
+                    placeholder="/products/... or filename"
+                    style={{ fontSize: "12px", padding: "4px 8px", flex: 1 }}
+                    value={v.imageKey || ""}
+                    onChange={(e) => set((prev: R) => ({ ...prev, imageKey: e.target.value.trim() }))}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <footer>
-          <button onClick={close}>Cancel</button>
-          <button className="primary" onClick={save}>
-            Save item
+          <button onClick={close} disabled={isUploading}>Cancel</button>
+          <button className="primary" onClick={save} disabled={isUploading}>
+            {isUploading ? "Uploading photo..." : "Save item"}
           </button>
         </footer>
       </div>

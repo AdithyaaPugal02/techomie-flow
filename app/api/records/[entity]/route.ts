@@ -370,7 +370,12 @@ export async function POST(req: Request) {
         created_at: now,
         received_by: values.received_by || user.id,
       });
-    if (entity === "expenses") extra.created_at = now;
+    if (entity === "expenses") {
+      extra.created_at = now;
+      if (values.project_id !== undefined) {
+        values.project_id = (typeof values.project_id === "string" && values.project_id.trim()) ? values.project_id.trim() : null;
+      }
+    }
     if (entity === "vendors") extra.created_at = now;
     if (entity === "zoho")
       Object.assign(extra, {

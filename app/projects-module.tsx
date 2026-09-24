@@ -63,6 +63,60 @@ const tabs = [
   { id: "Activity Timeline", label: "Timeline", icon: "🕒" },
 ];
 
+// Quick-Create Customer dialog (only name required)
+function QuickCreateCustomer({
+  onCreated,
+  onClose,
+}: {
+  onCreated: (c: R) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({ customerType: "Individual", name: "", phone: "", email: "", city: "", state: "Tamil Nadu" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const submit = async () => {
+    if (!form.name.trim()) { setErr("Customer name is required"); return; }
+    setBusy(true); setErr("");
+    try {
+      const r = await fetch("/api/customers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(form) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Failed to create customer"); setBusy(false); return; }
+      onCreated(d.customer);
+    } catch (e: any) { setErr(e?.message || "Network error"); } finally { setBusy(false); }
+  };
+  const f = (k: keyof typeof form, label: string) => (
+    <label className="qcc-field"><span>{label}</span>
+      <input value={form[k]} autoFocus={k === "name"} onChange={(e) => setForm({ ...form, [k]: e.target.value })} onKeyDown={(e) => e.key === "Enter" && submit()} />
+    </label>
+  );
+  return (
+    <div className="qcc-backdrop" onClick={onClose}>
+      <div className="qcc-dialog" onClick={(e) => e.stopPropagation()}>
+        <header className="qcc-header"><div><small>QUICK ADD</small><h3>New Customer</h3></div><button className="qcc-close" onClick={onClose}>×</button></header>
+        <div className="qcc-body">
+          <p className="qcc-hint">Only the customer name is required. Other details can be filled from Customers module.</p>
+          {err && <div className="qcc-err">{err}</div>}
+          <div className="qcc-form">
+            <label className="qcc-field"><span>Customer type</span>
+              <select value={form.customerType} onChange={(e) => setForm({ ...form, customerType: e.target.value })}>
+                {["Individual","Company","Builder","Architect","Contractor","Dealer","Other"].map((x) => <option key={x}>{x}</option>)}
+              </select>
+            </label>
+            {f("name", "Customer / company name ★")}
+            {f("phone", "Phone")}
+            {f("email", "Email")}
+            {f("city", "City")}
+          </div>
+        </div>
+        <div className="qcc-actions">
+          <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button type="button" className="primary" disabled={busy || !form.name.trim()} onClick={submit}>{busy ? "Creating…" : "Create customer"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectsModule({
   role,
   initialFilter,
@@ -535,6 +589,9 @@ function ProjectCreate({
 }) {
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showQCC, setShowQCC] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState<R[]>([]);
+  const allCustomers = [...(options.customers || []), ...localCustomers.filter((lc: R) => !(options.customers || []).some((oc: R) => String(oc.id) === String(lc.id)))];
 
   const sites = useMemo(() => {
     return (options.sites || []).filter(
@@ -623,35 +680,56 @@ function ProjectCreate({
             </div>
           )}
 
-          <label>
-            <span>
-              Customer <b>*</b>
-            </span>
-            <select
-              value={v.customerId}
-              onChange={(e) => {
-                const cId = e.target.value;
-                const cust = (options.customers || []).find(
-                  (x: R) => String(x.id) === String(cId)
-                );
-                set({
-                  ...v,
-                  customerId: cId,
-                  siteId: "",
-                  quotationId: "",
-                  address: cust?.billing_address || v.address || "",
-                  title: v.title || (cust?.name ? `${cust.name} Project` : ""),
-                });
+          {showQCC && (
+            <QuickCreateCustomer
+              onCreated={(c) => {
+                setLocalCustomers((prev) => [...prev.filter((x) => String(x.id) !== String(c.id)), c]);
+                set({ ...v, customerId: String(c.id), siteId: "", quotationId: "", title: v.title || (c.name ? `${c.name} Project` : "") });
+                setShowQCC(false);
               }}
+              onClose={() => setShowQCC(false)}
+            />
+          )}
+
+          <div className="qcc-row" style={{ alignItems: "flex-end" }}>
+            <label style={{ flex: 1 }}>
+              <span>
+                Customer <b>*</b>
+              </span>
+              <select
+                value={v.customerId}
+                onChange={(e) => {
+                  const cId = e.target.value;
+                  const cust = allCustomers.find(
+                    (x: R) => String(x.id) === String(cId)
+                  );
+                  set({
+                    ...v,
+                    customerId: cId,
+                    siteId: "",
+                    quotationId: "",
+                    address: cust?.billing_address || v.address || "",
+                    title: v.title || (cust?.name ? `${cust.name} Project` : ""),
+                  });
+                }}
+              >
+                <option value="">Select customer</option>
+                {allCustomers.map((x: R) => (
+                  <option key={x.id} value={x.id}>
+                    {x.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="qcc-add-btn"
+              title="Create a new customer on the spot"
+              onClick={() => setShowQCC(true)}
             >
-              <option value="">Select customer</option>
-              {(options.customers || []).map((x: R) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              ＋ New
+            </button>
+          </div>
 
           <label>
             <span>Project Location / Address</span>

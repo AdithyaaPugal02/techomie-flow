@@ -1256,75 +1256,99 @@
   color: #0f172a;
 }
 .qpaperfinance .qmilestones {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 3mm;
-  margin: 1mm 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  margin: 1.5mm 0;
 }
 .qpaperfinance .qmilestones article {
   display: grid;
-  grid-template-columns: 8mm 1fr auto;
+  grid-template-columns: 8.5mm 1fr auto;
   align-items: center;
-  gap: 3mm;
-  padding: 2.5mm 3.5mm;
+  gap: 3.5mm;
+  padding: 2.2mm 4mm;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 7px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 .qpaperfinance .qmilestones article > i {
-  width: 7.5mm;
-  height: 7.5mm;
+  width: 8mm;
+  height: 8mm;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: #0f172a;
   color: #38bdf8;
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 800;
   font-style: normal;
+  flex-shrink: 0;
 }
 .qpaperfinance .qmilestones article > span {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 1.5px;
   min-width: 0;
+  overflow: visible;
 }
 .qpaperfinance .qmilestones small {
+  display: block;
+  color: #aa8448;
+  font-size: 6.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+.qpaperfinance .qmilestones b {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  padding-bottom: 1px;
+}
+.qpaperfinance .qmilestones em {
+  display: block;
+  color: #64748b;
+  font-size: 6.8px;
+  font-style: normal;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: visible;
+}
+.qpaperfinance .qmilestones strong {
+  font-size: 11px;
+  font-weight: 800;
   color: #0284c7;
-  font-size: 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.qpaperfinance .qcommercialtermsbox {
+  margin-top: 2.5mm;
+  padding: 2.5mm 4mm;
+}
+.qpaperfinance .qcommercialtermsbox small {
+  color: #0284c7;
+  font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
-.qpaperfinance .qmilestones b {
-  font-size: 8.5px;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.qpaperfinance .qmilestones em {
-  color: #64748b;
-  font-size: 6.5px;
-  font-style: normal;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.qpaperfinance .qmilestones strong {
-  font-size: 10px;
-  font-weight: 800;
-  color: #0f172a;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.qpaperfinance .qcommercialtermsbox {
-  margin-top: 3mm;
-  padding: 3mm 4mm;
+.qpaperfinance .qcommercialtermsbox p {
+  margin: 1mm 0 0;
+  font-size: 7.2px;
+  color: #475569;
+  line-height: 1.4;
 }
 .qpaperfinance .qcommercialbreakdown {
-  margin-top: 3.5mm;
-  gap: 4mm;
+  margin-top: 3mm;
+  gap: 3.5mm;
 }
 
 /* Compact styling for unified execution & closing page */
@@ -1822,57 +1846,153 @@
 .qpaperpremium .qmilestones {
   display: flex;
   flex-direction: column;
-  gap: 3mm;
-  margin: 5mm 0;
+  gap: 2.5mm;
+  margin: 3mm 0;
 }
 .qpaperpremium .qmilestones article {
   display: grid;
-  grid-template-columns: 12mm 1fr auto;
+  grid-template-columns: 10mm 1fr auto;
   align-items: center;
-  gap: 4mm;
-  padding: 3.5mm 4.5mm;
+  gap: 3.5mm;
+  padding: 2.5mm 4mm;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 .qpaperpremium .qmilestones article > i {
-  width: 10mm;
-  height: 10mm;
+  width: 9mm;
+  height: 9mm;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: #0f172a;
   color: #38bdf8;
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 800;
   font-style: normal;
+  flex-shrink: 0;
 }
 .qpaperpremium .qmilestones article > span {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 1.5px;
+  min-width: 0;
+  overflow: visible;
 }
 .qpaperpremium .qmilestones small {
-  color: #0284c7;
+  display: block;
+  color: #aa8448;
   font-size: 6.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 .qpaperpremium .qmilestones b {
+  display: block;
   font-size: 9.5px;
+  font-weight: 700;
   color: #0f172a;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  padding-bottom: 1px;
 }
 .qpaperpremium .qmilestones em {
+  display: block;
   color: #64748b;
   font-size: 7px;
   font-style: normal;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: visible;
 }
 .qpaperpremium .qmilestones strong {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  color: #0f172a;
+  color: #0284c7;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* Compact Page Fit for Commercial Summary & Payment Terms */
+.qpaperpremium.qpaper .qpaperfinance {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.qpaperpremium .qpaperfinance .qsectiontitle {
+  margin-bottom: 2.5mm !important;
+}
+.qpaperpremium .qpaperfinance .qsectiontitle h2 {
+  font-size: 20px !important;
+  margin: 0.5mm 0 0 !important;
+}
+.qpaperpremium .qpaperfinance .qfloortablebox {
+  margin: 2mm 0 !important;
+}
+.qpaperpremium .qpaperfinance .qfloortable th,
+.qpaperpremium .qpaperfinance .qfloortable td {
+  padding: 3.5px 8px !important;
+}
+.qpaperpremium .qpaperfinance .qprojectsummarytablebox {
+  margin: 2mm 0 !important;
+}
+.qpaperpremium .qpaperfinance .qprojectsummarytable th {
+  padding: 1.6mm 4mm !important;
+}
+.qpaperpremium .qpaperfinance .qprojectsummarytable td {
+  padding: 1.6mm 4mm !important;
+}
+.qpaperpremium .qpaperfinance .qprojectsummarytable .qgrandtotalrow td {
+  padding: 2.2mm 4mm !important;
+}
+.qpaperpremium .qpaperfinance .qinstallationchargesbox {
+  margin: 1.8mm 0 !important;
+  padding: 1.6mm 3.5mm !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones-block {
+  margin-top: 1.8mm !important;
+}
+.qpaperpremium .qpaperfinance .qsubheading {
+  margin-bottom: 1mm !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones {
+  margin: 1.2mm 0 !important;
+  gap: 1.8mm !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones article {
+  padding: 1.8mm 3.5mm !important;
+  gap: 3mm !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones article > i {
+  width: 8mm !important;
+  height: 8mm !important;
+  font-size: 7.5px !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones b {
+  font-size: 9.5px !important;
+  line-height: 1.4 !important;
+  overflow: visible !important;
+}
+.qpaperpremium .qpaperfinance .qmilestones strong {
+  font-size: 10.5px !important;
+}
+.qpaperpremium .qpaperfinance .qprojecttimelinebox {
+  margin: 1.8mm 0 !important;
+  padding: 1.6mm 3.5mm !important;
+}
+.qpaperpremium .qpaperfinance .qcommercialtermsbox {
+  margin-top: 1.8mm !important;
+  padding: 2mm 3.5mm !important;
+}
+.qpaperpremium .qpaperfinance .qcommercialtermsbox p {
+  margin: 1mm 0 0 !important;
+  font-size: 7.2px !important;
+  line-height: 1.38 !important;
 }
 
 /* Grand Total Luxury Hero Bar */
@@ -2408,18 +2528,33 @@
 }
 
 .qsubsystemicon {
-  font-size: 22px;
+  font-size: 21px;
   line-height: 1;
   background: #f0f9ff;
   border: 1px solid #bae6fd;
   border-radius: 10px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 38px;
+  height: 38px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+  overflow: hidden;
+}
+
+.qsubsystemicon-inner,
+.qsubsystemicon i {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-size: 21px !important;
+  font-style: normal !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  transform: translateY(-2.5px) !important;
 }
 
 .qsubsystemcard:nth-child(2) .qsubsystemicon {
@@ -3712,8 +3847,12 @@
 .qsubsystemicon {
   width: 38px !important;
   height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   border-radius: 10px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
 }
 
 .qbulletcheck {

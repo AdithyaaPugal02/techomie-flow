@@ -9,6 +9,108 @@ import {
   type CSSProperties,
 } from "react";
 type R = Record<string, any>;
+
+export const resolveImageUrl = (v?: string | null) => {
+  if (!v) return "";
+  const s = String(v).trim();
+  if (!s) return "";
+  if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("blob:")) return s;
+  if (s.startsWith("/")) return s;
+  return `/api/uploads/${s}`;
+};
+
+// ---------------------------------------------------------------------------
+// Quick‑Create Customer dialog (used inline in Quotations, Invoice and Projects)
+// Only "name" is mandatory; all other fields are optional.
+// ---------------------------------------------------------------------------
+function QuickCreateCustomer({
+  onCreated,
+  onClose,
+}: {
+  onCreated: (customer: R) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({
+    customerType: "Individual",
+    name: "",
+    phone: "",
+    email: "",
+    city: "",
+    state: "Tamil Nadu",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const submit = async () => {
+    if (!form.name.trim()) { setErr("Customer name is required"); return; }
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Failed to create customer"); setBusy(false); return; }
+      onCreated(d.customer);
+    } catch (e: any) {
+      setErr(e?.message || "Network error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const f = (k: keyof typeof form, label: string) => (
+    <label className="qcc-field">
+      <span>{label}</span>
+      <input
+        value={form[k]}
+        autoFocus={k === "name"}
+        onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+        onKeyDown={(e) => e.key === "Enter" && submit()}
+      />
+    </label>
+  );
+  return (
+    <div className="qcc-backdrop" onClick={onClose}>
+      <div className="qcc-dialog" onClick={(e) => e.stopPropagation()}>
+        <header className="qcc-header">
+          <div>
+            <small>QUICK ADD</small>
+            <h3>New Customer</h3>
+          </div>
+          <button className="qcc-close" onClick={onClose} title="Close">×</button>
+        </header>
+        <div className="qcc-body">
+          <p className="qcc-hint">Only the customer name is required. You can fill in the rest later from the Customers module.</p>
+          {err && <div className="qcc-err">{err}</div>}
+          <div className="qcc-form">
+            <label className="qcc-field">
+              <span>Customer type</span>
+              <select value={form.customerType} onChange={(e) => setForm({ ...form, customerType: e.target.value })}>
+                {["Individual","Company","Builder","Architect","Contractor","Dealer","Other"].map((x) => <option key={x}>{x}</option>)}
+              </select>
+            </label>
+            {f("name", "Customer / company name ★")}
+            {f("phone", "Phone")}
+            {f("email", "Email")}
+            {f("city", "City")}
+          </div>
+        </div>
+        <div className="qcc-actions">
+          <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button
+            type="button"
+            className="primary"
+            disabled={busy || !form.name.trim()}
+            onClick={submit}
+          >
+            {busy ? "Creating…" : "Create customer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 const money = (n: any) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -590,9 +692,10 @@ function QuoteWorkspace({
     [salesId, setSalesId] = useState(""),
     [creating, setCreating] = useState(false),
     [branding, setBranding] = useState<R>({}),
-    [pdfGenerating, setPdfGenerating] = useState(false);
+    [pdfGenerating, setPdfGenerating] = useState(false),
+    [localCustomers, setLocalCustomers] = useState<R[]>([]);
   const timer = useRef<any>(null);
-  const customers = filters.customers || [],
+  const customers = [...(filters.customers || []), ...localCustomers.filter((lc: R) => !(filters.customers || []).some((fc: R) => String(fc.id) === String(lc.id)))],
     sites = (filters.sites || []).filter(
       (s: R) => String(s.customer_id) === String(customerId),
     );
@@ -903,6 +1006,11 @@ function QuoteWorkspace({
         users={filters.users || []}
         salesId={salesId}
         setSalesId={(value:string)=>{const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);setSnap((current:R)=>({...current,details:{...current.details,quotationByName:employee?.name||""}}))}}
+        onCustomerCreated={(newCust: R) => {
+          setLocalCustomers((prev) => [...prev.filter((x) => String(x.id) !== String(newCust.id)), newCust]);
+          setCustomerId(String(newCust.id));
+          setSiteId("");
+        }}
       />
     );
   if (!quote) return <div className="qloading">Loading quotation…</div>;
@@ -1134,6 +1242,8 @@ function QuoteWorkspace({
             users={filters.users || []}
             salesId={salesId}
             setSalesId={(value: string) => { const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);change({...snap,details:{...snap.details,quotationByName:employee?.name||""}}); }}
+            localCustomers={localCustomers}
+            setLocalCustomers={setLocalCustomers}
           />
         ) : tab === "Floors, Rooms & Items" ? (
           <Builder
@@ -1313,7 +1423,7 @@ function QuoteWorkspace({
       )}
       <div className="qmobilebar">
         {tab === "Floors, Rooms & Items" && !locked && (
-          <button onClick={() => setPicker({ floor: 0, room: 0 })}>Add Item</button>
+          <button onClick={() => setPicker({ floor: 0, room: 0, floorName: snap?.floors?.[0]?.name || "Floor 1", roomName: snap?.floors?.[0]?.rooms?.[0]?.name || "Room" })}>Add Item</button>
         )}
         <button disabled={stepIndex <= 0} onClick={() => moveStep(-1)}>Previous</button>
         <button disabled={stepIndex < 0 || stepIndex >= 4} onClick={() => moveStep(1)}>Next</button>
@@ -1342,9 +1452,21 @@ function NewQuote({
   users,
   salesId,
   setSalesId,
+  onCustomerCreated,
 }: R) {
+  const [showQCC, setShowQCC] = useState(false);
   return (
     <div className="newquote">
+      {showQCC && (
+        <QuickCreateCustomer
+          onCreated={(c) => {
+            setShowQCC(false);
+            if (onCustomerCreated) onCustomerCreated(c);
+            setCustomerId(String(c.id));
+          }}
+          onClose={() => setShowQCC(false)}
+        />
+      )}
       <header>
         <button onClick={close}>← Back</button>
         <div>
@@ -1354,20 +1476,30 @@ function NewQuote({
         </div>
       </header>
       <div className="newquotecard">
-        <label>
-          <span>Customer *</span>
-          <select
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
+        <div className="qcc-row">
+          <label style={{ flex: 1 }}>
+            <span>Customer *</span>
+            <select
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+            >
+              <option value="">Select customer</option>
+              {customers.map((c: R) => (
+                <option value={c.id} key={c.id}>
+                  {c.name}{c.phone ? ` · ${c.phone}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="qcc-add-btn"
+            title="Create a new customer on the spot"
+            onClick={() => setShowQCC(true)}
           >
-            <option value="">Select customer</option>
-            {customers.map((c: R) => (
-              <option value={c.id} key={c.id}>
-                {c.name} · {c.phone}
-              </option>
-            ))}
-          </select>
-        </label>
+            ＋ New
+          </button>
+        </div>
         <label>
           <span>Installation site *</span>
           <select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
@@ -1493,13 +1625,28 @@ function Details({
   users,
   salesId,
   setSalesId,
+  localCustomers,
+  setLocalCustomers,
 }: R) {
+  const [showQCC, setShowQCC] = useState(false);
+  const allCustomers = [...(customers || []), ...((localCustomers as R[] | undefined) || []).filter((lc: R) => !(customers || []).some((c: R) => String(c.id) === String(lc.id)))];
   const d = snap.details || {},
     change = (k: string, v: any) => set({ ...snap, details: { ...d, [k]: v } }),
     customerSites = (allSites || []).filter(
       (site: R) => String(site.customer_id) === String(customerId),
     );
   return (
+    <>
+    {showQCC && (
+      <QuickCreateCustomer
+        onCreated={(c) => {
+          setShowQCC(false);
+          if (setLocalCustomers) setLocalCustomers((prev: R[]) => [...prev.filter((x: R) => String(x.id) !== String(c.id)), c]);
+          setCustomerId(String(c.id));
+        }}
+        onClose={() => setShowQCC(false)}
+      />
+    )}
     <section className="qcard">
       <h2>Customer and quotation details</h2>
       <div className="qform">
@@ -1545,21 +1692,33 @@ function Details({
             onChange={(e) => change("validUntil", e.target.value)}
           />
         </label>
-        <label>
-          <span>Customer</span>
-          <select
-            disabled={locked}
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
-          >
-            <option value="">Select customer</option>
-            {(customers || []).map((customer: R) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name} · {customer.phone}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="qcc-row">
+          <label style={{ flex: 1 }}>
+            <span>Customer</span>
+            <select
+              disabled={locked}
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+            >
+              <option value="">Select customer</option>
+              {allCustomers.map((customer: R) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}{customer.phone ? ` · ${customer.phone}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!locked && (
+            <button
+              type="button"
+              className="qcc-add-btn"
+              title="Create a new customer on the spot"
+              onClick={() => setShowQCC(true)}
+            >
+              ＋ New
+            </button>
+          )}
+        </div>
         <label>
           <span>Installation site</span>
           <select
@@ -1673,6 +1832,7 @@ function Details({
         </label>
       </div>
     </section>
+    </>
   );
 }
 function Builder({ snap, set, locked, openPicker }: R) {
@@ -1771,7 +1931,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                   {!locked && (
                     <>
                       <button
-                        onClick={() => openPicker({ floor: fi, room: ri })}
+                        onClick={() => openPicker({ floor: fi, room: ri, floorName: f.name, roomName: r.name })}
                       >
                         ＋ Add item
                       </button>
@@ -1808,19 +1968,87 @@ function Builder({ snap, set, locked, openPicker }: R) {
                 <div className="qitems">
                   {(r.items || []).map((x: R, ii: number) => {
                     const itemKey = `${fi}-${ri}-${ii}`;
+                    const showVariants = editingItem === itemKey;
                     return <article className="qitemcard" key={itemKey}>
+                    {/* ── Top row: image / name / pills / qty / price / disc / total / actions ── */}
                     <div className="qitem">
-                      <img src={x.image || "/techomie-logo.jpg"} alt="" />
+                      <div className="qitem-thumb-wrapper" style={{ position: "relative", width: "46px", height: "46px", flexShrink: 0 }}>
+                        <img
+                          src={resolveImageUrl(x.image) || "/techomie-logo.jpg"}
+                          alt=""
+                          style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0" }}
+                        />
+                        {!locked && (
+                          <label
+                            title="Upload / Change Photo"
+                            style={{
+                              position: "absolute",
+                              bottom: "-4px",
+                              right: "-4px",
+                              background: "#2563eb",
+                              color: "#fff",
+                              borderRadius: "50%",
+                              width: "18px",
+                              height: "18px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "10px",
+                              cursor: "pointer",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                            }}
+                          >
+                            📷
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const fd = new FormData();
+                                fd.set("image", file);
+                                const res = await fetch("/api/uploads", { method: "POST", body: fd });
+                                const dat = await res.json();
+                                if (res.ok && dat.url) {
+                                  const key = dat.key || String(dat.url).split("/").pop();
+                                  mut((n) => {
+                                    n.floors[fi].rooms[ri].items[ii].image = dat.url;
+                                  });
+                                  if (x.variantId) {
+                                    fetch("/api/products", {
+                                      method: "PATCH",
+                                      headers: { "content-type": "application/json" },
+                                      body: JSON.stringify({ variantId: x.variantId, action: "update_image", imageKey: key }),
+                                    }).catch(() => {});
+                                  }
+                                } else {
+                                  alert(dat.error || "Unable to upload image");
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
                       <span>
-                        <b>
-                          {x.name}
-                          {x.series && <span className="item-pill-badge series">{x.series}</span>}
-                          {x.technology && <span className="item-pill-badge tech">{x.technology}</span>}
-                          {x.material && <span className="item-pill-badge mat">{x.material}</span>}
-                          {x.edgeColor && <span className="item-pill-badge edge">{x.edgeColor}</span>}
-                          {x.panelColor && <span className="item-pill-badge panel">{x.panelColor}</span>}
-                          {x.module && <span className="item-pill-badge mod">{x.module}M</span>}
-                        </b>
+                        {locked ? (
+                          <b>
+                            {x.name}
+                            {x.series && <span className="item-pill-badge series">{x.series}</span>}
+                            {x.technology && <span className="item-pill-badge tech">{x.technology}</span>}
+                            {x.material && <span className="item-pill-badge mat">{x.material}</span>}
+                            {x.edgeColor && <span className="item-pill-badge edge">{x.edgeColor}</span>}
+                            {x.panelColor && <span className="item-pill-badge panel">{x.panelColor}</span>}
+                            {x.module && <span className="item-pill-badge mod">{x.module}M</span>}
+                          </b>
+                        ) : (
+                          <input
+                            className="qitem-name-input"
+                            value={x.name || ""}
+                            placeholder="Item name"
+                            onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].name = e.target.value)}
+                          />
+                        )}
                         <small>
                           {x.brand} · {x.sku} · {x.variantSummary || ""}
                         </small>
@@ -1844,7 +2072,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         />
                       </label>
                       <label>
-                        Rate
+                        Rate ₹
                         <input
                           disabled={locked}
                           type="number"
@@ -1880,14 +2108,35 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <div className="qitemactions">
                           <button disabled={ii === 0} title="Move up" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii-1],a[ii]]=[a[ii],a[ii-1]]})}>↑</button>
                           <button disabled={ii === r.items.length - 1} title="Move down" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii],a[ii+1]]=[a[ii+1],a[ii]]})}>↓</button>
-                          <button title="Edit item" onClick={() => setEditingItem(editingItem === itemKey ? "" : itemKey)}>Edit</button>
+                          <button
+                            title={showVariants ? "Hide variants" : "Variants / swap"}
+                            className={showVariants ? "active" : ""}
+                            onClick={() => setEditingItem(showVariants ? "" : itemKey)}
+                          >
+                            {showVariants ? "▲ Variants" : "▼ Variants"}
+                          </button>
                           <button className="danger" title="Remove item" onClick={() => mut((n) => n.floors[fi].rooms[ri].items.splice(ii, 1))}>×</button>
                         </div>
                       )}
                     </div>
-                    {editingItem === itemKey && <div className="qitemedit">
+
+                    {/* ── Always-visible inline editable detail fields ── */}
+                    {!locked && (
+                      <div className="qiteminline">
+                        <label><span>Description</span><textarea rows={2} value={x.description || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].description = e.target.value)} /></label>
+                        <label><span>Line note / exclusions</span><textarea rows={2} value={x.note || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].note = e.target.value)} /></label>
+                        <label><span>Unit</span><input value={x.unit || "Nos"} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].unit = e.target.value)} /></label>
+                        <label><span>GST %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
+                        <label><span>Warranty</span><input value={x.warranty || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].warranty = e.target.value)} /></label>
+                        <label><span>Photo URL / key</span><input placeholder="/products/... or filename" value={x.image || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].image = e.target.value)} /></label>
+                        <label className="qitemcheck"><input type="checkbox" checked={!!x.optional} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].optional = e.target.checked)} /><span>Optional item</span></label>
+                      </div>
+                    )}
+
+                    {/* ── Variant selector (collapsible) ── */}
+                    {showVariants && <div className="qitemedit">
                       <div className="qitemeditvariantbox">
-                        <h4>Switch Variant & Customization</h4>
+                        <h4>Switch Variant &amp; Customization</h4>
                         <div className="qitemeditvariantrows">
                           {Array.isArray(x.availableVariants) && x.availableVariants.length > 1 && (
                             <>
@@ -2071,13 +2320,6 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           </div>
                         </div>
                       </div>
-                      <label><span>Item title</span><input value={x.name || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].name = e.target.value)} /></label>
-                      <label><span>Unit</span><input value={x.unit || "Nos"} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].unit = e.target.value)} /></label>
-                      <label><span>GST rate %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
-                      <label><span>Warranty</span><input value={x.warranty || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].warranty = e.target.value)} /></label>
-                      <label className="wide"><span>Description</span><textarea value={x.description || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].description = e.target.value)} /></label>
-                      <label className="wide"><span>Line note / exclusions</span><textarea value={x.note || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].note = e.target.value)} /></label>
-                      <label className="qitemcheck"><input type="checkbox" checked={!!x.optional} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].optional = e.target.checked)} /><span>Optional item</span></label>
                     </div>}
                     </article>})}
                 </div>
@@ -2234,9 +2476,10 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   useEffect(() => {
     const t = setTimeout(async () => {
       setLoading(true);
-      const query = encodeURIComponent(q);
-      const catParam = category ? `&category=${encodeURIComponent(category)}` : "";
-      const limitParam = category === "Smart switches" ? 3500 : 500;
+      const query = encodeURIComponent(q.trim());
+      // When a search term is entered, search across the entire catalog regardless of category
+      const catParam = (q.trim() || !category) ? "" : `&category=${encodeURIComponent(category)}`;
+      const limitParam = (category === "Smart switches" && !q.trim()) ? 3500 : 1500;
       try {
         const [masterResponse, legacyResponse] = await Promise.all([
           fetch(`/api/item-master?view=quotation&q=${query}`),
@@ -2281,12 +2524,39 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
 
   const categories = [
     "Smart switches",
-    "Smart doorlocks",
+    "Door locks",
     "Security system",
     "Gate automation",
     "Smart curtains",
+    "Lighting",
     "Others",
   ];
+
+  const matchesPickerCategory = (itemCat: string, selectedCat: string): boolean => {
+    if (!selectedCat) return true;
+    const ic = (itemCat || "").toLowerCase();
+    const sc = (selectedCat || "").toLowerCase();
+    if (ic === sc) return true;
+    if (sc.includes("doorlock") || sc.includes("door lock") || sc.includes("lock")) {
+      return ic.includes("lock");
+    }
+    if (sc.includes("curtain")) {
+      return ic.includes("curtain");
+    }
+    if (sc.includes("security")) {
+      return ic.includes("security") || ic.includes("sensor") || ic.includes("doorbell") || ic.includes("vdp") || ic.includes("video") || ic.includes("panel");
+    }
+    if (sc.includes("gate")) {
+      return ic.includes("gate") || ic.includes("barrier") || ic.includes("door automation") || ic.includes("window automation");
+    }
+    if (sc.includes("light")) {
+      return ic.includes("light");
+    }
+    if (sc === "others") {
+      return !["switch", "lock", "curtain", "gate", "light", "security"].some((c) => ic.includes(c));
+    }
+    return ic.includes(sc);
+  };
 
   const switchModelsMap = new Map<string, R>();
   const regularItems: R[] = [];
@@ -2318,12 +2588,12 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         unit: item.unit || "Nos",
         defaultTax: item.tax_rate || item.default_tax || 18,
         defaultWarranty: item.warranty || item.default_warranty || "",
-        image: item.image_key,
+        image: resolveImageUrl(item.image_key),
         variants: [],
       });
     }
     const m = switchModelsMap.get(key)!;
-    if (!m.image && item.image_key) m.image = item.image_key;
+    if (!m.image && item.image_key) m.image = resolveImageUrl(item.image_key);
     m.variants.push(item);
   }
 
@@ -2468,11 +2738,28 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
   filteredSwitchModels.sort((a, b) => rankModel(b.name, b.series) - rankModel(a.name, a.series) || a.name.localeCompare(b.name));
 
   const filteredRegularItems = regularItems.filter((item) => {
-    if (category && item.category !== category) return false;
+    if (q.trim()) {
+      const cleanQ = q.trim().toLowerCase();
+      const name = (item.name || "").toLowerCase();
+      const sku = (item.sku || "").toLowerCase();
+      const brand = (item.brand || "").toLowerCase();
+      const cat = (item.category || "").toLowerCase();
+      const subcat = (item.subcategory || "").toLowerCase();
+      const desc = (item.description || item.short_description || "").toLowerCase();
+      const terms = cleanQ.split(/\s+/).filter(Boolean);
+      const matchesAllTerms = terms.every((t) =>
+        name.includes(t) || sku.includes(t) || brand.includes(t) || cat.includes(t) || subcat.includes(t) || desc.includes(t)
+      );
+      if (!matchesAllTerms) return false;
+      // If user explicitly chose a specific category other than All/Switches, respect that category
+      if (category && category !== "Smart switches" && !matchesPickerCategory(item.category, category)) return false;
+    } else {
+      if (category && !matchesPickerCategory(item.category, category)) return false;
+    }
     if (model && String(item.product_id) !== model) return false;
     if (technology && item.normTech !== technology && item.parsedAttributes.technology !== technology) return false;
     if (material && item.normMat !== material && item.parsedAttributes.material !== material && item.parsedAttributes.finish !== material) return false;
-    if (activeSwitchFiltersCount > 0) {
+    if (item.category === "Smart switches" && activeSwitchFiltersCount > 0) {
       const specs = item.switchSpecs;
       if (moduleSize && specs?.moduleSize !== moduleSize) return false;
       if (switchCount && specs?.switches !== switchCount) return false;
@@ -2505,7 +2792,12 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
         <header>
           <div>
             <small>ITEMS MASTER</small>
-            <h2>Add item to selected room</h2>
+            <h2>
+              Add item
+              {target?.roomName ? (
+                <> → <span className="itempicker-location">{target.floorName && <>{target.floorName} · </>}{target.roomName}</span></>
+              ) : " to selected room"}
+            </h2>
           </div>
           <div className="itemdrawerclose">
             <span>{added ? `${added} item${added === 1 ? "" : "s"} added` : "Add multiple items, then close"}</span>
@@ -2513,12 +2805,59 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
           </div>
         </header>
 
+        {/* Quick Category Navigation Bar */}
+        <div style={{ display: "flex", gap: "6px", overflowX: "auto", padding: "6px 0 10px 0", flexWrap: "wrap", alignItems: "center" }}>
+          {[
+            { id: "", label: "All Items", icon: "📦" },
+            { id: "Door locks", label: "Door Locks", icon: "🔐" },
+            { id: "Smart switches", label: "Smart Switches", icon: "🔘" },
+            { id: "Security system", label: "Security & VDP", icon: "📹" },
+            { id: "Smart curtains", label: "Smart Curtains", icon: "🪟" },
+            { id: "Gate automation", label: "Gate Automation", icon: "🚪" },
+            { id: "Lighting", label: "Lighting", icon: "💡" },
+            { id: "Others", label: "Others", icon: "⚙️" },
+          ].map((cat) => {
+            const isSel = category === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  border: isSel ? "1.5px solid #2563eb" : "1px solid #cbd5e1",
+                  background: isSel ? "#eff6ff" : "#ffffff",
+                  color: isSel ? "#1d4ed8" : "#334155",
+                  fontWeight: isSel ? 700 : 500,
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  boxShadow: isSel ? "0 1px 3px rgba(37,99,235,0.15)" : "none",
+                }}
+                onClick={() => {
+                  setCategory(cat.id);
+                  setSeriesFilter("");
+                  setModel("");
+                  setTechnology("");
+                  setMaterial("");
+                  resetSwitchFilters();
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         <input
           className="itemsearch"
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search switch model, gang size, brand, SKU or category..."
+          placeholder="Search Series 6, door locks, switch model, gang size, brand, SKU or category..."
         />
 
         <div className="itempickerfilters">
@@ -2753,7 +3092,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                 return (
                   <article key={m.key} className="switchmodelcard">
                     <div className="switchmodelhead">
-                      <img src={activeVariant.image_key || m.image || "/techomie-logo.jpg"} alt={m.name} />
+                      <img src={resolveImageUrl(activeVariant.image_key || m.image) || "/techomie-logo.jpg"} alt={m.name} />
                       <div className="switchmodeldetails">
                         <small>{m.brand} · {m.category}{currentSeries ? ` · ${currentSeries}` : ""}</small>
                         <b>{m.name || activeVariant.name || activeVariant.sku || "Smart Switch"}</b>
@@ -2961,7 +3300,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                               edgeColor: chosenEdge,
                               panelColor: chosenPanel,
                               sku: activeVariant.sku,
-                              image: activeVariant.image_key || m.image,
+                              image: resolveImageUrl(activeVariant.image_key || m.image),
                               description: m.shortDescription || m.description || m.name,
                               technicalNotes: "",
                               technology: currentTech,
@@ -2979,7 +3318,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                                 purchaseCost: Number(v.purchase_cost || 0),
                                 taxRate: Number(v.tax_rate || 18),
                                 warranty: v.warranty || "",
-                                image: v.image_key,
+                                image: resolveImageUrl(v.image_key),
                               })),
                               qty,
                               unit: m.unit || "Nos",
@@ -3012,7 +3351,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                       : x.name;
                 return (
                   <article key={x.variant_id}>
-                    <img src={x.image_key || "/techomie-logo.jpg"} alt="" />
+                    <img src={resolveImageUrl(x.image_key) || "/techomie-logo.jpg"} alt="" />
                     <div>
                       <small>
                         {x.brand} · {x.category}
@@ -3043,7 +3382,7 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                             name,
                             brand: x.brand,
                             sku: x.sku,
-                            image: x.image_key,
+                            image: resolveImageUrl(x.image_key),
                             description:
                               x.short_description || x.description || name,
                             technicalNotes: "",
@@ -3248,7 +3587,7 @@ function QuotePaper({ quote, snap, totals }: R) {
               </h3>
               {r.items.map((x: R, i: number) => (
                 <div className="qpaperline" key={i}>
-                  <img src={x.image || "/techomie-logo.jpg"} alt="" />
+                  <img src={resolveImageUrl(x.image) || "/techomie-logo.jpg"} alt="" />
                   <span>
                     <b>
                       {x.name}
@@ -4166,7 +4505,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                             <td className="td-sno">{sno}</td>
                             <td className="td-img">
                               <div className="qboqimgwrap">
-                                <img src={item.image || logo} alt="" />
+                                <img src={resolveImageUrl(item.image) || logo} alt="" />
                               </div>
                             </td>
                             <td className="td-details">
@@ -4243,7 +4582,9 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
               <article key={sub.id} className="qsubsystemcard">
 
                 <div className="qsubsystemhead">
-                  <span className="qsubsystemicon">{sub.icon}</span>
+                  <span className="qsubsystemicon">
+                    <i className="qsubsystemicon-inner">{sub.icon}</i>
+                  </span>
                   <div className="qsubsystemtitlewrap">
                     <span className="qsubsystembadge">{sub.category}</span>
                     <b>{sub.title}</b>
@@ -4505,7 +4846,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                 <span>
                   <small>{m.percent}% MILESTONE</small>
                   <b>{m.name}</b>
-                  <em>{m.condition}</em>
+                  {m.condition ? <em>{m.condition}</em> : null}
                 </span>
                 <strong>
                   {money((totals.grand * Number(m.percent || 0)) / 100)}
@@ -4521,7 +4862,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           <div>
             <b>Project Timeline</b>
             <p>
-              Estimated Installation Duration: <b>3–5 working days</b> (subject to site readiness and availability of required electrical/network infrastructure).
+              Estimated Installation Duration: <b>3–5 working days</b>{" "}(subject to site readiness and availability of required electrical/network infrastructure).
             </p>
           </div>
         </div>

@@ -60,8 +60,26 @@ export async function GET(req: Request) {
     ] as const) {
       const val = x.searchParams.get(k);
       if (val) {
-        where.push(`${col}=?`);
-        args.push(val);
+        if (k === "category") {
+          const lower = val.toLowerCase();
+          if (lower.includes("doorlock") || lower.includes("door lock") || lower === "locks") {
+            where.push("(p.category = 'Door locks' OR p.category = 'Smart doorlocks' OR p.category = 'Door lock accessories')");
+          } else if (lower.includes("curtain")) {
+            where.push("(p.category = 'Curtains' OR p.category = 'Smart curtains')");
+          } else if (lower.includes("security")) {
+            where.push("(p.category IN ('Security', 'Security system', 'Sensors and controls', 'Doorbells', 'Video door phones'))");
+          } else if (lower.includes("gate") || lower.includes("barrier")) {
+            where.push("(p.category IN ('Gate automation', 'Door automation', 'Boom barriers', 'Window automation'))");
+          } else if (lower.includes("light")) {
+            where.push("(p.category IN ('Lighting', 'Lighting controls', 'Lighting accessories'))");
+          } else {
+            where.push(`${col}=?`);
+            args.push(val);
+          }
+        } else {
+          where.push(`${col}=?`);
+          args.push(val);
+        }
       }
     }
     const searchTerms = (x.searchParams.get("q") || "")
@@ -283,7 +301,7 @@ export async function POST(req: Request) {
           Number(p.taxRate || 18),
           p.hsn || null,
           p.warranty || null,
-          p.imageKey || null,
+          p.imageKey || p.image_key || p.image || null,
         )
         .first<{ id: number }>();
     const sku = variantSku({ category: p.category }, variant!.id);
@@ -331,6 +349,17 @@ export async function PATCH(req: Request) {
         .run();
       return Response.json({ ok: true, archived: true, used: !!used });
     }
+    if (p.action === "update_image" || ((p.imageKey !== undefined || p.image_key !== undefined || p.image !== undefined) && !p.name)) {
+      const imgKey = p.imageKey || p.image_key || p.image || null;
+      await env.DB.prepare("UPDATE variants SET image_key=? WHERE id=?").bind(imgKey, id).run();
+      await env.DB.prepare("UPDATE products SET updated_at=? WHERE id=?").bind(new Date().toISOString(), v.product_id).run();
+      await env.DB.prepare(
+        "INSERT INTO audit_log(user_id,action,entity_type,entity_id,created_at)VALUES(?,'item_image_updated','product',?,?)",
+      )
+        .bind(u.id, String(id), new Date().toISOString())
+        .run();
+      return Response.json({ ok: true, imageKey: imgKey });
+    }
     const attributes = {
       ...(p.attributes || {}),
       ...(p.sku && !String(p.sku).startsWith("TCM-") ? { supplierSku: p.sku } : {}),
@@ -356,6 +385,7 @@ export async function PATCH(req: Request) {
         v.product_id,
       )
       .run();
+    const finalImageKey = p.imageKey !== undefined ? (p.imageKey || null) : (p.image_key !== undefined ? (p.image_key || null) : (p.image !== undefined ? (p.image || null) : null));
     await env.DB.prepare(
       "UPDATE variants SET sku=?,name=?,attributes=?,selling_price=?,minimum_price=?,purchase_cost=?,tax_rate=?,hsn=?,warranty=?,image_key=?,active=? WHERE id=?",
     )
@@ -369,7 +399,7 @@ export async function PATCH(req: Request) {
         Number(p.taxRate),
         p.hsn || null,
         p.warranty || null,
-        p.imageKey || null,
+        finalImageKey,
         p.active ? 1 : 0,
         id,
       )

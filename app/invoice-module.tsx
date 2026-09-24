@@ -101,6 +101,59 @@ const states = [
   ["23", "Madhya Pradesh"],
 ];
 
+function QuickCreateCustomer({
+  onCreated,
+  onClose,
+}: {
+  onCreated: (c: Customer) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({ customerType: "Individual", name: "", phone: "", email: "", city: "", state: "Tamil Nadu" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const submit = async () => {
+    if (!form.name.trim()) { setErr("Customer name is required"); return; }
+    setBusy(true); setErr("");
+    try {
+      const r = await fetch("/api/customers", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(form) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Failed to create customer"); setBusy(false); return; }
+      onCreated(d.customer as Customer);
+    } catch (e: any) { setErr(e?.message || "Network error"); } finally { setBusy(false); }
+  };
+  const f = (k: keyof typeof form, label: string) => (
+    <label className="qcc-field"><span>{label}</span>
+      <input value={form[k]} autoFocus={k === "name"} onChange={(e) => setForm({ ...form, [k]: e.target.value })} onKeyDown={(e) => e.key === "Enter" && submit()} />
+    </label>
+  );
+  return (
+    <div className="qcc-backdrop" onClick={onClose}>
+      <div className="qcc-dialog" onClick={(e) => e.stopPropagation()}>
+        <header className="qcc-header"><div><small>QUICK ADD</small><h3>New Customer</h3></div><button className="qcc-close" onClick={onClose}>×</button></header>
+        <div className="qcc-body">
+          <p className="qcc-hint">Only the customer name is required. Other details can be filled later.</p>
+          {err && <div className="qcc-err">{err}</div>}
+          <div className="qcc-form">
+            <label className="qcc-field"><span>Customer type</span>
+              <select value={form.customerType} onChange={(e) => setForm({ ...form, customerType: e.target.value })}>
+                {["Individual","Company","Builder","Architect","Contractor","Dealer","Other"].map((x) => <option key={x}>{x}</option>)}
+              </select>
+            </label>
+            {f("name", "Customer / company name ★")}
+            {f("phone", "Phone")}
+            {f("email", "Email")}
+            {f("city", "City")}
+          </div>
+        </div>
+        <div className="qcc-actions">
+          <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button type="button" className="primary" disabled={busy || !form.name.trim()} onClick={submit}>{busy ? "Creating…" : "Create customer"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function InvoiceModule({ rooms, details, focusId, role }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([]),
     [customers, setCustomers] = useState<Customer[]>([]),
@@ -113,7 +166,8 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     [showFinalise, setShowFinalise] = useState(false),
     [branding, setBranding] = useState<Record<string, any>>({}),
     [showList, setShowList] = useState(true),
-    [zoom, setZoom] = useState<"fit" | "100" | "85" | "75">("fit");
+    [zoom, setZoom] = useState<"fit" | "100" | "85" | "75">("fit"),
+    [showQCC, setShowQCC] = useState(false);
   const [draft, setDraft] = useState({
     customerId: "",
     invoiceDate: today(),
@@ -610,6 +664,16 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
           )}
         </section>
       </div>
+      {showQCC && (
+        <QuickCreateCustomer
+          onCreated={(c) => {
+            setCustomers((prev) => [...prev.filter((x) => x.id !== c.id), c as Customer]);
+            chooseCustomer(String(c.id));
+            setShowQCC(false);
+          }}
+          onClose={() => setShowQCC(false)}
+        />
+      )}
       {showDraft && (
         <Modal
           title="Convert accepted quotation to draft invoice"
@@ -622,7 +686,8 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                 {(branding.invoiceTemplates || [{id:"executive",name:"Executive Tax Invoice"},{id:"technical",name:"Technical Blue"},{id:"classic",name:"Classic GST"}]).filter((x:Record<string,any>) => x.active !== false).map((x:Record<string,any>) => <option key={x.id} value={x.id}>{x.name}</option>)}
               </select>
             </label>
-            <label>
+          <div className="qcc-row">
+            <label style={{ flex: 1 }}>
               <span>Customer *</span>
               <select
                 value={draft.customerId}
@@ -631,11 +696,20 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                 <option value="">Select customer</option>
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} · {c.phone}
+                    {c.name}{c.phone ? ` · ${c.phone}` : ""}
                   </option>
                 ))}
               </select>
             </label>
+            <button
+              type="button"
+              className="qcc-add-btn"
+              title="Create a new customer on the spot"
+              onClick={() => setShowQCC(true)}
+            >
+              ＋ New
+            </button>
+          </div>
             <label>
               <span>Invoice date</span>
               <input

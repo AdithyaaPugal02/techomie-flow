@@ -441,7 +441,7 @@ export default function CustomersModule({
               <button
                 type="button"
                 className="primary"
-                disabled={createBusy || !form.name.trim() || !form.phone.trim()}
+                disabled={createBusy || !form.name.trim()}
                 onClick={() => create()}
               >
                 {createBusy ? "Creating customer…" : "Create permanent customer"}
@@ -656,7 +656,7 @@ function CustomerForm({
       {f("name", "Customer / company name *")}
       {f("displayName", "Display name")}
       {f("primaryContact", "Primary contact person")}
-      {f("phone", "Primary phone *")}
+      {f("phone", "Primary phone")}
       {f("whatsapp", "WhatsApp")}
       {f("email", "Email")}
       {f("alternatePhone", "Alternate phone")}

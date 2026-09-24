@@ -184,6 +184,9 @@ class Files {
     if (!fs.existsSync(targetPath)) {
       targetPath = path.join(localStorageDir, key);
     }
+    if (!fs.existsSync(targetPath)) {
+      targetPath = path.join(process.cwd(), "public", key);
+    }
     if (!fs.existsSync(targetPath)) return null;
 
     const stat = fs.statSync(targetPath);
