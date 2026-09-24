@@ -2228,9 +2228,13 @@ function Builder({ snap, set, locked, openPicker }: R) {
                             className={`qitemeditbtn ${isEditing ? "active" : ""}`}
                             style={{
                               display: "inline-flex",
+                              flexDirection: "row",
                               alignItems: "center",
+                              justifyContent: "center",
+                              whiteSpace: "nowrap",
                               gap: "4px",
-                              padding: "4px 10px",
+                              padding: "0 10px",
+                              height: "30px",
                               fontSize: "12px",
                               fontWeight: 600,
                               borderRadius: "6px",
@@ -2238,10 +2242,14 @@ function Builder({ snap, set, locked, openPicker }: R) {
                               color: isEditing ? "#1d4ed8" : "#475467",
                               border: isEditing ? "1.5px solid #3b82f6" : "1px solid #cbd5e1",
                               cursor: "pointer",
+                              minWidth: "64px",
+                              boxSizing: "border-box",
+                              flexShrink: 0,
                             }}
                             onClick={() => setEditingItem(isEditing ? "" : itemKey)}
                           >
-                            ✏️ {isEditing ? "Done" : "Edit"}
+                            <span style={{ fontSize: "12px", lineHeight: 1 }}>{isEditing ? "✓" : "✏️"}</span>
+                            <span style={{ fontSize: "12px", lineHeight: 1 }}>{isEditing ? "Done" : "Edit"}</span>
                           </button>
                           <button className="danger" title="Remove item" onClick={() => mut((n) => n.floors[fi].rooms[ri].items.splice(ii, 1))}>×</button>
                         </div>
