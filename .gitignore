@@ -55,4 +55,5 @@ yarn-error.log*
 /scratch/
 tsconfig.tsbuildinfo
 /tmp/updated_phlipton_parsed.txt
+/public/uploads/
 

@@ -9,11 +9,21 @@ const money = (v: any) =>
   }).format(Number(v || 0));
 export const imageUrl = (v?: string | null) => {
   if (!v) return "";
-  const s = String(v).trim();
+  let s = String(v).trim();
   if (!s) return "";
   if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("blob:")) return s;
   if (s.startsWith("/")) return s;
+  if (s.startsWith("api/uploads/")) return `/${s}`;
+  if (s.startsWith("uploads/")) return `/api/${s}`;
+  if (s.startsWith("public/uploads/")) return `/api/uploads/${s.replace("public/uploads/", "")}`;
   return `/api/uploads/${s}`;
+};
+
+const onImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const target = e.currentTarget;
+  if (!target.src.endsWith("/techomie-logo.jpg") && !target.src.includes("techomie-logo")) {
+    target.src = "/techomie-logo.jpg";
+  }
 };
 const blank = {
   name: "",
@@ -272,7 +282,7 @@ export default function ItemsModule({ isAdmin }: { isAdmin: boolean }) {
             >
               <span className="itemimage">
                 {x.image_key ? (
-                  <img src={imageUrl(x.image_key)} alt="" />
+                  <img src={imageUrl(x.image_key)} alt="" onError={onImageError} />
                 ) : (
                   <i>No image</i>
                 )}
@@ -474,7 +484,7 @@ function ItemDetail({
         <div className="itemdetailtop">
           <div className="gallery">
             {x.image_key ? (
-              <img src={imageUrl(x.image_key)} alt={x.name} />
+              <img src={imageUrl(x.image_key)} alt={x.name} onError={onImageError} />
             ) : (
               <span>No product image</span>
             )}

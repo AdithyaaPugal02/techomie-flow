@@ -16,6 +16,7 @@ export async function GET(req: Request) {
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
   headers.set("cache-control", "public, max-age=31536000, immutable");
+  if (object.size) headers.set("content-length", String(object.size));
   return new Response(object.body, { headers });
 }
 

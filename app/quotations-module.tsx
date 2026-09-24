@@ -12,11 +12,21 @@ type R = Record<string, any>;
 
 export const resolveImageUrl = (v?: string | null) => {
   if (!v) return "";
-  const s = String(v).trim();
+  let s = String(v).trim();
   if (!s) return "";
   if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:") || s.startsWith("blob:")) return s;
   if (s.startsWith("/")) return s;
+  if (s.startsWith("api/uploads/")) return `/${s}`;
+  if (s.startsWith("uploads/")) return `/api/${s}`;
+  if (s.startsWith("public/uploads/")) return `/api/uploads/${s.replace("public/uploads/", "")}`;
   return `/api/uploads/${s}`;
+};
+
+export const onImageErrorFallback = (e: React.SyntheticEvent<HTMLImageElement, Event>, fallback = "/techomie-logo.jpg") => {
+  const target = e.currentTarget;
+  if (!target.src.endsWith(fallback) && !target.src.includes("techomie-logo")) {
+    target.src = fallback;
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -1976,6 +1986,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <img
                           src={resolveImageUrl(x.image) || "/techomie-logo.jpg"}
                           alt=""
+                          onError={onImageErrorFallback}
                           style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "6px", background: "#f8fafc", border: "1px solid #e2e8f0" }}
                         />
                         {!locked && (
@@ -3092,7 +3103,11 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                 return (
                   <article key={m.key} className="switchmodelcard">
                     <div className="switchmodelhead">
-                      <img src={resolveImageUrl(activeVariant.image_key || m.image) || "/techomie-logo.jpg"} alt={m.name} />
+                      <img
+                        src={resolveImageUrl(activeVariant.image_key || m.image) || "/techomie-logo.jpg"}
+                        alt={m.name}
+                        onError={onImageErrorFallback}
+                      />
                       <div className="switchmodeldetails">
                         <small>{m.brand} · {m.category}{currentSeries ? ` · ${currentSeries}` : ""}</small>
                         <b>{m.name || activeVariant.name || activeVariant.sku || "Smart Switch"}</b>
@@ -3351,7 +3366,11 @@ function ItemPicker({ target, role, taxMode, close, add }: R) {
                       : x.name;
                 return (
                   <article key={x.variant_id}>
-                    <img src={resolveImageUrl(x.image_key) || "/techomie-logo.jpg"} alt="" />
+                    <img
+                      src={resolveImageUrl(x.image_key || x.image) || "/techomie-logo.jpg"}
+                      alt=""
+                      onError={onImageErrorFallback}
+                    />
                     <div>
                       <small>
                         {x.brand} · {x.category}
@@ -3587,7 +3606,11 @@ function QuotePaper({ quote, snap, totals }: R) {
               </h3>
               {r.items.map((x: R, i: number) => (
                 <div className="qpaperline" key={i}>
-                  <img src={resolveImageUrl(x.image) || "/techomie-logo.jpg"} alt="" />
+                  <img
+                    src={resolveImageUrl(x.image) || "/techomie-logo.jpg"}
+                    alt=""
+                    onError={onImageErrorFallback}
+                  />
                   <span>
                     <b>
                       {x.name}
@@ -4505,7 +4528,11 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                             <td className="td-sno">{sno}</td>
                             <td className="td-img">
                               <div className="qboqimgwrap">
-                                <img src={resolveImageUrl(item.image) || logo} alt="" />
+                                <img
+                                  src={resolveImageUrl(item.image) || logo}
+                                  alt=""
+                                  onError={(e) => onImageErrorFallback(e, logo)}
+                                />
                               </div>
                             </td>
                             <td className="td-details">

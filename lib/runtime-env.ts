@@ -167,14 +167,22 @@ class Files {
       try {
         const { data, error } = await storage.download(key);
         if (!error && data) {
+          const arrayBuffer = await data.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          try {
+            const cachedTarget = path.join(localUploadsDir, key);
+            fs.mkdirSync(path.dirname(cachedTarget), { recursive: true });
+            fs.writeFileSync(cachedTarget, buffer);
+          } catch {}
           return {
-            body: data.stream(),
-            httpMetadata: { contentType: data.type },
-            httpEtag: `"${data.size}"`,
+            body: buffer,
+            httpMetadata: { contentType: data.type || "application/octet-stream" },
+            httpEtag: `"${buffer.byteLength}"`,
             writeHttpMetadata: (headers: Headers) => {
-              if (data.type) headers.set("content-type", data.type);
+              headers.set("content-type", data.type || "application/octet-stream");
+              headers.set("content-length", String(buffer.byteLength));
             },
-            size: data.size,
+            size: buffer.byteLength,
           };
         }
       } catch {}
