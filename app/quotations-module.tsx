@@ -4877,24 +4877,24 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
     const mapHeightMm = activeRoomsCount > 0 ? Math.min(24, 10 + mapLines * 4.5) : 0;
 
     // Safe room budget calculations:
-    // Total page usable height from top padding (14mm) to footer clearance line is ~260mm.
+    // Total page usable height from top padding (14mm) to footer clearance line is ~245mm.
     // On Page 1 (isFirst === true):
     // - qpdfhead: ~16mm
     // - qsectiontitle: ~22mm
     // - qfloormap: mapHeightMm (10-24mm) + 4mm margin
     // Total top overhead on Page 1: ~42mm + mapHeightMm (for 18 areas = ~66mm)
-    // Budget on Page 1: 260 - (42 + mapHeightMm) => ~194mm (comfortably holds 6-7 items!)
+    // Budget on Page 1: 245 - (42 + mapHeightMm) => ~179mm
     //
     // Continuation pages (isFirst === false):
     // - qpdfhead: ~16mm
     // - qsectiontitle (compact continued header): ~16mm
     // Total top overhead on Continuation page: ~32mm
-    // Budget on Continuation page: 260 - 32 = 228mm (comfortably holds 7-8 items across rooms!)
+    // Budget on Continuation page: 245 - 32 = 190mm (leaves 30mm+ safe buffer before footer)
     const getBudget = (isFirst: boolean) => {
       if (isFirst) {
-        return Math.max(120, 260 - (42 + mapHeightMm));
+        return Math.max(110, 245 - (42 + mapHeightMm));
       }
-      return 228;
+      return 190;
     };
 
     const getItemHeight = (item: R) => {
@@ -4972,9 +4972,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         let chunkItemHeight = 0;
         for (let i = itemIdx; i < items.length; i++) {
           const itmH = getItemHeight(items[i]);
-          const isLast = (i === items.length - 1);
-          const contNoteCost = isLast ? 0 : 4; // 0mm since room total bar is removed, 4mm if continuation note
-          if (chunkItemHeight + itmH + contNoteCost <= available) {
+          if (chunkItemHeight + itmH <= available) {
             chunkItemHeight += itmH;
             count++;
           } else {
@@ -4989,7 +4987,6 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
 
         const slice = items.slice(itemIdx, itemIdx + count);
         const isEnd = itemIdx + slice.length >= items.length;
-        const contNoteCost = isEnd ? 0 : 4;
 
         currentPageRooms.push({
           ...room,
@@ -5001,7 +4998,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           startSno: itemIdx + 1,
         });
 
-        currentUsed += overhead + chunkItemHeight + contNoteCost;
+        currentUsed += overhead + chunkItemHeight;
         itemIdx += slice.length;
         chunkIdx++;
       }
@@ -5308,12 +5305,6 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                       })}
                     </tbody>
                   </table>
-                  {!room.isChunkEnd && (
-                    <div className="qroomcontbar">
-                      <span>{room.name} (continued on next page)</span>
-                      <small>Continues on Page {scope.pageIndex + 2} →</small>
-                    </div>
-                  )}
                 </div>
               );
             })}
