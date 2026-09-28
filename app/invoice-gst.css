@@ -1104,3 +1104,227 @@
   }
 }
 
+/* ─── Interactive Room-by-Room Allocation in Invoice Draft Modal ─── */
+.invoice-rooms-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 4px;
+}
+.invoice-rooms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.invoice-rooms-header b {
+  font-size: 13px;
+  color: #0f172a;
+  display: block;
+}
+.invoice-rooms-header span {
+  font-size: 11px;
+  color: #64748b;
+}
+.invoice-add-room-btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.invoice-add-room-btn:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+}
+.invoice-rooms-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.invoice-room-card {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+.invoice-room-card.drop-active {
+  border: 2px solid #0284c7 !important;
+  background: #f0f9ff !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+.invoice-room-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.invoice-room-head small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0284c7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.invoice-room-head h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: #1e293b;
+}
+.invoice-room-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.invoice-room-meta .count {
+  font-size: 11px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.invoice-room-meta .total {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0284c7;
+}
+.invoice-room-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.invoice-drop-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(2, 132, 199, 0.08);
+  border: 2px dashed #0284c7;
+  border-radius: 6px;
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 11px;
+  animation: q-pulse-drop 1.4s ease-in-out infinite;
+}
+.invoice-empty-room {
+  text-align: center;
+  padding: 12px;
+  color: #94a3b8;
+  font-size: 11px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 6px;
+}
+.invoice-item-row {
+  display: grid;
+  grid-template-columns: 20px minmax(140px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.invoice-item-row:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.invoice-item-row.is-dragging {
+  opacity: 0.35 !important;
+  border: 1.5px dashed #0284c7 !important;
+  background: #eff6ff !important;
+}
+.invoice-item-row.drop-before {
+  border-top: 2.5px solid #0284c7 !important;
+}
+.invoice-item-row.drop-after {
+  border-bottom: 2.5px solid #0284c7 !important;
+}
+.invoice-drag-handle {
+  color: #94a3b8;
+  cursor: grab;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+.invoice-drag-handle:hover {
+  color: #0284c7;
+}
+.invoice-drag-handle:active {
+  cursor: grabbing;
+}
+.invoice-item-info b {
+  font-size: 12px;
+  color: #1e293b;
+  display: block;
+}
+.invoice-item-info small {
+  font-size: 10px;
+  color: #64748b;
+}
+.invoice-item-total {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+.invoice-move-select {
+  height: 26px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475467;
+  cursor: pointer;
+}
+.invoice-move-select:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+.invoice-floor-select {
+  height: 22px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.invoice-floor-select:hover {
+  background: #e0f2fe;
+  border-color: #38bdf8;
+}
+
+
+

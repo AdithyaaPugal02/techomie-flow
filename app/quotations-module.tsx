@@ -1183,6 +1183,28 @@ function QuoteWorkspace({
               Convert to project
             </button>
           )}
+          {["admin", "crm", "sales"].includes(role) && quote?.id && (
+            <button
+              type="button"
+              style={{
+                background: "#0284c7",
+                color: "#ffffff",
+                fontWeight: 600,
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              onClick={() => {
+                window.location.href = `/?module=Invoices&create=1&quoteId=${encodeURIComponent(quote.id)}`;
+              }}
+            >
+              🧾 Create invoice
+            </button>
+          )}
           {role === "admin" && quote?.id && (
             <button
               style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
@@ -1861,6 +1883,31 @@ function Builder({ snap, set, locked, openPicker }: R) {
       name: string;
     }>(null),
     [editingItem, setEditingItem] = useState(""),
+    [draggedItem, setDraggedItem] = useState<{
+      floorIndex: number;
+      roomIndex: number;
+      itemIndex: number;
+    } | null>(null),
+    [dragOverRoom, setDragOverRoom] = useState<{
+      floorIndex: number;
+      roomIndex: number;
+    } | null>(null),
+    [dragOverItem, setDragOverItem] = useState<{
+      floorIndex: number;
+      roomIndex: number;
+      itemIndex: number;
+      position: "before" | "after";
+    } | null>(null),
+    [draggedRoom, setDraggedRoom] = useState<{
+      floorIndex: number;
+      roomIndex: number;
+    } | null>(null),
+    [dragOverFloor, setDragOverFloor] = useState<number | null>(null),
+    [dragOverRoomTarget, setDragOverRoomTarget] = useState<{
+      floorIndex: number;
+      roomIndex: number;
+      position: "before" | "after";
+    } | null>(null),
     floors = snap.floors || [],
     mut = (fn: (n: R) => void) => {
       const n = structuredClone(snap || {});
@@ -1875,6 +1922,88 @@ function Builder({ snap, set, locked, openPicker }: R) {
       fn(n);
       set(n);
     };
+
+  const allRoomsList = useMemo(() => {
+    const list: { floorIndex: number; roomIndex: number; label: string }[] = [];
+    floors.forEach((fl: R, fIdx: number) => {
+      (fl.rooms || []).forEach((rm: R, rIdx: number) => {
+        list.push({
+          floorIndex: fIdx,
+          roomIndex: rIdx,
+          label: `${rm.name || "Room"} (${fl.name || `Floor ${fIdx + 1}`})`,
+        });
+      });
+    });
+    return list;
+  }, [floors]);
+
+  const handleItemMove = (
+    fromFloor: number,
+    fromRoom: number,
+    fromItem: number,
+    toFloor: number,
+    toRoom: number,
+    toItem?: number,
+    position?: "before" | "after",
+  ) => {
+    mut((n) => {
+      const srcItems = n.floors?.[fromFloor]?.rooms?.[fromRoom]?.items;
+      const destItems = n.floors?.[toFloor]?.rooms?.[toRoom]?.items;
+      if (!srcItems || !destItems || !srcItems[fromItem]) return;
+
+      const [item] = srcItems.splice(fromItem, 1);
+
+      if (fromFloor === toFloor && fromRoom === toRoom) {
+        let insertIndex = toItem !== undefined ? toItem : destItems.length;
+        if (position === "after") {
+          insertIndex = fromItem < insertIndex ? insertIndex : insertIndex + 1;
+        } else if (position === "before") {
+          insertIndex = fromItem < insertIndex ? Math.max(0, insertIndex) : insertIndex;
+        }
+        destItems.splice(Math.max(0, Math.min(insertIndex, destItems.length)), 0, item);
+      } else {
+        if (toItem === undefined) {
+          destItems.push(item);
+        } else {
+          const insertIndex = position === "after" ? toItem + 1 : toItem;
+          destItems.splice(Math.max(0, Math.min(insertIndex, destItems.length)), 0, item);
+        }
+      }
+    });
+  };
+
+  const handleRoomMove = (
+    fromFloor: number,
+    fromRoom: number,
+    toFloor: number,
+    toRoom?: number,
+    position?: "before" | "after",
+  ) => {
+    mut((n) => {
+      const srcRooms = n.floors?.[fromFloor]?.rooms;
+      const destRooms = n.floors?.[toFloor]?.rooms;
+      if (!srcRooms || !destRooms || !srcRooms[fromRoom]) return;
+
+      const [room] = srcRooms.splice(fromRoom, 1);
+
+      if (fromFloor === toFloor) {
+        let insertIndex = toRoom !== undefined ? toRoom : destRooms.length;
+        if (position === "after") {
+          insertIndex = fromRoom < insertIndex ? insertIndex : insertIndex + 1;
+        } else if (position === "before") {
+          insertIndex = fromRoom < insertIndex ? Math.max(0, insertIndex) : insertIndex;
+        }
+        destRooms.splice(Math.max(0, Math.min(insertIndex, destRooms.length)), 0, room);
+      } else {
+        if (toRoom === undefined) {
+          destRooms.push(room);
+        } else {
+          const insertIndex = position === "after" ? toRoom + 1 : toRoom;
+          destRooms.splice(Math.max(0, Math.min(insertIndex, destRooms.length)), 0, room);
+        }
+      }
+    });
+  };
   return (
     <div className="qbuilder">
       <section className="qtaxmodebar">
@@ -1964,8 +2093,40 @@ function Builder({ snap, set, locked, openPicker }: R) {
           )}
         </div>
       </section>
-      {floors.map((f: R, fi: number) => (
-        <section className="qfloor" key={fi}>
+      {floors.map((f: R, fi: number) => {
+        const isFloorDropTarget = dragOverFloor === fi && !!draggedRoom;
+        return (
+        <section
+          className={`qfloor ${isFloorDropTarget ? "floor-drop-active" : ""}`}
+          key={fi}
+          onDragOver={(e) => {
+            if (locked || !draggedRoom) return;
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOverFloor(fi);
+          }}
+          onDragLeave={(e) => {
+            e.stopPropagation();
+            const rect = e.currentTarget.getBoundingClientRect();
+            if (
+              e.clientX < rect.left ||
+              e.clientX > rect.right ||
+              e.clientY < rect.top ||
+              e.clientY > rect.bottom
+            ) {
+              if (dragOverFloor === fi) setDragOverFloor(null);
+            }
+          }}
+          onDrop={(e) => {
+            if (locked || !draggedRoom) return;
+            e.preventDefault();
+            e.stopPropagation();
+            handleRoomMove(draggedRoom.floorIndex, draggedRoom.roomIndex, fi);
+            setDraggedRoom(null);
+            setDragOverFloor(null);
+            setDragOverRoomTarget(null);
+          }}
+        >
           <header>
             <input
               disabled={locked}
@@ -2023,9 +2184,124 @@ function Builder({ snap, set, locked, openPicker }: R) {
             )}
           </header>
           <div>
-            {f.rooms.map((r: R, ri: number) => (
-              <article className="qroom" key={ri}>
+            {isFloorDropTarget && (!f.rooms || f.rooms.length === 0) && (
+              <div className="qfloor-drop-indicator">
+                <span>⇩ Drop room here to move into {f.name}</span>
+              </div>
+            )}
+            {f.rooms.map((r: R, ri: number) => {
+              const isRoomDragging =
+                draggedRoom?.floorIndex === fi && draggedRoom?.roomIndex === ri;
+              const isRoomDropTarget =
+                dragOverRoom?.floorIndex === fi && dragOverRoom?.roomIndex === ri;
+              const isTargetRoomPosition =
+                dragOverRoomTarget?.floorIndex === fi &&
+                dragOverRoomTarget?.roomIndex === ri;
+              return (
+              <article
+                className={`qroom ${isRoomDragging ? "room-is-dragging" : ""} ${
+                  isRoomDropTarget ? "drop-target-active" : ""
+                } ${isTargetRoomPosition ? `drop-${dragOverRoomTarget.position}` : ""}`}
+                key={ri}
+                onDragOver={(e) => {
+                  if (locked) return;
+                  if (draggedRoom) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    const pos = e.clientY < midY ? "before" : "after";
+                    setDragOverRoomTarget({ floorIndex: fi, roomIndex: ri, position: pos });
+                    return;
+                  }
+                  if (draggedItem) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOverRoom({ floorIndex: fi, roomIndex: ri });
+                  }
+                }}
+                onDragLeave={(e) => {
+                  e.stopPropagation();
+                  if (draggedRoom) {
+                    if (
+                      dragOverRoomTarget?.floorIndex === fi &&
+                      dragOverRoomTarget?.roomIndex === ri
+                    ) {
+                      setDragOverRoomTarget(null);
+                    }
+                    return;
+                  }
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  if (
+                    e.clientX < rect.left ||
+                    e.clientX > rect.right ||
+                    e.clientY < rect.top ||
+                    e.clientY > rect.bottom
+                  ) {
+                    if (dragOverRoom?.floorIndex === fi && dragOverRoom?.roomIndex === ri) {
+                      setDragOverRoom(null);
+                    }
+                  }
+                }}
+                onDrop={(e) => {
+                  if (locked) return;
+                  if (draggedRoom) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRoomMove(
+                      draggedRoom.floorIndex,
+                      draggedRoom.roomIndex,
+                      fi,
+                      ri,
+                      dragOverRoomTarget?.position || "after",
+                    );
+                    setDraggedRoom(null);
+                    setDragOverFloor(null);
+                    setDragOverRoomTarget(null);
+                    return;
+                  }
+                  if (draggedItem) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleItemMove(
+                      draggedItem.floorIndex,
+                      draggedItem.roomIndex,
+                      draggedItem.itemIndex,
+                      fi,
+                      ri,
+                      undefined,
+                      undefined,
+                    );
+                    setDraggedItem(null);
+                    setDragOverRoom(null);
+                    setDragOverItem(null);
+                  }
+                }}
+              >
                 <div className="qroomhead">
+                  {!locked && (
+                    <span
+                      className="qroom-drag-handle"
+                      title="Drag room to another floor or reorder"
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        setDraggedRoom({ floorIndex: fi, roomIndex: ri });
+                        e.dataTransfer.setData(
+                          "application/json",
+                          JSON.stringify({ floorIndex: fi, roomIndex: ri }),
+                        );
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragEnd={() => {
+                        setDraggedRoom(null);
+                        setDragOverFloor(null);
+                        setDragOverRoomTarget(null);
+                      }}
+                    >
+                      ⋮⋮ Room
+                    </span>
+                  )}
                   <input
                     disabled={locked}
                     value={r.name}
@@ -2043,6 +2319,35 @@ function Builder({ snap, set, locked, openPicker }: R) {
                   </span>
                   {!locked && (
                     <>
+                      <select
+                        className="qroommoveselect"
+                        value={fi}
+                        title="Move this room to another floor"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "new_floor") {
+                            const newFloorName = prompt("Enter new floor name:", `Floor ${floors.length + 1}`);
+                            if (!newFloorName?.trim()) return;
+                            mut((n) => {
+                              const [room] = n.floors[fi].rooms.splice(ri, 1);
+                              n.floors.push({ name: newFloorName.trim(), rooms: [room] });
+                            });
+                          } else {
+                            const targetFloor = parseInt(val, 10);
+                            if (targetFloor !== fi) {
+                              handleRoomMove(fi, ri, targetFloor);
+                            }
+                          }
+                        }}
+                      >
+                        <option disabled value="">Move to floor…</option>
+                        {floors.map((fl: R, flIdx: number) => (
+                          <option key={flIdx} value={flIdx}>
+                            Floor: {fl.name || `Floor ${flIdx + 1}`} {flIdx === fi ? "(Current)" : ""}
+                          </option>
+                        ))}
+                        <option value="new_floor">＋ New floor…</option>
+                      </select>
                       <button
                         onClick={() => openPicker({ floor: fi, room: ri, floorName: f.name, roomName: r.name })}
                       >
@@ -2079,12 +2384,111 @@ function Builder({ snap, set, locked, openPicker }: R) {
                   }
                 />
                 <div className="qitems">
+                  {isRoomDropTarget && (!r.items || r.items.length === 0 || !dragOverItem) && (
+                    <div className="qroom-drop-indicator">
+                      <span>⇩ Drop item here to move into {r.name}</span>
+                    </div>
+                  )}
+                  {(!r.items || r.items.length === 0) && (
+                    <div className="qroom-empty-dropzone">
+                      <span>No items in this room yet. Drag an item here or click "＋ Add item"</span>
+                    </div>
+                  )}
                   {(r.items || []).map((x: R, ii: number) => {
                     const itemKey = `${fi}-${ri}-${ii}`;
                     const isEditing = editingItem === itemKey;
-                    return <article className="qitemcard" key={itemKey}>
-                    {/* ── Top row: image / name / pills / qty / price / disc / total / actions ── */}
+                    const isItemDragging =
+                      draggedItem?.floorIndex === fi &&
+                      draggedItem?.roomIndex === ri &&
+                      draggedItem?.itemIndex === ii;
+                    const isOverThisItem =
+                      dragOverItem?.floorIndex === fi &&
+                      dragOverItem?.roomIndex === ri &&
+                      dragOverItem?.itemIndex === ii;
+
+                    return <article
+                      className={`qitemcard ${isItemDragging ? "is-dragging" : ""} ${
+                        isOverThisItem ? `drop-${dragOverItem.position}` : ""
+                      } ${locked ? "locked" : ""}`}
+                      key={itemKey}
+                      draggable={!locked}
+                      onDragStart={(e) => {
+                        if (locked) return;
+                        const tag = (e.target as HTMLElement).tagName.toLowerCase();
+                        if (["input", "textarea", "select", "button", "label"].includes(tag)) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setDraggedItem({ floorIndex: fi, roomIndex: ri, itemIndex: ii });
+                        e.dataTransfer.setData(
+                          "application/json",
+                          JSON.stringify({ floorIndex: fi, roomIndex: ri, itemIndex: ii }),
+                        );
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragEnd={() => {
+                        setDraggedItem(null);
+                        setDragOverRoom(null);
+                        setDragOverItem(null);
+                      }}
+                      onDragOver={(e) => {
+                        if (locked || !draggedItem) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const relY = e.clientY - rect.top;
+                        const position = relY < rect.height / 2 ? "before" : "after";
+                        setDragOverRoom({ floorIndex: fi, roomIndex: ri });
+                        setDragOverItem({ floorIndex: fi, roomIndex: ri, itemIndex: ii, position });
+                      }}
+                      onDragLeave={(e) => {
+                        e.stopPropagation();
+                        if (
+                          dragOverItem?.floorIndex === fi &&
+                          dragOverItem?.roomIndex === ri &&
+                          dragOverItem?.itemIndex === ii
+                        ) {
+                          setDragOverItem(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        if (locked || !draggedItem) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleItemMove(
+                          draggedItem.floorIndex,
+                          draggedItem.roomIndex,
+                          draggedItem.itemIndex,
+                          fi,
+                          ri,
+                          ii,
+                          dragOverItem?.position || "after",
+                        );
+                        setDraggedItem(null);
+                        setDragOverRoom(null);
+                        setDragOverItem(null);
+                      }}
+                    >
+                    {/* ── Top row: drag handle / image / name / pills / qty / price / disc / total / actions ── */}
                     <div className="qitem">
+                      {!locked && (
+                        <div
+                          className="qdrag-handle"
+                          title="Drag to reorder or move across rooms"
+                          draggable
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            setDraggedItem({ floorIndex: fi, roomIndex: ri, itemIndex: ii });
+                            e.dataTransfer.setData(
+                              "application/json",
+                              JSON.stringify({ floorIndex: fi, roomIndex: ri, itemIndex: ii }),
+                            );
+                            e.dataTransfer.effectAllowed = "move";
+                          }}
+                        >
+                          ⋮⋮
+                        </div>
+                      )}
                       <div className="qitem-thumb-wrapper" style={{ position: "relative", width: "46px", height: "46px", flexShrink: 0 }}>
                         <img
                           src={resolveImageUrl(x.image) || "/techomie-logo.jpg"}
@@ -2224,6 +2628,29 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <div className="qitemactions">
                           <button disabled={ii === 0} title="Move up" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii-1],a[ii]]=[a[ii],a[ii-1]]})}>↑</button>
                           <button disabled={ii === r.items.length - 1} title="Move down" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii],a[ii+1]]=[a[ii+1],a[ii]]})}>↓</button>
+                          {allRoomsList.length > 1 && (
+                            <select
+                              className="qitemmoveselect"
+                              title="Move item to another room"
+                              value=""
+                              onChange={(e) => {
+                                if (!e.target.value) return;
+                                const [targetF, targetR] = e.target.value.split(":").map(Number);
+                                handleItemMove(fi, ri, ii, targetF, targetR);
+                              }}
+                            >
+                              <option value="" disabled>Room ↷</option>
+                              {allRoomsList.map((target) => (
+                                <option
+                                  key={`${target.floorIndex}:${target.roomIndex}`}
+                                  value={`${target.floorIndex}:${target.roomIndex}`}
+                                  disabled={target.floorIndex === fi && target.roomIndex === ri}
+                                >
+                                  {target.label}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                           <button
                             type="button"
                             title={isEditing ? "Close edit details" : "Edit item details"}
@@ -2459,10 +2886,12 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         </div>
                       </div>
                     </div>}
-                    </article>})}
+                    </article>
+                  })}
                 </div>
               </article>
-            ))}
+            );
+          })}
           </div>
           {!locked && (
             <div className="qflooractions">
@@ -2497,7 +2926,8 @@ function Builder({ snap, set, locked, openPicker }: R) {
             </div>
           )}
         </section>
-      ))}
+        );
+      })}
       {!locked && (
         <button
           className="addfloor"

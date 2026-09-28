@@ -272,6 +272,68 @@ export default function SettingsModule({
                   In-app reminders
                 </label>
               </Field>
+
+              {/* Danger Zone: Delete Profile */}
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  marginTop: "24px",
+                  padding: "16px 20px",
+                  border: "1px solid #fecaca",
+                  borderRadius: "10px",
+                  background: "#fff1f2",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: "0 0 4px", color: "#991b1b", fontSize: "14px", fontWeight: 700 }}>
+                    Danger Zone: Delete Profile & Account
+                  </h4>
+                  <p style={{ margin: 0, color: "#b91c1c", fontSize: "12px", lineHeight: 1.4 }}>
+                    Permanently delete your user profile account and sign out immediately. This action cannot be undone.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const confirmMsg = `Are you sure you want to permanently delete your account (${profile.email || currentEmail})? This action cannot be undone and you will be signed out immediately.`;
+                    if (!confirm(confirmMsg)) return;
+                    const targetId = profile.id || users.find((u) => u.email === (profile.email || currentEmail))?.id;
+                    if (!targetId) {
+                      return setNotice("Unable to locate profile identifier. Please refresh the page.");
+                    }
+                    const r = await fetch(`/api/users?id=${encodeURIComponent(targetId)}`, {
+                      method: "DELETE",
+                    });
+                    const d = await r.json();
+                    if (r.ok) {
+                      alert("Your profile has been deleted. Redirecting to home...");
+                      window.location.href = "/";
+                    } else {
+                      setNotice(d.error || "Failed to delete profile");
+                    }
+                  }}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: "8px",
+                    border: "1px solid #dc2626",
+                    background: "#dc2626",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  🗑 Delete Profile & Account
+                </button>
+              </div>
             </div>
           ) : active === "users" ? (
             <Users
@@ -744,18 +806,28 @@ function Users({
   };
 
   const deleteEmployee = async (u: R) => {
-    if (
-      !confirm(
-        `Are you sure you want to permanently delete employee "${u.name}" (${u.email})?`,
-      )
-    )
-      return;
+    const isMe = u.email === currentEmail;
+    const confirmMsg = isMe
+      ? `Are you sure you want to permanently delete your own account "${u.name}" (${u.email})? You will be immediately signed out and lose access.`
+      : `Are you sure you want to permanently delete employee profile "${u.name}" (${u.email})? This action cannot be undone.`;
+    if (!confirm(confirmMsg)) return;
+
     const r = await fetch(`/api/users?id=${encodeURIComponent(u.id)}`, {
       method: "DELETE",
     });
     const d = await r.json();
-    notice(r.ok ? `Employee ${u.name} deleted` : d.error);
-    if (r.ok) reload();
+    if (r.ok) {
+      notice(`Employee profile ${u.name} deleted`);
+      if (modalOpen) setModalOpen(false);
+      if (d.selfDeleted || isMe) {
+        window.location.href = "/";
+      } else {
+        reload();
+      }
+    } else {
+      notice(d.error || "Failed to delete employee");
+      if (modalOpen) setModalError(d.error || "Failed to delete employee");
+    }
   };
 
   return (
@@ -926,43 +998,67 @@ function Users({
                       {u.active ? "Deactivate" : "Activate"}
                     </button>
 
-                    {!isMe && (
-                      <button
-                        type="button"
-                        onClick={() => deleteEmployee(u)}
-                        title="Delete employee account"
-                        style={{
-                          padding: "6px 8px",
-                          fontSize: "12px",
-                          borderRadius: "6px",
-                          border: "1px solid #fecaca",
-                          background: "#fff",
-                          color: "#dc2626",
-                          cursor: "pointer",
-                        }}
-                      >
-                        🗑
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => deleteEmployee(u)}
+                      title={isMe ? "Delete my account" : "Delete employee account"}
+                      style={{
+                        padding: "6px 10px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        borderRadius: "6px",
+                        border: "1px solid #fecaca",
+                        background: "#fff",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      🗑 Delete
+                    </button>
                   </>
                 ) : isMe ? (
-                  <button
-                    type="button"
-                    onClick={() => openEdit(u)}
-                    title="Edit my details and password"
-                    style={{
-                      padding: "6px 12px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      borderRadius: "6px",
-                      border: "1px solid #cbd5e1",
-                      background: "#ffffff",
-                      color: "#0f172a",
-                      cursor: "pointer",
-                    }}
-                  >
-                    ✎ Edit My Details
-                  </button>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(u)}
+                      title="Edit my details and password"
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        borderRadius: "6px",
+                        border: "1px solid #cbd5e1",
+                        background: "#ffffff",
+                        color: "#0f172a",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✎ Edit My Details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteEmployee(u)}
+                      title="Delete my account"
+                      style={{
+                        padding: "6px 10px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        borderRadius: "6px",
+                        border: "1px solid #fecaca",
+                        background: "#fff",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
                 ) : (
                   <span style={{ fontSize: "12px", color: "#94a3b8" }}>Team member</span>
                 )}
@@ -1158,40 +1254,73 @@ function Users({
                 </div>
               </div>
 
-              <div className="modalactions">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  disabled={busy}
-                  style={{
-                    border: "1px solid #cbd5e1",
-                    background: "#ffffff",
-                    borderRadius: "8px",
-                    padding: "9px 18px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="primary"
-                  style={{
-                    background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
-                    color: "#ffffff",
-                    border: 0,
-                    borderRadius: "8px",
-                    padding: "9px 22px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    cursor: busy ? "wait" : "pointer",
-                  }}
-                >
-                  {busy ? "Saving…" : isNew ? "Create Employee" : "Save Changes"}
-                </button>
+              <div
+                className="modalactions"
+                style={{
+                  display: "flex",
+                  justifyContent: !isNew && editingUser ? "space-between" : "flex-end",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                {!isNew && editingUser && (
+                  <button
+                    type="button"
+                    onClick={() => deleteEmployee(editingUser)}
+                    disabled={busy}
+                    style={{
+                      border: "1px solid #fecaca",
+                      background: "#fff1f2",
+                      color: "#dc2626",
+                      borderRadius: "8px",
+                      padding: "9px 16px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    🗑 Delete Profile
+                  </button>
+                )}
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    disabled={busy}
+                    style={{
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      borderRadius: "8px",
+                      padding: "9px 18px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="primary"
+                    style={{
+                      background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
+                      color: "#ffffff",
+                      border: 0,
+                      borderRadius: "8px",
+                      padding: "9px 22px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      cursor: busy ? "wait" : "pointer",
+                    }}
+                  >
+                    {busy ? "Saving…" : isNew ? "Create Employee" : "Save Changes"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -103,6 +103,9 @@ export default function Home() {
   }>({ loading: true, setupRequired: false, user: null });
   const [rooms, setRooms] = useState(initialRooms);
   const [activeRoom, setActiveRoom] = useState(0);
+  const [draggedHomeItem, setDraggedHomeItem] = useState<{ roomIndex: number; itemIndex: number } | null>(null);
+  const [dragOverHomeRoom, setDragOverHomeRoom] = useState<number | null>(null);
+  const [dragOverHomeItem, setDragOverHomeItem] = useState<{ itemIndex: number; position: "before" | "after" } | null>(null);
   const [module, setModule] = useState("Overview");
   const [moduleFilter, setModuleFilter] = useState<Record<string, string>>({});
   const [quoteScreen, setQuoteScreen] = useState<"list" | "detail">("list");
@@ -809,7 +812,32 @@ export default function Home() {
                     <button
                       key={r.name}
                       onClick={() => setActiveRoom(i)}
-                      className={activeRoom === i ? "active" : ""}
+                      className={`${activeRoom === i ? "active" : ""} ${dragOverHomeRoom === i ? "drop-active" : ""}`}
+                      style={dragOverHomeRoom === i ? { border: "2px dashed #0284c7", background: "#f0f9ff" } : {}}
+                      onDragOver={(e) => {
+                        if (!draggedHomeItem) return;
+                        e.preventDefault();
+                        setDragOverHomeRoom(i);
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverHomeRoom === i) setDragOverHomeRoom(null);
+                      }}
+                      onDrop={(e) => {
+                        if (!draggedHomeItem) return;
+                        e.preventDefault();
+                        const { roomIndex, itemIndex } = draggedHomeItem;
+                        if (roomIndex !== i) {
+                          setRooms((rs) => {
+                            const next = structuredClone(rs);
+                            const [it] = next[roomIndex].items.splice(itemIndex, 1);
+                            next[i].items.push(it);
+                            return next;
+                          });
+                          _setNotice(`Moved item to ${rooms[i].name}`);
+                        }
+                        setDraggedHomeItem(null);
+                        setDragOverHomeRoom(null);
+                      }}
                     >
                       <small>{r.floor}</small>
                       <b>{r.name}</b>
@@ -827,51 +855,110 @@ export default function Home() {
                   <button>⋯</button>
                 </div>
                 <div className="lines">
-                  {rooms[activeRoom].items.map((p, i) => (
-                    <div className="line" key={`${p.id}-${i}`}>
-                      <span className="handle">⋮⋮</span>
-                      <div className="mini">
-                        <img src={p.image} alt="" />
-                      </div>
-                      <div className="linedetail">
-                        <b>{p.name}</b>
-                        <span>{p.variant}</span>
-                        <small>
-                          {p.sku} · {p.discount || 0}% discount ·{" "}
-                          {p.taxMode || "GST"}{" "}
-                          {p.taxMode === "Non-GST"
-                            ? ""
-                            : `${p.gstRate ?? p.gst ?? 18}%`}
-                        </small>
-                      </div>
-                      <div className="qty">
-                        <button onClick={() => changeQty(i, -1)}>−</button>
-                        <b>{p.qty}</b>
-                        <button onClick={() => changeQty(i, 1)}>＋</button>
-                      </div>
-                      <strong>{money(lineTaxable(p) + lineTax(p))}</strong>
-                      <span className="lineactions">
-                        <button
-                          onClick={() =>
-                            setEditingLine({
-                              room: activeRoom,
-                              index: i,
-                              item: p,
-                            })
+                  {rooms[activeRoom].items.map((p, i) => {
+                    const isDragging =
+                      draggedHomeItem?.roomIndex === activeRoom &&
+                      draggedHomeItem?.itemIndex === i;
+                    const isOver = dragOverHomeItem?.itemIndex === i;
+
+                    return (
+                      <div
+                        className="line"
+                        key={`${p.id}-${i}`}
+                        style={{
+                          opacity: isDragging ? 0.35 : 1,
+                          borderTop: isOver && dragOverHomeItem?.position === "before" ? "2.5px solid #0284c7" : undefined,
+                          borderBottom: isOver && dragOverHomeItem?.position === "after" ? "2.5px solid #0284c7" : undefined,
+                        }}
+                        draggable
+                        onDragStart={(e) => {
+                          const tag = (e.target as HTMLElement).tagName.toLowerCase();
+                          if (["input", "textarea", "select", "button"].includes(tag)) {
+                            e.preventDefault();
+                            return;
                           }
-                        >
-                          Edit
-                        </button>
-                        <button onClick={() => copyItemToRoom(i)}>Copy room</button>
-                        <button
-                          className="danger"
-                          onClick={() => removeItem(i)}
-                        >
-                          Remove
-                        </button>
-                      </span>
-                    </div>
-                  ))}
+                          setDraggedHomeItem({ roomIndex: activeRoom, itemIndex: i });
+                          e.dataTransfer.setData("application/json", JSON.stringify({ roomIndex: activeRoom, itemIndex: i }));
+                          e.dataTransfer.effectAllowed = "move";
+                        }}
+                        onDragEnd={() => {
+                          setDraggedHomeItem(null);
+                          setDragOverHomeRoom(null);
+                          setDragOverHomeItem(null);
+                        }}
+                        onDragOver={(e) => {
+                          if (!draggedHomeItem) return;
+                          e.preventDefault();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const relY = e.clientY - rect.top;
+                          const position = relY < rect.height / 2 ? "before" : "after";
+                          setDragOverHomeItem({ itemIndex: i, position });
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverHomeItem?.itemIndex === i) setDragOverHomeItem(null);
+                        }}
+                        onDrop={(e) => {
+                          if (!draggedHomeItem) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const { roomIndex, itemIndex } = draggedHomeItem;
+                          const pos = dragOverHomeItem?.position || "after";
+                          setRooms((rs) => {
+                            const next = structuredClone(rs);
+                            const [it] = next[roomIndex].items.splice(itemIndex, 1);
+                            const targetIdx = pos === "after" ? i + 1 : i;
+                            next[activeRoom].items.splice(targetIdx, 0, it);
+                            return next;
+                          });
+                          setDraggedHomeItem(null);
+                          setDragOverHomeRoom(null);
+                          setDragOverHomeItem(null);
+                        }}
+                      >
+                        <span className="handle" style={{ cursor: "grab", userSelect: "none" }}>⋮⋮</span>
+                        <div className="mini">
+                          <img src={p.image} alt="" />
+                        </div>
+                        <div className="linedetail">
+                          <b>{p.name}</b>
+                          <span>{p.variant}</span>
+                          <small>
+                            {p.sku} · {p.discount || 0}% discount ·{" "}
+                            {p.taxMode || "GST"}{" "}
+                            {p.taxMode === "Non-GST"
+                              ? ""
+                              : `${p.gstRate ?? p.gst ?? 18}%`}
+                          </small>
+                        </div>
+                        <div className="qty">
+                          <button onClick={() => changeQty(i, -1)}>−</button>
+                          <b>{p.qty}</b>
+                          <button onClick={() => changeQty(i, 1)}>＋</button>
+                        </div>
+                        <strong>{money(lineTaxable(p) + lineTax(p))}</strong>
+                        <span className="lineactions">
+                          <button
+                            onClick={() =>
+                              setEditingLine({
+                                room: activeRoom,
+                                index: i,
+                                item: p,
+                              })
+                            }
+                          >
+                            Edit
+                          </button>
+                          <button onClick={() => copyItemToRoom(i)}>Copy room</button>
+                          <button
+                            className="danger"
+                            onClick={() => removeItem(i)}
+                          >
+                            Remove
+                          </button>
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <button className="drop" onClick={() => setProductPicker(true)}>
                   ＋ Add products by variant or guided choices

@@ -157,6 +157,8 @@ function QuickCreateCustomer({
 export default function InvoiceModule({ rooms, details, focusId, role }: Props) {
   const [invoices, setInvoices] = useState<Invoice[]>([]),
     [customers, setCustomers] = useState<Customer[]>([]),
+    [quotations, setQuotations] = useState<Record<string, any>[]>([]),
+    [selectedQuoteId, setSelectedQuoteId] = useState<string>(""),
     [selected, setSelected] = useState<Invoice | null>(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
@@ -167,7 +169,18 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     [branding, setBranding] = useState<Record<string, any>>({}),
     [showList, setShowList] = useState(true),
     [zoom, setZoom] = useState<"fit" | "100" | "85" | "75">("fit"),
-    [showQCC, setShowQCC] = useState(false);
+    [showQCC, setShowQCC] = useState(false),
+    [invoiceRooms, setInvoiceRooms] = useState<Room[]>([]),
+    [draggedInvoiceItem, setDraggedInvoiceItem] = useState<{ roomIndex: number; itemIndex: number } | null>(null),
+    [dragOverInvoiceRoom, setDragOverInvoiceRoom] = useState<number | null>(null),
+    [dragOverInvoiceItem, setDragOverInvoiceItem] = useState<{ roomIndex: number; itemIndex: number; position: "before" | "after" } | null>(null);
+
+  useEffect(() => {
+    if (rooms && rooms.length) {
+      setInvoiceRooms(structuredClone(rooms));
+    }
+  }, [rooms]);
+
   const [draft, setDraft] = useState({
     customerId: "",
     invoiceDate: today(),
@@ -199,10 +212,13 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     igst: "",
     total: "",
   });
+
+  const currentRooms = invoiceRooms.length ? invoiceRooms : rooms;
+
   const quoteItems = useMemo(
     () =>
-      rooms.flatMap((r) =>
-        r.items.map((i) => ({
+      currentRooms.flatMap((r) =>
+        (r.items || []).map((i) => ({
           description: `${i.name}${i.variant ? ` — ${i.variant}` : ""} (${r.name})`,
           sku: i.sku || "",
           hsnSac: i.hsn || "8536",
@@ -213,12 +229,105 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
           gstRate: i.taxMode === "Non-GST" ? 0 : (i.gstRate ?? i.gst ?? 18),
         })),
       ),
-    [rooms],
+    [currentRooms],
   );
+
+  const handleInvoiceItemMove = (
+    fromRoom: number,
+    fromItem: number,
+    toRoom: number,
+    toItem?: number,
+    position?: "before" | "after",
+  ) => {
+    setInvoiceRooms((prev) => {
+      const next = structuredClone(prev.length ? prev : rooms);
+      const srcItems = next[fromRoom]?.items;
+      const destItems = next[toRoom]?.items;
+      if (!srcItems || !destItems || !srcItems[fromItem]) return prev;
+
+      const [item] = srcItems.splice(fromItem, 1);
+
+      if (fromRoom === toRoom) {
+        let insertIndex = toItem !== undefined ? toItem : destItems.length;
+        if (position === "after") {
+          insertIndex = fromItem < insertIndex ? insertIndex : insertIndex + 1;
+        } else if (position === "before") {
+          insertIndex = fromItem < insertIndex ? Math.max(0, insertIndex) : insertIndex;
+        }
+        destItems.splice(Math.max(0, Math.min(insertIndex, destItems.length)), 0, item);
+      } else {
+        if (toItem === undefined) {
+          destItems.push(item);
+        } else {
+          const insertIndex = position === "after" ? toItem + 1 : toItem;
+          destItems.splice(Math.max(0, Math.min(insertIndex, destItems.length)), 0, item);
+        }
+      }
+      return next;
+    });
+  };
+
+  const addInvoiceRoom = () => {
+    const name = window.prompt("Enter new room name for invoice (e.g. Master Bedroom, Outer Lounge):");
+    if (!name || !name.trim()) return;
+    setInvoiceRooms((prev) => [
+      ...(prev.length ? prev : structuredClone(rooms)),
+      { name: name.trim(), floor: "Ground Floor", items: [] },
+    ]);
+  };
+
+  const chooseQuotation = async (quoteId: string) => {
+    setSelectedQuoteId(quoteId);
+    if (!quoteId) {
+      setInvoiceRooms(structuredClone(rooms));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/quotations?id=${encodeURIComponent(quoteId)}`);
+      const dat = await res.json();
+      if (res.ok && dat.quotation) {
+        const q = dat.quotation;
+        if (q.customer_id) {
+          chooseCustomer(String(q.customer_id));
+        }
+        if (q.snapshot?.floors) {
+          const extractedRooms: Room[] = [];
+          q.snapshot.floors.forEach((fl: any) => {
+            (fl.rooms || []).forEach((rm: any) => {
+              extractedRooms.push({
+                name: rm.name || "Room",
+                floor: fl.name || "Ground Floor",
+                items: (rm.items || []).map((it: any) => ({
+                  id: it.id || String(it.productId || it.variantId || Math.random()),
+                  name: it.name,
+                  variant: it.variantSummary || it.variant || "",
+                  sku: it.sku || "",
+                  hsn: it.hsn || "8536",
+                  qty: Number(it.qty || 1),
+                  price: Number(it.price || 0),
+                  discount: Number(it.discount || 0),
+                  taxMode: it.taxMode || q.snapshot.taxMode || "GST",
+                  gstRate: Number(it.gst || it.gstRate || 18),
+                  image: it.image || "",
+                })),
+              });
+            });
+          });
+          if (extractedRooms.length) {
+            setInvoiceRooms(extractedRooms);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load quotation for invoice", err);
+    }
+  };
+
   const load = async () => {
-    const [ir, cr] = await Promise.all([
+    const [ir, cr, qr] = await Promise.all([
       fetch("/api/invoices"),
       fetch("/api/customers"),
+      fetch("/api/quotations?limit=100").catch(() => null),
     ]);
     if (ir.ok) {
       const d = await ir.json();
@@ -228,10 +337,23 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
       const d = await cr.json();
       setCustomers(d.customers || []);
     }
+    if (qr && qr.ok) {
+      const d = await qr.json().catch(() => null);
+      if (d?.quotations) setQuotations(d.quotations);
+    }
   };
   useEffect(() => {
     load();
     if (focusId) openInvoice(focusId);
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get("create") === "1" || p.get("quoteId")) {
+        setShowDraft(true);
+        if (p.get("quoteId")) {
+          chooseQuotation(p.get("quoteId")!);
+        }
+      }
+    }
   }, [focusId]);
   useEffect(() => {
     fetch("/api/settings").then(r => r.ok ? r.json() : null).then(d => {
@@ -686,6 +808,23 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                 {(branding.invoiceTemplates || [{id:"executive",name:"Executive Tax Invoice"},{id:"technical",name:"Technical Blue"},{id:"classic",name:"Classic GST"}]).filter((x:Record<string,any>) => x.active !== false).map((x:Record<string,any>) => <option key={x.id} value={x.id}>{x.name}</option>)}
               </select>
             </label>
+            {quotations.length > 0 && (
+              <label className="wide" style={{ background: "#f0f9ff", padding: "10px", borderRadius: "8px", border: "1px solid #bae6fd" }}>
+                <span style={{ color: "#0369a1", fontWeight: 700 }}>Import from Quotation (optional)</span>
+                <select
+                  value={selectedQuoteId}
+                  onChange={(e) => chooseQuotation(e.target.value)}
+                  style={{ background: "#ffffff", borderColor: "#7dd3fc" }}
+                >
+                  <option value="">Use current active quotation</option>
+                  {quotations.map((q) => (
+                    <option key={q.id} value={q.id}>
+                      {q.number || `Quote #${q.id}`} — {q.customer_name || "Customer"} · {q.site_name || "Site"} ({money(q.total || 0)})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           <div className="qcc-row">
             <label style={{ flex: 1 }}>
               <span>Customer *</span>
@@ -801,11 +940,236 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                 }
               />
             </label>
+            <div className="invoice-rooms-section wide">
+              <div className="invoice-rooms-header">
+                <div>
+                  <b>Room-by-Room Item Allocation (Drag &amp; Drop)</b>
+                  <span>Drag items between rooms to customize line attribution on the tax invoice</span>
+                </div>
+                <button type="button" className="invoice-add-room-btn" onClick={addInvoiceRoom}>
+                  ＋ Add room
+                </button>
+              </div>
+
+              <div className="invoice-rooms-grid">
+                {currentRooms.map((r, rIdx) => {
+                  const isTarget = dragOverInvoiceRoom === rIdx;
+                  const roomTotal = (r.items || []).reduce(
+                    (sum, item) => sum + item.qty * item.price * (1 - (item.discount || 0) / 100),
+                    0,
+                  );
+                  return (
+                    <div
+                      key={rIdx}
+                      className={`invoice-room-card ${isTarget ? "drop-active" : ""}`}
+                      onDragOver={(e) => {
+                        if (!draggedInvoiceItem) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDragOverInvoiceRoom(rIdx);
+                      }}
+                      onDragLeave={(e) => {
+                        e.stopPropagation();
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        if (
+                          e.clientX < rect.left ||
+                          e.clientX > rect.right ||
+                          e.clientY < rect.top ||
+                          e.clientY > rect.bottom
+                        ) {
+                          if (dragOverInvoiceRoom === rIdx) setDragOverInvoiceRoom(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        if (!draggedInvoiceItem) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleInvoiceItemMove(
+                          draggedInvoiceItem.roomIndex,
+                          draggedInvoiceItem.itemIndex,
+                          rIdx,
+                          undefined,
+                          undefined,
+                        );
+                        setDraggedInvoiceItem(null);
+                        setDragOverInvoiceRoom(null);
+                        setDragOverInvoiceItem(null);
+                      }}
+                    >
+                      <div className="invoice-room-head">
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                            <select
+                              value={r.floor || "Ground Floor"}
+                              className="invoice-floor-select"
+                              title="Change floor for this room"
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "new_floor") {
+                                  const custom = prompt("Enter new floor name:", `Floor ${currentRooms.length + 1}`);
+                                  if (!custom?.trim()) return;
+                                  setInvoiceRooms((prev) => {
+                                    const next = structuredClone(prev.length ? prev : rooms);
+                                    if (next[rIdx]) next[rIdx].floor = custom.trim();
+                                    return next;
+                                  });
+                                } else {
+                                  setInvoiceRooms((prev) => {
+                                    const next = structuredClone(prev.length ? prev : rooms);
+                                    if (next[rIdx]) next[rIdx].floor = val;
+                                    return next;
+                                  });
+                                }
+                              }}
+                            >
+                              {Array.from(
+                                new Set([
+                                  "Ground Floor",
+                                  "First Floor",
+                                  "Second Floor",
+                                  "Third Floor",
+                                  "Terrace",
+                                  ...currentRooms.map((rm) => rm.floor).filter(Boolean),
+                                ]),
+                              ).map((fl) => (
+                                <option key={fl} value={fl}>
+                                  Floor: {fl}
+                                </option>
+                              ))}
+                              <option value="new_floor">＋ New floor…</option>
+                            </select>
+                          </div>
+                          <h4>{r.name}</h4>
+                        </div>
+                        <div className="invoice-room-meta">
+                          <span className="count">{(r.items || []).length} items</span>
+                          <span className="total">{money(roomTotal)}</span>
+                        </div>
+                      </div>
+
+                      <div className="invoice-room-items">
+                        {isTarget && (!r.items || !r.items.length || !dragOverInvoiceItem) && (
+                          <div className="invoice-drop-indicator">
+                            <span>⇩ Drop item here into {r.name}</span>
+                          </div>
+                        )}
+                        {(!r.items || r.items.length === 0) && (
+                          <div className="invoice-empty-room">
+                            <span>No items in this room yet. Drag items here from other rooms.</span>
+                          </div>
+                        )}
+                        {(r.items || []).map((item, iIdx) => {
+                          const isDragging =
+                            draggedInvoiceItem?.roomIndex === rIdx &&
+                            draggedInvoiceItem?.itemIndex === iIdx;
+                          const isOver =
+                            dragOverInvoiceItem?.roomIndex === rIdx &&
+                            dragOverInvoiceItem?.itemIndex === iIdx;
+                          const itemTotal =
+                            item.qty * item.price * (1 - (item.discount || 0) / 100);
+                          return (
+                            <div
+                              key={iIdx}
+                              className={`invoice-item-row ${isDragging ? "is-dragging" : ""} ${
+                                isOver ? `drop-${dragOverInvoiceItem.position}` : ""
+                              }`}
+                              draggable
+                              onDragStart={(e) => {
+                                setDraggedInvoiceItem({ roomIndex: rIdx, itemIndex: iIdx });
+                                e.dataTransfer.setData(
+                                  "application/json",
+                                  JSON.stringify({ roomIndex: rIdx, itemIndex: iIdx }),
+                                );
+                                e.dataTransfer.effectAllowed = "move";
+                              }}
+                              onDragEnd={() => {
+                                setDraggedInvoiceItem(null);
+                                setDragOverInvoiceRoom(null);
+                                setDragOverInvoiceItem(null);
+                              }}
+                              onDragOver={(e) => {
+                                if (!draggedInvoiceItem) return;
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const relY = e.clientY - rect.top;
+                                const position = relY < rect.height / 2 ? "before" : "after";
+                                setDragOverInvoiceRoom(rIdx);
+                                setDragOverInvoiceItem({ roomIndex: rIdx, itemIndex: iIdx, position });
+                              }}
+                              onDragLeave={(e) => {
+                                e.stopPropagation();
+                                if (
+                                  dragOverInvoiceItem?.roomIndex === rIdx &&
+                                  dragOverInvoiceItem?.itemIndex === iIdx
+                                ) {
+                                  setDragOverInvoiceItem(null);
+                                }
+                              }}
+                              onDrop={(e) => {
+                                if (!draggedInvoiceItem) return;
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleInvoiceItemMove(
+                                  draggedInvoiceItem.roomIndex,
+                                  draggedInvoiceItem.itemIndex,
+                                  rIdx,
+                                  iIdx,
+                                  dragOverInvoiceItem?.position || "after",
+                                );
+                                setDraggedInvoiceItem(null);
+                                setDragOverInvoiceRoom(null);
+                                setDragOverInvoiceItem(null);
+                              }}
+                            >
+                              <span className="invoice-drag-handle" title="Drag to move between rooms">
+                                ⋮⋮
+                              </span>
+                              <div className="invoice-item-info">
+                                <b>{item.name}</b>
+                                <small>
+                                  {item.variant || item.sku || ""} · Qty {item.qty} × {money(item.price)}
+                                </small>
+                              </div>
+                              <strong className="invoice-item-total">{money(itemTotal)}</strong>
+                              {currentRooms.length > 1 && (
+                                <select
+                                  className="invoice-move-select"
+                                  title="Move to room"
+                                  value=""
+                                  onChange={(e) => {
+                                    if (!e.target.value) return;
+                                    handleInvoiceItemMove(rIdx, iIdx, Number(e.target.value));
+                                  }}
+                                >
+                                  <option value="" disabled>
+                                    Move ↷
+                                  </option>
+                                  {currentRooms.map((targetR, targetIdx) => (
+                                    <option
+                                      key={targetIdx}
+                                      value={targetIdx}
+                                      disabled={targetIdx === rIdx}
+                                    >
+                                      {targetR.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="draftcheck wide">
-              <b>{quoteItems.length} quotation lines will be copied</b>
+              <b>{quoteItems.length} lines allocated across {currentRooms.filter(r => (r.items || []).length > 0).length} room{currentRooms.filter(r => (r.items || []).length > 0).length === 1 ? "" : "s"}</b>
               <span>
-                Tax is calculated by the server. Tamil Nadu uses CGST + SGST;
-                other states use IGST.
+                Each item's room is automatically appended to its description on the final invoice. Tax is calculated by the server.
               </span>
             </div>
           </div>

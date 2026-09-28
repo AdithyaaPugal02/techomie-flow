@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { auditLog, users } from "../../../db/schema";
-import { hashPassword, randomToken, requireUser } from "../../../lib/auth";
+import { auditLog, sessions, users } from "../../../db/schema";
+import { clearSession, hashPassword, randomToken, requireUser } from "../../../lib/auth";
 
 export async function GET() {
   try {
@@ -111,20 +111,46 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const admin = await requireUser(["admin"]);
+    const caller = await requireUser();
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return Response.json({ error: "User ID is required" }, { status: 400 });
-    if (id === admin.id) return Response.json({ error: "You cannot delete your own account" }, { status: 400 });
-    await getDb().delete(users).where(eq(users.id, id));
-    await getDb().insert(auditLog).values({
-      userId: admin.id,
+
+    const isSelf = id === caller.id;
+    if (!isSelf && caller.role !== "admin") {
+      return Response.json({ error: "Only administrators can delete other staff accounts" }, { status: 403 });
+    }
+
+    const db = getDb();
+    const targetRows = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const target = targetRows[0];
+    if (!target) return Response.json({ error: "User account not found" }, { status: 404 });
+
+    // Safety guard: if deleting an admin account, ensure at least one other active admin remains
+    if (target.role === "admin") {
+      const allAdmins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
+      if (allAdmins.length <= 1) {
+        return Response.json({
+          error: "Cannot delete the sole administrator account. Please designate or create another admin first.",
+        }, { status: 400 });
+      }
+    }
+
+    await db.delete(sessions).where(eq(sessions.userId, id));
+    await db.delete(users).where(eq(users.id, id));
+    await db.insert(auditLog).values({
+      userId: caller.id,
       action: "user_deleted",
       entityType: "user",
       entityId: id,
       createdAt: new Date().toISOString(),
     });
-    return Response.json({ ok: true });
+
+    if (isSelf) {
+      await clearSession();
+    }
+
+    return Response.json({ ok: true, selfDeleted: isSelf });
   } catch (e) {
     return e instanceof Response ? e : Response.json({ error: e instanceof Error ? e.message : "Unable to delete user" }, { status: 500 });
   }

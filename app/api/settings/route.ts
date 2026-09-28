@@ -356,7 +356,7 @@ export async function GET(req: Request) {
     const u = await requireUser(),
       x = new URL(req.url);
     const profile = await env.DB.prepare(
-      "SELECT name,email,phone,profile_image,notification_preferences FROM users WHERE id=?",
+      "SELECT id,name,email,phone,profile_image,notification_preferences,role FROM users WHERE id=?",
     )
       .bind(u.id)
       .first<R>();
