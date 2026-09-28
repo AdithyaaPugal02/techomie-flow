@@ -4872,29 +4872,29 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
     const activeRooms = (floor.rooms || []).filter((r: R) => (r.items || []).length > 0);
     const activeRoomsCount = activeRooms.length;
 
-    // Floor map height on first page:
-    // When activeRoomsCount is large (e.g. 18 areas), the map wraps into 3-5 lines
-    const mapLines = activeRoomsCount > 0 ? Math.ceil(activeRoomsCount / 4) : 0;
-    const mapHeightMm = activeRoomsCount > 0 ? Math.min(36, 12 + mapLines * 6) : 0;
+    // Floor map height on first page (compact line spacing)
+    const mapLines = activeRoomsCount > 0 ? Math.ceil(activeRoomsCount / 5) : 0;
+    const mapHeightMm = activeRoomsCount > 0 ? Math.min(24, 10 + mapLines * 4.5) : 0;
 
     // Safe room budget calculations:
-    // Total page usable height from top padding to footer clearance line is ~230mm.
+    // Total page usable height from top padding (14mm) to footer clearance line is ~260mm.
     // On Page 1 (isFirst === true):
-    // - qpdfhead: ~18mm
-    // - qsectiontitle: ~26mm
-    // - qfloormap: mapHeightMm (12-36mm) + 5mm margin
-    // Total top overhead on Page 1: ~49mm + mapHeightMm (for 18 areas = ~85mm)
+    // - qpdfhead: ~16mm
+    // - qsectiontitle: ~22mm
+    // - qfloormap: mapHeightMm (10-24mm) + 4mm margin
+    // Total top overhead on Page 1: ~42mm + mapHeightMm (for 18 areas = ~66mm)
+    // Budget on Page 1: 260 - (42 + mapHeightMm) => ~194mm (comfortably holds 6-7 items!)
     //
     // Continuation pages (isFirst === false):
-    // - qpdfhead: ~18mm
-    // - qsectiontitle (compact continued header): ~18mm
-    // - No floor map on continuation pages
-    // Total top overhead on Continuation page: ~36mm
+    // - qpdfhead: ~16mm
+    // - qsectiontitle (compact continued header): ~16mm
+    // Total top overhead on Continuation page: ~32mm
+    // Budget on Continuation page: 260 - 32 = 228mm (comfortably holds 7-8 items across rooms!)
     const getBudget = (isFirst: boolean) => {
       if (isFirst) {
-        return Math.max(80, 230 - (49 + mapHeightMm));
+        return Math.max(120, 260 - (42 + mapHeightMm));
       }
-      return 190;
+      return 228;
     };
 
     const getItemHeight = (item: R) => {
@@ -4909,11 +4909,11 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       ].filter(Boolean).length;
       const hasDesc = item.description && item.description.trim().length > 15;
 
-      // Base height for 78px photo wrap + padding + title: 34mm
-      let h = 34;
-      if (pillCount >= 4 || hasFeature) h += 4;
-      if (hasDesc && pillCount >= 4) h += 3;
-      return Math.min(44, h); // 34mm - 41mm
+      // Actual row height: 78px photo wrap is 20.6mm + padding = ~23mm base
+      let h = 26;
+      if (pillCount >= 4 || hasFeature) h += 2.5;
+      if (hasDesc && pillCount >= 4) h += 1.5;
+      return Math.min(30, h); // 26mm - 30mm
     };
 
     const pushCurrentPage = () => {
@@ -4931,7 +4931,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       const budget = getBudget(pages.length === 0);
 
       if (!items.length) {
-        const cost = 20;
+        const cost = 16;
         if (currentUsed + cost > budget) pushCurrentPage();
         currentPageRooms.push({
           ...room,
@@ -4949,13 +4949,13 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       let chunkIdx = 0;
       while (itemIdx < items.length) {
         const curBudget = getBudget(pages.length === 0);
-        // Room banner + capability pills + table thead = 32mm (chunk 0)
-        // Continued banner + thead = 22mm
-        const overhead = chunkIdx === 0 ? 32 : 22;
+        // Room banner (~12mm) + thead (~8mm) = 20mm (chunk 0)
+        // Continued banner (~8mm) + thead (~8mm) = 16mm
+        const overhead = chunkIdx === 0 ? 20 : 16;
         const firstItemH = getItemHeight(items[itemIdx]);
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
-        // break to next page immediately so the room starts cleanly at the top!
+        // break to next page immediately so the room starts cleanly!
         if (chunkIdx === 0 && currentUsed > 0 && (curBudget - currentUsed < overhead + firstItemH)) {
           pushCurrentPage();
           continue;
@@ -4973,8 +4973,8 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         for (let i = itemIdx; i < items.length; i++) {
           const itmH = getItemHeight(items[i]);
           const isLast = (i === items.length - 1);
-          const totalBarCost = isLast ? 0 : 5; // No room total bar, 5mm if continuation note
-          if (chunkItemHeight + itmH + totalBarCost <= available) {
+          const contNoteCost = isLast ? 0 : 4; // 0mm since room total bar is removed, 4mm if continuation note
+          if (chunkItemHeight + itmH + contNoteCost <= available) {
             chunkItemHeight += itmH;
             count++;
           } else {
@@ -4989,7 +4989,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
 
         const slice = items.slice(itemIdx, itemIdx + count);
         const isEnd = itemIdx + slice.length >= items.length;
-        const totalBarCost = isEnd ? 0 : 5;
+        const contNoteCost = isEnd ? 0 : 4;
 
         currentPageRooms.push({
           ...room,
@@ -5001,7 +5001,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           startSno: itemIdx + 1,
         });
 
-        currentUsed += overhead + chunkItemHeight + totalBarCost;
+        currentUsed += overhead + chunkItemHeight + contNoteCost;
         itemIdx += slice.length;
         chunkIdx++;
       }
