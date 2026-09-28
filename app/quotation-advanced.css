@@ -4139,3 +4139,256 @@
 .qclosingbanner p {
   color: #94a3b8 !important;
 }
+
+/* ==========================================================
+   10. Compact Layout for Unified Execution & Closing Page
+   Ensures warranty, bank details, acceptance & signatures
+   sit comfortably above the footer with zero overlap.
+   ========================================================== */
+.qpaperpremium .qpaperclosing.qpaperterms {
+  padding: 10mm 16mm 22mm 16mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsectiontitle {
+  margin-bottom: 1.5mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsectiontitle h2 {
+  font-size: 13px !important;
+  margin: 0.5mm 0 !important;
+}
+
+.qpaperpremium .qpaperclosing .qsectiontitle small,
+.qpaperpremium .qpaperclosing .qsectiontitle span {
+  font-size: 7.5px !important;
+}
+
+/* Policy Box */
+.qpaperpremium .qpaperclosing .qpolicybox {
+  padding: 1.5mm 3mm !important;
+  margin-bottom: 1.5mm !important;
+  gap: 6px !important;
+}
+
+.qpaperpremium .qpaperclosing .qpolicyicon {
+  font-size: 13px !important;
+}
+
+.qpaperpremium .qpaperclosing .qpolicybox b {
+  font-size: 9.5px !important;
+  margin-bottom: 0.5px !important;
+}
+
+.qpaperpremium .qpaperclosing .qpolicybox p {
+  font-size: 7.5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Inclusions & Exclusions 2-Column Scope */
+.qpaperpremium .qpaperclosing .qscopetwocol {
+  gap: 3mm !important;
+  margin-bottom: 1.5mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qscopebox {
+  padding: 1.8mm 3mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qscopebox small {
+  font-size: 7.5px !important;
+  margin-bottom: 0.8mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qchecklist,
+.qpaperpremium .qpaperclosing .qcrosslist {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0.4mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qchecklist li,
+.qpaperpremium .qpaperclosing .qcrosslist li {
+  font-size: 7.5px !important;
+  line-height: 1.2 !important;
+  gap: 4px !important;
+}
+
+.qpaperpremium .qpaperclosing .qcheck,
+.qpaperpremium .qpaperclosing .qcross {
+  font-size: 7px !important;
+}
+
+/* Site Readiness Box */
+.qpaperpremium .qpaperclosing .qsitereadinessbox {
+  padding: 1.5mm 3mm !important;
+  margin: 1.5mm 0 !important;
+  gap: 6px !important;
+}
+
+.qpaperpremium .qpaperclosing .qsitereadinessicon {
+  font-size: 13px !important;
+}
+
+.qpaperpremium .qpaperclosing .qsitereadinessbox b {
+  font-size: 9.5px !important;
+  margin-bottom: 0.5px !important;
+}
+
+.qpaperpremium .qpaperclosing .qsitereadinessbox p {
+  font-size: 7.5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Dual Warranty Cards */
+.qpaperpremium .qpaperclosing .qwarrantygrid {
+  gap: 3mm !important;
+  margin: 1.5mm 0 !important;
+}
+
+.qpaperpremium .qpaperclosing .qwarrantycard {
+  padding: 1.6mm 3mm !important;
+  gap: 6px !important;
+}
+
+.qpaperpremium .qpaperclosing .qwarrantybadge {
+  font-size: 9.5px !important;
+  padding: 2.5px 6px !important;
+  font-weight: 800 !important;
+}
+
+.qpaperpremium .qpaperclosing .qwarrantycard small {
+  font-size: 7px !important;
+}
+
+.qpaperpremium .qpaperclosing .qwarrantycard b {
+  font-size: 10px !important;
+}
+
+.qpaperpremium .qpaperclosing .qwarrantycard span {
+  font-size: 7.5px !important;
+}
+
+/* Official Bank Account Card */
+.qpaperpremium .qpaperclosing .qbankcard {
+  padding: 0 !important;
+  margin: 1.5mm 0 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankhead {
+  padding: 1.2mm 3mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankhead b {
+  font-size: 8.5px !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankhead span {
+  font-size: 7px !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankgrid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1.5mm !important;
+  padding: 1.5mm 2.5mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankgrid div {
+  padding: 1mm 2mm !important;
+  border-radius: 4px !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankgrid div:last-child {
+  grid-column: span 2 !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankgrid div small {
+  font-size: 6.8px !important;
+  letter-spacing: 0.04em !important;
+}
+
+.qpaperpremium .qpaperclosing .qbankgrid div b {
+  font-size: 8.5px !important;
+}
+
+/* Official Signatures Block */
+.qpaperpremium .qpaperclosing .qacceptanceblock {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 3.5mm !important;
+  margin: 1.8mm 0 1.2mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignbox {
+  min-height: 25mm !important;
+  padding: 2mm 3.5mm !important;
+  border-radius: 6px !important;
+}
+
+.qpaperpremium .qpaperclosing .qsigntitle {
+  font-size: 8px !important;
+  margin-bottom: 0.6mm !important;
+  font-weight: 800 !important;
+}
+
+.qpaperpremium .qpaperclosing .qacceptancetext {
+  font-size: 7.5px !important;
+  line-height: 1.25 !important;
+  min-height: auto !important;
+  margin: 0 0 1mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignspace {
+  height: 9mm !important;
+  min-height: 9mm !important;
+  max-height: 11mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignspace img {
+  max-height: 8.5mm !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignline {
+  padding-top: 1mm !important;
+  border-top: 1px dashed #94a3b8 !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignline b {
+  font-size: 9.5px !important;
+}
+
+.qpaperpremium .qpaperclosing .qsignline span {
+  font-size: 7.5px !important;
+}
+
+/* Thank You Closing Banner & Prepared By Footer */
+.qpaperpremium .qpaperclosing .qclosingbanner {
+  padding: 1.5mm 3mm !important;
+  margin-top: 1.2mm !important;
+  border-radius: 6px !important;
+}
+
+.qpaperpremium .qpaperclosing .qclosingbanner small {
+  font-size: 7px !important;
+  letter-spacing: 0.1em !important;
+}
+
+.qpaperpremium .qpaperclosing .qclosingbanner h2 {
+  font-size: 11px !important;
+  margin: 0.4mm 0 !important;
+}
+
+.qpaperpremium .qpaperclosing .qclosingbanner p {
+  font-size: 7.5px !important;
+  margin: 0 !important;
+}
+
+.qpaperpremium .qpaperclosing .qpreparedbyfoot {
+  margin-top: 1mm !important;
+  padding-top: 0.8mm !important;
+  font-size: 7px !important;
+  line-height: 1.25 !important;
+}
+

@@ -4530,9 +4530,122 @@ interface SubsystemFeature {
   features: string[];
 }
 
-function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
-  // Always include all 5 smart-home solution features to showcase the complete Techomie experience
+function getSnapAllItems(snap: R): R[] {
+  const floors = snap.floors || [];
   return [
+    ...floors.flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || [])),
+    ...(snap.projectItems || []),
+  ];
+}
+
+function checkItemMatchesType(item: R, type: string): boolean {
+  const name = (item.name || "").toLowerCase();
+  const desc = (item.description || "").toLowerCase();
+  const cat = (item.category || "").toLowerCase();
+  const subcat = (item.subcategory || "").toLowerCase();
+  const series = (item.series || item.parsedAttributes?.series || "").toLowerCase();
+  const tech = (item.technology || item.parsedAttributes?.technology || "").toLowerCase();
+  const full = `${name} ${desc} ${cat} ${subcat} ${series} ${tech}`;
+
+  switch (type) {
+    case "lighting":
+      return (
+        cat.includes("light") ||
+        cat.includes("switch") ||
+        full.includes("switch") ||
+        full.includes("dimmer") ||
+        full.includes("dimming") ||
+        full.includes("fan") ||
+        full.includes("luxeray") ||
+        full.includes("royal edge") ||
+        full.includes("edge color") ||
+        full.includes("edge") ||
+        full.includes("touch") ||
+        full.includes("light") ||
+        full.includes("gang") ||
+        full.includes("relay") ||
+        full.includes("driver") ||
+        full.includes("dali") ||
+        full.includes("rgb") ||
+        full.includes("bell")
+      );
+    case "curtains":
+      return (
+        cat.includes("curtain") ||
+        full.includes("curtain") ||
+        full.includes("tubular") ||
+        full.includes("blind") ||
+        full.includes("shade") ||
+        full.includes("drape") ||
+        full.includes("motorized track")
+      );
+    case "locks":
+      return (
+        cat.includes("lock") ||
+        full.includes("lock") ||
+        full.includes("deadbolt") ||
+        full.includes("rim lock") ||
+        full.includes("mortise") ||
+        full.includes("biometric")
+      );
+    case "security":
+      return (
+        cat.includes("security") ||
+        cat.includes("sensor") ||
+        full.includes("sensor") ||
+        full.includes("motion") ||
+        full.includes("radar") ||
+        full.includes("pir") ||
+        full.includes("siren") ||
+        full.includes("alarm") ||
+        full.includes("detector") ||
+        full.includes("vdp") ||
+        full.includes("doorbell") ||
+        full.includes("intercom")
+      );
+    case "cctv":
+      return (
+        cat.includes("cctv") ||
+        cat.includes("camera") ||
+        full.includes("cctv") ||
+        full.includes("camera") ||
+        full.includes("nvr") ||
+        full.includes("dvr") ||
+        full.includes("surveillance") ||
+        full.includes("dome") ||
+        full.includes("bullet")
+      );
+    case "gate":
+      return (
+        cat.includes("gate") ||
+        cat.includes("barrier") ||
+        full.includes("gate") ||
+        full.includes("barrier") ||
+        full.includes("sliding gate") ||
+        full.includes("swing gate") ||
+        full.includes("boom barrier") ||
+        full.includes("gate motor")
+      );
+    case "network":
+      return (
+        cat.includes("network") ||
+        full.includes("gateway") ||
+        full.includes("hub") ||
+        full.includes("zigbee") ||
+        full.includes("router") ||
+        full.includes("mesh") ||
+        full.includes("access point") ||
+        full.includes("poe") ||
+        full.includes("repeater")
+      );
+    default:
+      return false;
+  }
+}
+
+function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
+  const items = getSnapAllItems(snap);
+  const allSubsystems: SubsystemFeature[] = [
     {
       id: "lighting",
       category: "SMART LIGHTING",
@@ -4617,6 +4730,16 @@ function detectQuoteSubsystems(snap: R): SubsystemFeature[] {
       ],
     },
   ];
+
+  if (!items.length) {
+    return [allSubsystems[0]];
+  }
+
+  const active = allSubsystems.filter((sub) =>
+    items.some((item) => checkItemMatchesType(item, sub.id))
+  );
+
+  return active.length ? active : [allSubsystems[0]];
 }
 
 function synthesizeSmartScenes(subsystems: SubsystemFeature[]) {
@@ -4732,42 +4855,48 @@ interface ScopeCategoryItem {
 }
 
 function detectScopeSummary(snap: R): ScopeCategoryItem[] {
-  const subsystems = detectQuoteSubsystems(snap);
-  const ids = new Set(subsystems.map((s) => s.id));
+  const items = getSnapAllItems(snap);
   const summary: ScopeCategoryItem[] = [];
 
-  if (ids.has("lighting")) {
+  const hasLighting = items.some((i) => checkItemMatchesType(i, "lighting"));
+  const hasCurtains = items.some((i) => checkItemMatchesType(i, "curtains"));
+  const hasLocks = items.some((i) => checkItemMatchesType(i, "locks"));
+  const hasSecurity = items.some((i) => checkItemMatchesType(i, "security"));
+  const hasCctv = items.some((i) => checkItemMatchesType(i, "cctv"));
+  const hasGate = items.some((i) => checkItemMatchesType(i, "gate"));
+  const hasNetwork = items.some((i) => checkItemMatchesType(i, "network"));
+
+  if (hasLighting) {
     summary.push({
       category: "Lighting Automation",
       scope: "Smart touch switches, dimmers, fan regulators and scene control",
     });
   }
-  if (ids.has("curtains")) {
+  if (hasCurtains) {
     summary.push({
       category: "Curtain Automation",
       scope: "Motorized curtain track, tubular motors and automated scheduling",
     });
   }
-  if (ids.has("locks") || ids.has("security")) {
+  if (hasLocks || hasSecurity) {
     summary.push({
       category: "Security & Access",
       scope: "Smart biometric door locks, sensors, radar and siren integration",
     });
   }
-  const allText = JSON.stringify(snap).toLowerCase();
-  if (allText.includes("cctv") || allText.includes("camera") || allText.includes("nvr")) {
+  if (hasCctv) {
     summary.push({
       category: "CCTV & Surveillance",
       scope: "High-definition cameras, NVR recording and remote mobile live view",
     });
   }
-  if (ids.has("gate")) {
+  if (hasGate) {
     summary.push({
       category: "Gate Automation",
       scope: "Heavy-duty motor operator, controller, base plate and wireless remotes",
     });
   }
-  if (allText.includes("wifi") || allText.includes("zigbee") || allText.includes("gateway") || allText.includes("network") || allText.includes("poe")) {
+  if (hasNetwork) {
     summary.push({
       category: "Networking & Mesh",
       scope: "Wi-Fi, Zigbee 3.0 mesh gateway and local network infrastructure",
@@ -4784,11 +4913,7 @@ function detectScopeSummary(snap: R): ScopeCategoryItem[] {
 }
 
 function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
-  const floors = snap.floors || [];
-  const allItems: R[] = [
-    ...floors.flatMap((f: R) => (f.rooms || []).flatMap((r: R) => r.items || [])),
-    ...(snap.projectItems || []),
-  ];
+  const allItems = getSnapAllItems(snap);
 
   const counts: Record<string, number> = {};
   for (const item of allItems) {
