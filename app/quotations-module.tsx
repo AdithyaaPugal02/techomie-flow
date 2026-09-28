@@ -4973,7 +4973,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         for (let i = itemIdx; i < items.length; i++) {
           const itmH = getItemHeight(items[i]);
           const isLast = (i === items.length - 1);
-          const totalBarCost = isLast ? 10 : 8; // 10mm for room total bar, or 8mm for continued note
+          const totalBarCost = isLast ? 0 : 5; // No room total bar, 5mm if continuation note
           if (chunkItemHeight + itmH + totalBarCost <= available) {
             chunkItemHeight += itmH;
             count++;
@@ -4989,7 +4989,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
 
         const slice = items.slice(itemIdx, itemIdx + count);
         const isEnd = itemIdx + slice.length >= items.length;
-        const totalBarCost = isEnd ? 10 : 8;
+        const totalBarCost = isEnd ? 0 : 5;
 
         currentPageRooms.push({
           ...room,
@@ -5308,20 +5308,8 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                       })}
                     </tbody>
                   </table>
-                  {room.isChunkEnd !== false ? (
-                    <div className="qroomtotalbar">
-                      <span>{room.name} Total</span>
-                      <b>
-                        {money(
-                          ((scope.floor.rooms || []).find((r: R) => r.name === room.name)?.items || room.items || []).reduce(
-                            (acc: number, x: R) => acc + line(x).total,
-                            0,
-                          ),
-                        )}
-                      </b>
-                    </div>
-                  ) : (
-                    <div className="qroomtotalbar qroomcontbar">
+                  {!room.isChunkEnd && (
+                    <div className="qroomcontbar">
                       <span>{room.name} (continued on next page)</span>
                       <small>Continues on Page {scope.pageIndex + 2} →</small>
                     </div>
@@ -5329,18 +5317,6 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                 </div>
               );
             })}
-
-            {scope.pageIndex === scope.pageCount - 1 && (
-              <div className="qfloortotalbar">
-                <div>
-                  <small>FLOOR SUB-TOTAL</small>
-                  <b>{scope.floor.name} Subtotal</b>
-                </div>
-                <strong>
-                  {money((scope.floor.rooms || []).flatMap((r: R) => r.items || []).reduce((acc: number, x: R) => acc + line(x).total, 0))}
-                </strong>
-              </div>
-            )}
 
             {foot(
               `${scope.floor.name} scope${scope.pageCount > 1 ? ` · Page ${scope.pageIndex + 1}/${scope.pageCount}` : ""}`,
