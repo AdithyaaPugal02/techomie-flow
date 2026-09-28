@@ -5093,7 +5093,127 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
         </footer>
       </section>
 
-      {/* PAGE 2: PROJECT OVERVIEW + SYSTEM SUMMARY */}
+      {/* FEATURES & BENEFITS — WHAT YOU GET */}
+      {subsystems.length > 0 && (
+        <section className="qpaperfeatures">
+          {head("FEATURES & BENEFITS — WHAT YOU GET")}
+          <div className="qsectiontitle">
+            <small>SOLUTION ARCHITECTURE &amp; VALUE</small>
+            <h2>What You Get With Your Techomie Smart Home</h2>
+            <span>
+              Personalized features &amp; everyday living experience engineered from your selected configuration
+            </span>
+          </div>
+
+          <div className={`qsubsystemsgrid qcols-${Math.min(subsystems.length, 2)}`}>
+            {subsystems.map((sub) => (
+              <article key={sub.id} className="qsubsystemcard">
+
+                <div className="qsubsystemhead">
+                  <span className="qsubsystemicon">
+                    <i className="qsubsystemicon-inner">{sub.icon}</i>
+                  </span>
+                  <div className="qsubsystemtitlewrap">
+                    <span className="qsubsystembadge">{sub.category}</span>
+                    <b>{sub.title}</b>
+                    <small>{sub.subtitle}</small>
+                  </div>
+                </div>
+                <ul className="qsubsystemfeaturelist">
+                  {sub.features.map((feat, fIdx) => (
+                    <li key={fIdx}>
+                      <span className="qbulletcheck">✓</span>
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+
+          <div className="qfeaturesfooterbar">
+            <span>
+              ✦ All hardware modules operate as a single unified ecosystem through the Techomie platform.
+            </span>
+          </div>
+
+          {foot("Features & Benefits — What You Get")}
+        </section>
+      )}
+
+      {/* SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE */}
+      {(
+        <section className="qpaperadvantage">
+          {head("YOUR TECHOMIE ADVANTAGE")}
+          <div className="qsectiontitle">
+            <small>INTELLIGENT ROUTINES &amp; SERVICE ASSURANCE</small>
+            <h2>Your Techomie Advantage &amp; Smart Scenes</h2>
+            <span>
+              Dynamic scene automations and our dedicated end-to-end service commitments
+            </span>
+          </div>
+
+          {/* SMART SCENES */}
+          <div className="qscenescapsblock">
+            <div className="qscenescapstitle">
+              <small>SYSTEM CAPABILITIES</small>
+              <b>Smart Scenes (Example Automations)</b>
+              <p>
+                Tailored specifically for the modules in your proposal and programmed during on-site commissioning:
+              </p>
+            </div>
+            <div className="qscenesgridnew">
+              {smartScenes.map((scene, sIdx) => (
+                <div key={sIdx} className="qscenecardnew">
+                  <div className="qsceneheadnew">
+                    <span className="qsceneicon">{scene.icon}</span>
+                    <div>
+                      <b>{scene.name}</b>
+                      <small>{scene.time}</small>
+                    </div>
+                  </div>
+                  <div className="qscenesteps">
+                    <code>{scene.steps}</code>
+                  </div>
+                  <p className="qscenedesc">{scene.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* WHY TECHOMIE? */}
+          <div className="qwhytechomieblock">
+            <div className="qwhyhead">
+              <div className="qwhybadge">THE TECHOMIE ADVANTAGE</div>
+              <b>Why Techomie?</b>
+              <span>11 Core Service Deliverables Included in Every Project</span>
+            </div>
+            <div className="qwhygrid">
+              {whyTechomiePoints.map((pt, pIdx) => (
+                <div key={pIdx} className="qwhyitem">
+                  <span className="qwhycheck">✓</span>
+                  <span>{pt}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* LOCAL & RELIABLE CONTROL */}
+          <div className="qlocalcontrolcard">
+            <div className="qlocalicon">🛡️</div>
+            <div className="qlocalcontent">
+              <b>Local &amp; Reliable Control</b>
+              <p>
+                Selected systems can continue to provide local control even when internet connectivity is unavailable, depending on the products and architecture used.
+              </p>
+            </div>
+          </div>
+
+          {foot("Your Techomie Advantage")}
+        </section>
+      )}
+
+      {/* PROPOSAL OVERVIEW + SYSTEM SUMMARY */}
       {detailed && (
         <section className="qintro">
           {head("PROPOSAL OVERVIEW")}
@@ -5315,126 +5435,6 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           </section>
         );
       })}
-
-      {/* 4. FEATURES & BENEFITS — WHAT YOU GET */}
-      {subsystems.length > 0 && (
-        <section className="qpaperfeatures">
-          {head("4. FEATURES & BENEFITS — WHAT YOU GET")}
-          <div className="qsectiontitle">
-            <small>SOLUTION ARCHITECTURE &amp; VALUE</small>
-            <h2>What You Get With Your Techomie Smart Home</h2>
-            <span>
-              Personalized features &amp; everyday living experience engineered from your selected configuration
-            </span>
-          </div>
-
-          <div className={`qsubsystemsgrid qcols-${Math.min(subsystems.length, 2)}`}>
-            {subsystems.map((sub) => (
-              <article key={sub.id} className="qsubsystemcard">
-
-                <div className="qsubsystemhead">
-                  <span className="qsubsystemicon">
-                    <i className="qsubsystemicon-inner">{sub.icon}</i>
-                  </span>
-                  <div className="qsubsystemtitlewrap">
-                    <span className="qsubsystembadge">{sub.category}</span>
-                    <b>{sub.title}</b>
-                    <small>{sub.subtitle}</small>
-                  </div>
-                </div>
-                <ul className="qsubsystemfeaturelist">
-                  {sub.features.map((feat, fIdx) => (
-                    <li key={fIdx}>
-                      <span className="qbulletcheck">✓</span>
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-
-          <div className="qfeaturesfooterbar">
-            <span>
-              ✦ All hardware modules operate as a single unified ecosystem through the Techomie platform.
-            </span>
-          </div>
-
-          {foot("4. Features & Benefits — What You Get")}
-        </section>
-      )}
-
-      {/* 5. SYSTEM CAPABILITIES & THE TECHOMIE ADVANTAGE */}
-      {(
-        <section className="qpaperadvantage">
-          {head("5. YOUR TECHOMIE ADVANTAGE")}
-          <div className="qsectiontitle">
-            <small>INTELLIGENT ROUTINES &amp; SERVICE ASSURANCE</small>
-            <h2>Your Techomie Advantage &amp; Smart Scenes</h2>
-            <span>
-              Dynamic scene automations and our dedicated end-to-end service commitments
-            </span>
-          </div>
-
-          {/* SMART SCENES */}
-          <div className="qscenescapsblock">
-            <div className="qscenescapstitle">
-              <small>SYSTEM CAPABILITIES</small>
-              <b>Smart Scenes (Example Automations)</b>
-              <p>
-                Tailored specifically for the modules in your proposal and programmed during on-site commissioning:
-              </p>
-            </div>
-            <div className="qscenesgridnew">
-              {smartScenes.map((scene, sIdx) => (
-                <div key={sIdx} className="qscenecardnew">
-                  <div className="qsceneheadnew">
-                    <span className="qsceneicon">{scene.icon}</span>
-                    <div>
-                      <b>{scene.name}</b>
-                      <small>{scene.time}</small>
-                    </div>
-                  </div>
-                  <div className="qscenesteps">
-                    <code>{scene.steps}</code>
-                  </div>
-                  <p className="qscenedesc">{scene.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* WHY TECHOMIE? */}
-          <div className="qwhytechomieblock">
-            <div className="qwhyhead">
-              <div className="qwhybadge">THE TECHOMIE ADVANTAGE</div>
-              <b>Why Techomie?</b>
-              <span>11 Core Service Deliverables Included in Every Project</span>
-            </div>
-            <div className="qwhygrid">
-              {whyTechomiePoints.map((pt, pIdx) => (
-                <div key={pIdx} className="qwhyitem">
-                  <span className="qwhycheck">✓</span>
-                  <span>{pt}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* LOCAL & RELIABLE CONTROL */}
-          <div className="qlocalcontrolcard">
-            <div className="qlocalicon">🛡️</div>
-            <div className="qlocalcontent">
-              <b>Local &amp; Reliable Control</b>
-              <p>
-                Selected systems can continue to provide local control even when internet connectivity is unavailable, depending on the products and architecture used.
-              </p>
-            </div>
-          </div>
-
-          {foot("5. Your Techomie Advantage")}
-        </section>
-      )}
 
       {/* COMMERCIAL & PAYMENT TERMS PAGE */}
       <section className="qpaperfinance">
