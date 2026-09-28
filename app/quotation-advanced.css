@@ -3835,6 +3835,12 @@
   border: 1px solid #e2e8f0 !important;
 }
 
+.qboqtable .item-pill-badge.mod {
+  background: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 1px solid #ddd6fe !important;
+}
+
 .qboqtable .item-pill-badge.feature {
   background: #ecfdf5 !important;
   color: #047857 !important;

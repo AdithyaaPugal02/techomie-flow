@@ -5533,7 +5533,13 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                                 {item.material && <span className="item-pill-badge mat"><span className="qpilltext">{item.material}</span></span>}
                                 {item.edgeColor && <span className="item-pill-badge edge"><span className="qpilltext">{item.edgeColor}</span></span>}
                                 {item.panelColor && <span className="item-pill-badge panel"><span className="qpilltext">{item.panelColor}</span></span>}
-                                {item.module && <span className="item-pill-badge mod"><span className="qpilltext">{item.module}</span></span>}
+                                {item.module && (
+                                  <span className="item-pill-badge mod">
+                                    <span className="qpilltext">
+                                      {String(item.module).toUpperCase().endsWith("M") ? item.module : `${item.module}M`}
+                                    </span>
+                                  </span>
+                                )}
                                 {getItemFeatureTag(item) && <span className="item-pill-badge feature"><span className="qpilltext">✦ {getItemFeatureTag(item)}</span></span>}
                                 {item.sku && <span className="qitemsku"><span className="qpilltext">{item.sku}</span></span>}
                               </div>
