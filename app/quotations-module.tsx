@@ -376,6 +376,13 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
           `/api/quotations?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&page=${page}`,
         );
       if (!r.ok) {
+        if (r.status === 401) {
+          setMsg("Your session has expired. Please sign in again.");
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("techomie-auth-expired"));
+          }
+          return;
+        }
         const d = await r.json().catch(() => ({}));
         setMsg(d.error || `Failed to load quotations (${r.status})`);
         return;
@@ -419,7 +426,58 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
           ＋ New quotation
         </button>
       </header>
-      {msg && <div className="qnotice">{msg}</div>}
+      {msg && (
+        <div
+          className="qnotice"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span>{msg}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {(msg.toLowerCase().includes("401") ||
+              msg.toLowerCase().includes("session") ||
+              msg.toLowerCase().includes("unauthorized")) && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/";
+                }}
+                style={{
+                  background: "#0284c7",
+                  color: "#ffffff",
+                  border: 0,
+                  borderRadius: "6px",
+                  padding: "5px 14px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Sign In Again
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setMsg("")}
+              style={{
+                background: "transparent",
+                border: 0,
+                color: "#94a3b8",
+                fontSize: "16px",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="qlisttools">
         <input
           value={q}

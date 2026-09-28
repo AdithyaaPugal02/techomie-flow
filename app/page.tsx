@@ -352,6 +352,12 @@ export default function Home() {
         }),
       )
       .catch(() => setAuth((a) => ({ ...a, loading: false })));
+
+    const handleAuthExpired = () => {
+      setAuth((a) => ({ ...a, user: null }));
+    };
+    window.addEventListener("techomie-auth-expired", handleAuthExpired);
+    return () => window.removeEventListener("techomie-auth-expired", handleAuthExpired);
   }, []);
   useEffect(()=>{const saved=window.localStorage.getItem("techomie-sidebar-collapsed");setSidebarCollapsed(saved==="1")},[]);
   useEffect(()=>{window.localStorage.setItem("techomie-sidebar-collapsed",sidebarCollapsed?"1":"0")},[sidebarCollapsed]);
