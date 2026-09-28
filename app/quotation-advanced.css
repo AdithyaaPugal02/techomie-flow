@@ -729,7 +729,7 @@
   height: 295.5mm !important;
   min-height: 295.5mm !important;
   max-height: 295.5mm !important;
-  padding: 14mm 16mm 22mm 16mm !important;
+  padding: 14mm 16mm 26mm 16mm !important;
   box-sizing: border-box !important;
   page-break-after: always;
   break-after: page;
@@ -737,8 +737,17 @@
   overflow: hidden !important;
 }
 
+.qpaperpremium .qsectiontitlecompact {
+  margin-bottom: 3.5mm !important;
+}
+
+.qpaperpremium .qsectiontitlecompact h2 {
+  font-size: 19px !important;
+  margin: 0.5mm 0 0 !important;
+}
+
 .qpaperpremium .qpdfroom {
-  margin-bottom: 5mm;
+  margin-bottom: 4.5mm;
   break-inside: avoid !important;
   page-break-inside: avoid !important;
 }
@@ -748,6 +757,32 @@
 .qpaperpremium .qboqsubtotalrow {
   break-inside: avoid !important;
   page-break-inside: avoid !important;
+}
+
+.qroomtotalbar.qroomcontbar {
+  background: #f8fafc !important;
+  border: 1px dashed #cbd5e1 !important;
+  border-top: 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 1.8mm 3.5mm !important;
+}
+
+.qroomtotalbar.qroomcontbar span {
+  font-size: 8.5px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  font-style: italic !important;
+  letter-spacing: 0.02em !important;
+}
+
+.qroomtotalbar.qroomcontbar small {
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
 }
 
 /* Floor Summary Card */

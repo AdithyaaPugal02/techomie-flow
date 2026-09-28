@@ -4867,8 +4867,54 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
     const pages: R[] = [];
     let currentPageRooms: R[] = [];
     let currentUsed = 0;
-    // Room budget: 170mm safe height to guarantee zero row clipping on A4 pages
-    const getBudget = (isFirst: boolean) => 170;
+
+    // Active room count determines floor map height on the first page
+    const activeRooms = (floor.rooms || []).filter((r: R) => (r.items || []).length > 0);
+    const activeRoomsCount = activeRooms.length;
+
+    // Floor map height on first page:
+    // When activeRoomsCount is large (e.g. 18 areas), the map wraps into 3-5 lines
+    const mapLines = activeRoomsCount > 0 ? Math.ceil(activeRoomsCount / 4) : 0;
+    const mapHeightMm = activeRoomsCount > 0 ? Math.min(36, 12 + mapLines * 6) : 0;
+
+    // Safe room budget calculations:
+    // Total page usable height from top padding to footer clearance line is ~230mm.
+    // On Page 1 (isFirst === true):
+    // - qpdfhead: ~18mm
+    // - qsectiontitle: ~26mm
+    // - qfloormap: mapHeightMm (12-36mm) + 5mm margin
+    // Total top overhead on Page 1: ~49mm + mapHeightMm (for 18 areas = ~85mm)
+    //
+    // Continuation pages (isFirst === false):
+    // - qpdfhead: ~18mm
+    // - qsectiontitle (compact continued header): ~18mm
+    // - No floor map on continuation pages
+    // Total top overhead on Continuation page: ~36mm
+    const getBudget = (isFirst: boolean) => {
+      if (isFirst) {
+        return Math.max(80, 230 - (49 + mapHeightMm));
+      }
+      return 190;
+    };
+
+    const getItemHeight = (item: R) => {
+      const hasFeature = !!getItemFeatureTag(item);
+      const pillCount = [
+        item.series,
+        item.technology,
+        item.material,
+        item.edgeColor,
+        item.panelColor,
+        item.module,
+      ].filter(Boolean).length;
+      const hasDesc = item.description && item.description.trim().length > 15;
+
+      // Base height for 78px photo wrap + padding + title: 34mm
+      let h = 34;
+      if (pillCount >= 4 || hasFeature) h += 4;
+      if (hasDesc && pillCount >= 4) h += 3;
+      return Math.min(44, h); // 34mm - 41mm
+    };
 
     const pushCurrentPage = () => {
       if (currentPageRooms.length) {
@@ -4885,7 +4931,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       const budget = getBudget(pages.length === 0);
 
       if (!items.length) {
-        const cost = 22;
+        const cost = 20;
         if (currentUsed + cost > budget) pushCurrentPage();
         currentPageRooms.push({
           ...room,
@@ -4903,26 +4949,48 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
       let chunkIdx = 0;
       while (itemIdx < items.length) {
         const curBudget = getBudget(pages.length === 0);
-        // Room banner + capability pills (14mm) + table thead (8mm) = 22mm (chunk 0)
-        // Continued chunk: banner (10mm) + thead (8mm) = 18mm
-        const overhead = chunkIdx === 0 ? 22 : 18;
-        const itemHeight = 26; // Realistic item row height for enlarged photos (78px img wrap + badges + padding)
+        // Room banner + capability pills + table thead = 32mm (chunk 0)
+        // Continued banner + thead = 22mm
+        const overhead = chunkIdx === 0 ? 32 : 22;
+        const firstItemH = getItemHeight(items[itemIdx]);
 
         // If starting a new room and remaining space cannot hold overhead + at least 1 item,
-        // break to next page immediately so the room starts cleanly at the top of the next page!
-        if (chunkIdx === 0 && currentUsed > 0 && (curBudget - currentUsed < overhead + itemHeight)) {
+        // break to next page immediately so the room starts cleanly at the top!
+        if (chunkIdx === 0 && currentUsed > 0 && (curBudget - currentUsed < overhead + firstItemH)) {
           pushCurrentPage();
           continue;
         }
 
         const available = curBudget - currentUsed - overhead;
-        let count = Math.floor(available / itemHeight);
+        if (available < firstItemH) {
+          pushCurrentPage();
+          continue;
+        }
+
+        // Greedily pick items that fit within available height
+        let count = 0;
+        let chunkItemHeight = 0;
+        for (let i = itemIdx; i < items.length; i++) {
+          const itmH = getItemHeight(items[i]);
+          const isLast = (i === items.length - 1);
+          const totalBarCost = isLast ? 10 : 8; // 10mm for room total bar, or 8mm for continued note
+          if (chunkItemHeight + itmH + totalBarCost <= available) {
+            chunkItemHeight += itmH;
+            count++;
+          } else {
+            break;
+          }
+        }
+
         if (count < 1) {
           pushCurrentPage();
           continue;
         }
+
         const slice = items.slice(itemIdx, itemIdx + count);
         const isEnd = itemIdx + slice.length >= items.length;
+        const totalBarCost = isEnd ? 10 : 8;
+
         currentPageRooms.push({
           ...room,
           items: slice,
@@ -4932,7 +5000,8 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
           isChunkEnd: isEnd,
           startSno: itemIdx + 1,
         });
-        currentUsed += overhead + slice.length * itemHeight;
+
+        currentUsed += overhead + chunkItemHeight + totalBarCost;
         itemIdx += slice.length;
         chunkIdx++;
       }
@@ -5112,7 +5181,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             key={`${scope.floor.name}-${scope.pageIndex}-${pIdx}`}
           >
             {head("ROOM-WISE SCOPE")}
-            <div className="qsectiontitle">
+            <div className={`qsectiontitle ${scope.pageIndex > 0 ? "qsectiontitlecompact" : ""}`}>
               <small>
                 SCOPE {String(scope.floorIndex + 1).padStart(2, "0")}
                 {scope.pageIndex > 0
@@ -5121,20 +5190,24 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                     ? ` · (PAGE 1 OF ${scope.pageCount})`
                     : ""}
               </small>
-              <h2>{scope.floor.name}</h2>
-              <span>{(scope.floor.rooms || []).length} areas configured</span>
+              <h2>{scope.floor.name}{scope.pageIndex > 0 ? " (Continued)" : ""}</h2>
+              {scope.pageIndex === 0 && (
+                <span>{(scope.floor.rooms || []).length} areas configured</span>
+              )}
             </div>
 
-            {/* Room mini-map / navigation pills */}
-            <div className="qfloormap">
-              <small>AREAS IN THIS FLOOR:</small>
-              <div className="qfloormaptext">
-                {(scope.floor.rooms || [])
-                  .filter((r: R) => (r.items || []).length > 0)
-                  .map((r: R) => `${r.name} (${(r.items || []).length})`)
-                  .join("  ·  ")}
+            {/* Room mini-map / navigation pills - First page of floor only */}
+            {scope.pageIndex === 0 && (
+              <div className="qfloormap">
+                <small>AREAS IN THIS FLOOR:</small>
+                <div className="qfloormaptext">
+                  {(scope.floor.rooms || [])
+                    .filter((r: R) => (r.items || []).length > 0)
+                    .map((r: R) => `${r.name} (${(r.items || []).length})`)
+                    .join("  ·  ")}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Room items tables */}
             {scope.rooms.map((room: R, rIndex: number) => {
@@ -5235,10 +5308,24 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
                       })}
                     </tbody>
                   </table>
-                  <div className="qroomtotalbar">
-                    <span>{room.name} Total</span>
-                    <b>{money((room.items || []).reduce((acc: number, x: R) => acc + line(x).total, 0))}</b>
-                  </div>
+                  {room.isChunkEnd !== false ? (
+                    <div className="qroomtotalbar">
+                      <span>{room.name} Total</span>
+                      <b>
+                        {money(
+                          ((scope.floor.rooms || []).find((r: R) => r.name === room.name)?.items || room.items || []).reduce(
+                            (acc: number, x: R) => acc + line(x).total,
+                            0,
+                          ),
+                        )}
+                      </b>
+                    </div>
+                  ) : (
+                    <div className="qroomtotalbar qroomcontbar">
+                      <span>{room.name} (continued on next page)</span>
+                      <small>Continues on Page {scope.pageIndex + 2} →</small>
+                    </div>
+                  )}
                 </div>
               );
             })}
