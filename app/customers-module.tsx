@@ -49,7 +49,7 @@ export default function CustomersModule({
 }: {
   role: string;
   initialFilter: R;
-  onNavigate: (x: string) => void;
+  onNavigate: (x: string, filter?: R) => void;
 }) {
   const [rows, setRows] = useState<R[]>([]),
     [users, setUsers] = useState<R[]>([]),
@@ -526,7 +526,7 @@ export default function CustomersModule({
             <button onClick={addContact}>Add contact</button>
             <button onClick={addSite}>Add project</button>
             <button onClick={() => onNavigate("Leads")}>Add lead</button>
-            <button onClick={() => onNavigate("Quotations")}>
+            <button onClick={() => onNavigate("Quotations", { customerId: String(detail.customer.id) })}>
               Create quote
             </button>
             <button onClick={() => onNavigate("Invoices")}>

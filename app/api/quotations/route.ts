@@ -40,7 +40,43 @@ export async function GET(req: Request) {
     const base = `FROM quotations q LEFT JOIN customers c ON c.id=q.customer_id LEFT JOIN customer_sites s ON s.id=q.site_id LEFT JOIN users u ON u.id=q.sales_id LEFT JOIN users cu ON cu.id=q.created_by WHERE ${where.join(" AND ")}`;
     const count = await env.DB.prepare(`SELECT COUNT(*) n ${base}`).bind(...args).first<{ n: number }>();
     const rows = (await env.DB.prepare(`SELECT q.*,c.name customer_name,c.phone,s.name site_name,s.city,u.name sales_name,cu.name created_name ${base} ORDER BY q.updated_at DESC,q.created_at DESC LIMIT ? OFFSET ?`).bind(...args, limit, (page - 1) * limit).all<R>()).results;
-    const customers = (await env.DB.prepare("SELECT id,name,phone FROM customers WHERE archived=0 ORDER BY name").all()).results;
+    if (u.role === "admin") {
+      for (const row of rows) {
+        if (row.snapshot) {
+          try {
+            const snap = parse(row.snapshot);
+            const items = (snap?.floors || [])
+              .flatMap((f: any) => (f?.rooms || []).flatMap((r: any) => r?.items || []))
+              .concat(snap?.projectItems || []);
+            let cost = 0, taxable = 0;
+            for (const it of items) {
+              if (it.optional && it.excluded) continue;
+              const qty = Number(it.qty || 1);
+              const base = Number(it.price || 0) * qty;
+              const disc = (base * Number(it.discount || 0)) / 100;
+              taxable += (base - disc);
+              const c = it.purchaseCost ?? it.purchase_cost ?? it.buyingPrice ?? it.cost ?? 0;
+              cost += Number(c) * qty;
+            }
+            row.cost = Math.round(cost * 100) / 100;
+            row.profit = Math.round((taxable - cost) * 100) / 100;
+            row.margin = taxable > 0 ? Math.round((row.profit / taxable) * 100) : 0;
+          } catch {
+            row.cost = 0;
+            row.profit = 0;
+            row.margin = 0;
+          }
+        }
+      }
+    } else {
+      for (const row of rows) {
+        delete row.snapshot;
+        delete row.cost;
+        delete row.profit;
+        delete row.margin;
+      }
+    }
+    const customers = (await env.DB.prepare("SELECT id,customer_code,name,display_name,phone FROM customers WHERE archived=0 ORDER BY name").all()).results;
     const sites = (await env.DB.prepare("SELECT id,customer_id,name,address,city,state,contact_name,contact_phone FROM customer_sites WHERE archived=0 ORDER BY name").all()).results;
     const users = (await env.DB.prepare("SELECT id,name,role FROM users WHERE active=1 AND role IN('admin','crm','sales') ORDER BY name").all()).results;
     return Response.json({ quotations: rows, pagination: { page, limit, total: count?.n || 0, pages: Math.ceil((count?.n || 0) / limit) }, filters: { customers, sites, users }, statuses });
@@ -100,6 +136,11 @@ export async function DELETE(req: Request) {
     const id = Number(new URL(req.url).searchParams.get("id"));
     if (!id) return Response.json({ error: "Quotation ID is required" }, { status: 400 });
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM payments WHERE quotation_id=? AND (project_id IS NULL OR project_id = '')").bind(id),
+      env.DB.prepare("UPDATE payments SET quotation_id=NULL WHERE quotation_id=?").bind(id),
+      env.DB.prepare("UPDATE projects SET quotation_id=NULL WHERE quotation_id=?").bind(id),
+      env.DB.prepare("UPDATE tax_invoices SET quotation_id=NULL WHERE quotation_id=?").bind(id),
+      env.DB.prepare("UPDATE zoho_invoices SET quotation_id=NULL WHERE quotation_id=?").bind(id),
       env.DB.prepare("DELETE FROM quotation_items WHERE quotation_id=?").bind(id),
       env.DB.prepare("DELETE FROM quotation_rooms WHERE floor_id IN (SELECT id FROM quotation_floors WHERE quotation_id=?)").bind(id),
       env.DB.prepare("DELETE FROM quotation_floors WHERE quotation_id=?").bind(id),

@@ -12,6 +12,7 @@ import SettingsModule from "./settings-module";
 import QuotationsModule from "./quotations-module";
 import ExpensesModule from "./expenses-module";
 import SiteVisitsModule from "./site-visits-module";
+import ProcurementModule from "./procurement-module";
 
 const products = catalog.map((p) => ({
   ...p,
@@ -1017,7 +1018,7 @@ export default function Home() {
         ) : module === "Projects" ? (
           <ProjectsModule role={auth.user.role} initialFilter={moduleFilter} onNavigate={(target) => setModule(target)} />
         ) : module === "Customers" ? (
-          <CustomersModule role={auth.user.role} initialFilter={moduleFilter} onNavigate={(target) => setModule(target)} />
+          <CustomersModule role={auth.user.role} initialFilter={moduleFilter} onNavigate={(target, filter) => { setModuleFilter(filter || {}); setModule(target); }} />
         ) : module === "Leads" ? (
           <LeadsModule role={auth.user.role} initialFilter={moduleFilter} onCreateQuote={() => { setModule("Quotations"); setQuoteScreen("list"); }} />
         ) : module === "Invoices" ? (
@@ -1050,6 +1051,8 @@ export default function Home() {
           <SettingsModule role={auth.user.role} currentEmail={auth.user.email} />
         ) : module === "Reports" ? (
           <OverviewModule role={auth.user.role} onNavigate={(target,filter)=>navigate(target,filter||{})} />
+        ) : module === "Procurement" ? (
+          <ProcurementModule role={auth.user.role} initialFilter={moduleFilter} />
         ) : (
           <OperationsModule name={module} role={auth.user.role} initialFilter={moduleFilter} />
         )}

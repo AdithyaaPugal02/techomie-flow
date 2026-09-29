@@ -488,11 +488,12 @@ export async function PATCH(req: Request) {
       if (!customer)
         return Response.json({ error: "Customer not found" }, { status: 404 });
       const sid = `SITE-${Date.now().toString().slice(-6)}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
+      const newSiteId = crypto.randomUUID();
       await env.DB.prepare(
         "INSERT INTO customer_sites(id,customer_id,site_code,name,address,city,state,pincode,maps_url,contact_name,contact_phone,property_type,construction_stage,floors,neutral_wire,survey_notes,electrical_readiness,network_details,access_requirements,status,archived)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'Active',0)",
       )
         .bind(
-          crypto.randomUUID(),
+          newSiteId,
           id,
           sid,
           p.name,
@@ -514,7 +515,33 @@ export async function PATCH(req: Request) {
         )
         .run();
       await log(u.id, "customer_site_added", String(id));
-      return Response.json({ ok: true, siteCode: sid });
+      return Response.json({
+        ok: true,
+        siteCode: sid,
+        id: newSiteId,
+        site: {
+          id: newSiteId,
+          customer_id: id,
+          site_code: sid,
+          name: p.name,
+          address: p.address,
+          city: p.city || null,
+          state: p.state || "Tamil Nadu",
+          pincode: p.pincode || null,
+          contact_name: p.contactName || null,
+          contact_phone: p.contactPhone || null,
+        },
+      });
+    }
+    if (action === "quickContact") {
+      if (!id) return Response.json({ error: "Customer ID required" }, { status: 400 });
+      await env.DB.prepare(
+        "UPDATE customers SET primary_contact=?, phone=COALESCE(?, phone), email=COALESCE(?, email) WHERE id=?",
+      )
+        .bind(p.contactName || null, p.phone || null, p.email || null, id)
+        .run();
+      await log(u.id, "customer_contact_updated", String(id));
+      return Response.json({ ok: true });
     }
     if (action === "note") {
       await env.DB.prepare(

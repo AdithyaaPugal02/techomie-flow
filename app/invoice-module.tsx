@@ -1482,7 +1482,7 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
         </div>
 
         <div className="infocard">
-          <small>SHIP TO (INSTALLATION SITE)</small>
+          <small>SHIP TO (PROJECT)</small>
           <b>{i.customer_name as string}</b>
           <p>
             {(i.shipping_address as string) ||

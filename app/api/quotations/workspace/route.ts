@@ -52,7 +52,7 @@ export async function GET(req: Request) {
         .first<R>();
     if (!q)
       return Response.json({ error: "Quotation unavailable" }, { status: 404 });
-    const [activities, files, acceptances, revisions] = await Promise.all([
+    const [activities, files, acceptances, revisions, customers, sites, users] = await Promise.all([
       env.DB.prepare(
         "SELECT a.*,u.name user_name FROM activities a LEFT JOIN users u ON u.id=a.created_by WHERE a.entity_type='quotation' AND a.entity_id=? ORDER BY a.created_at DESC",
       )
@@ -73,6 +73,15 @@ export async function GET(req: Request) {
       )
         .bind(id)
         .all(),
+      env.DB.prepare(
+        "SELECT id,customer_code,name,display_name,phone FROM customers WHERE archived=0 ORDER BY name",
+      ).all(),
+      env.DB.prepare(
+        "SELECT id,customer_id,name,address,city,state,contact_name,contact_phone FROM customer_sites WHERE archived=0 ORDER BY name",
+      ).all(),
+      env.DB.prepare(
+        "SELECT id,name,role FROM users WHERE active=1 AND role IN('admin','crm','sales') ORDER BY name",
+      ).all(),
     ]);
     const snapshot = parse(q.snapshot);
     return Response.json({
@@ -84,6 +93,11 @@ export async function GET(req: Request) {
       files: files.results,
       acceptances: acceptances.results,
       revisions: revisions.results,
+      filters: {
+        customers: customers.results,
+        sites: sites.results,
+        users: users.results,
+      },
       admin: u.role === "admin",
     });
   } catch (e) {
@@ -122,12 +136,12 @@ export async function PATCH(req: Request) {
         );
       const customerId = Number(p.customerId), siteId = String(p.siteId || "");
       if (!customerId || !siteId)
-        return Response.json({ error: "Select both a customer and an installation site" }, { status: 400 });
+        return Response.json({ error: "Select both a customer and a project" }, { status: 400 });
       const relation = await env.DB.prepare(
         "SELECT s.*,c.name customer_name,c.phone,c.gstin,c.billing_address,c.primary_contact FROM customer_sites s JOIN customers c ON c.id=s.customer_id WHERE s.id=? AND s.customer_id=? AND s.archived=0 AND c.archived=0",
       ).bind(siteId, customerId).first<R>();
       if (!relation)
-        return Response.json({ error: "Select a site that belongs to this customer" }, { status: 409 });
+        return Response.json({ error: "Select a project that belongs to this customer" }, { status: 409 });
       const snapshot = parse(q.snapshot), details = snapshot.details || {};
       snapshot.details = {
         ...details,

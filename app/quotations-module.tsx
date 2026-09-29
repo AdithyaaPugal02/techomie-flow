@@ -121,6 +121,250 @@ function QuickCreateCustomer({
     </div>
   );
 }
+
+function QuickAddProject({
+  customerId,
+  customerName,
+  onCreated,
+  onClose,
+}: {
+  customerId: string;
+  customerName?: string;
+  onCreated: (site: R) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    address: "",
+    city: "",
+    state: "Tamil Nadu",
+    pincode: "",
+    propertyType: "Villa",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const submit = async () => {
+    if (!form.name.trim()) { setErr("Project name is required (e.g. 'Erode Residence')"); return; }
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await fetch("/api/customers", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "site",
+          id: Number(customerId),
+          name: form.name.trim(),
+          address: form.address.trim() || form.city.trim() || "Address pending",
+          city: form.city.trim() || undefined,
+          state: form.state || "Tamil Nadu",
+          pincode: form.pincode.trim() || undefined,
+          propertyType: form.propertyType,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Failed to add project"); setBusy(false); return; }
+      onCreated(d.site || {
+        id: d.id,
+        customer_id: Number(customerId),
+        site_code: d.siteCode,
+        name: form.name.trim(),
+        address: form.address.trim() || form.city.trim() || "Address pending",
+        city: form.city.trim() || "",
+        state: form.state || "Tamil Nadu",
+        pincode: form.pincode.trim() || "",
+      });
+    } catch (e: any) {
+      setErr(e?.message || "Network error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="qcc-backdrop" onClick={onClose}>
+      <div className="qcc-dialog" onClick={(e) => e.stopPropagation()}>
+        <header className="qcc-header">
+          <div>
+            <small>NEW PROJECT</small>
+            <h3>Add Project {customerName ? `for ${customerName}` : ""}</h3>
+          </div>
+          <button className="qcc-close" onClick={onClose} title="Close">×</button>
+        </header>
+        <div className="qcc-body">
+          <p className="qcc-hint">Add a new site/project location for this customer. It will be immediately selected for this quotation.</p>
+          {err && <div className="qcc-err">{err}</div>}
+          <div className="qcc-form">
+            <label className="qcc-field">
+              <span>Project name ★</span>
+              <input
+                autoFocus
+                placeholder="e.g. Erode Residence"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+            <label className="qcc-field">
+              <span>Property type</span>
+              <select value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })}>
+                {["Villa", "Apartment", "Independent House", "Commercial", "Office", "Hotel", "Other"].map((x) => (
+                  <option key={x} value={x}>{x}</option>
+                ))}
+              </select>
+            </label>
+            <label className="qcc-field">
+              <span>Address</span>
+              <input
+                placeholder="e.g. Thindal"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+            <label className="qcc-field">
+              <span>City</span>
+              <input
+                placeholder="e.g. Erode"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+            <label className="qcc-field">
+              <span>Pincode</span>
+              <input
+                placeholder="e.g. 638012"
+                value={form.pincode}
+                onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+          </div>
+        </div>
+        <div className="qcc-actions">
+          <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button
+            type="button"
+            className="primary"
+            disabled={busy || !form.name.trim()}
+            onClick={submit}
+          >
+            {busy ? "Saving…" : "Save project"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuickEditContact({
+  customerId,
+  initialContact,
+  onSaved,
+  onClose,
+}: {
+  customerId: string;
+  initialContact: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
+  onSaved: (updated: { name: string; phone: string; email?: string }) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: initialContact.name || "",
+    phone: initialContact.phone || "",
+    email: initialContact.email || "",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const submit = async () => {
+    if (!form.name.trim()) { setErr("Contact name is required"); return; }
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await fetch("/api/customers", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "quickContact",
+          id: Number(customerId),
+          contactName: form.name.trim(),
+          phone: form.phone.trim() || undefined,
+          email: form.email.trim() || undefined,
+        }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(d.error || "Failed to update contact"); setBusy(false); return; }
+      onSaved(form);
+    } catch (e: any) {
+      setErr(e?.message || "Network error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="qcc-backdrop" onClick={onClose}>
+      <div className="qcc-dialog" onClick={(e) => e.stopPropagation()}>
+        <header className="qcc-header">
+          <div>
+            <small>CONTACT DETAILS</small>
+            <h3>Edit Contact</h3>
+          </div>
+          <button className="qcc-close" onClick={onClose} title="Close">×</button>
+        </header>
+        <div className="qcc-body">
+          <p className="qcc-hint">Update contact person details for this customer and quotation.</p>
+          {err && <div className="qcc-err">{err}</div>}
+          <div className="qcc-form">
+            <label className="qcc-field">
+              <span>Primary contact person ★</span>
+              <input
+                autoFocus
+                placeholder="e.g. Vivek Thulasiappan"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+            <label className="qcc-field">
+              <span>Contact phone</span>
+              <input
+                placeholder="e.g. +91 97888 84222"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+            <label className="qcc-field">
+              <span>Contact email</span>
+              <input
+                type="email"
+                placeholder="e.g. name@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+              />
+            </label>
+          </div>
+        </div>
+        <div className="qcc-actions">
+          <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
+          <button
+            type="button"
+            className="primary"
+            disabled={busy || !form.name.trim()}
+            onClick={submit}
+          >
+            {busy ? "Saving…" : "Save contact"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const money = (n: any) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -396,11 +640,9 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
     }
   }, [q, status, page]);
   useEffect(() => {
-    if (view === "list") {
-      const t = setTimeout(load, 150);
-      return () => clearTimeout(t);
-    }
-  }, [view, load]);
+    const t = setTimeout(load, 150);
+    return () => clearTimeout(t);
+  }, [load]);
   const open = (id: number) => {
     setSelected(id);
     setView("quote");
@@ -485,7 +727,7 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
             setQ(e.target.value);
             setPage(1);
           }}
-          placeholder="Search quote, customer, phone, site, salesperson, item or project"
+          placeholder="Search quote, customer, phone, project, salesperson or item"
         />
         <select
           value={status}
@@ -523,7 +765,7 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
         <button
           onClick={() => {
             const csv = [
-                "Quote,Revision,Customer,Site,Date,Validity,Sales,Total,Status",
+                "Quote,Revision,Customer,Project,Date,Validity,Sales,Total,Status",
                 ...rows.map((x) =>
                   [
                     x.number,
@@ -550,10 +792,11 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
       <div className="qlist">
         <div className={`qrow qhead ${role === "admin" ? "admin" : ""}`}>
           <span>Quote</span>
-          <span>Customer / Site</span>
+          <span>Customer / Project</span>
           <span>Date / Validity</span>
           <span>Salesperson</span>
           <span>Total</span>
+          {role === "admin" && <span>Profit</span>}
           <span>Status</span>
           <span>Actions</span>
         </div>
@@ -575,6 +818,16 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
             </span>
             <span>{x.sales_name || x.created_name}</span>
             <strong>{money(x.total)}</strong>
+            {role === "admin" && (
+              <span className="qadmin-profit-cell" title="Gross Profit (Admin Only)">
+                <b style={{ color: (x.profit ?? 0) >= 0 ? "#059669" : "#dc2626" }}>
+                  {money(x.profit ?? 0)}
+                </b>
+                <small style={{ color: "#64748b" }}>
+                  {x.margin != null ? `${x.margin}% margin` : "—"}
+                </small>
+              </span>
+            )}
             <em className={String(x.status).toLowerCase().replaceAll(" ", "-")}>
               {x.status}
             </em>
@@ -627,6 +880,7 @@ export default function QuotationsModule({ role, initialFilter }: { role: string
       id={selected}
       role={role}
       filters={filters}
+      initialCustomerId={initialFilter?.customerId ? String(initialFilter.customerId) : undefined}
       close={() => {
         setView("list");
         setSelected(null);
@@ -687,7 +941,7 @@ export function QuotationWorkspaceRoute({
             ? "Preview & Send"
             : mode === "revisions"
               ? "Revisions"
-              : "Customer & Site"
+              : "Customer & Project"
         }
         close={() => {
           window.location.href = "/?module=Quotations";
@@ -708,7 +962,8 @@ function QuoteWorkspace({
   close,
   notify,
   onCreated,
-  initialTab = "Customer & Site",
+  initialTab = "Customer & Project",
+  initialCustomerId,
 }: {
   id: number | null;
   role: string;
@@ -717,6 +972,7 @@ function QuoteWorkspace({
   notify: (s: string) => void;
   onCreated: (id: number) => void;
   initialTab?: string;
+  initialCustomerId?: string;
 }) {
   const [quote, setQuote] = useState<R | null>(null),
     [snap, setSnap] = useState<R>({
@@ -755,18 +1011,38 @@ function QuoteWorkspace({
     [revisions, setRevisions] = useState<R[]>([]),
     [files, setFiles] = useState<R[]>([]),
     [newMode, setNewMode] = useState(!id),
-    [customerId, setCustomerId] = useState(""),
+    [customerId, setCustomerId] = useState(initialCustomerId || ""),
     [siteId, setSiteId] = useState(""),
     [salesId, setSalesId] = useState(""),
     [creating, setCreating] = useState(false),
     [branding, setBranding] = useState<R>({}),
     [pdfGenerating, setPdfGenerating] = useState(false),
-    [localCustomers, setLocalCustomers] = useState<R[]>([]);
+    [localCustomers, setLocalCustomers] = useState<R[]>([]),
+    [localSites, setLocalSites] = useState<R[]>([]),
+    [localFilters, setLocalFilters] = useState<R>({});
   const timer = useRef<any>(null);
-  const customers = [...(filters.customers || []), ...localCustomers.filter((lc: R) => !(filters.customers || []).some((fc: R) => String(fc.id) === String(lc.id)))],
-    sites = (filters.sites || []).filter(
-      (s: R) => String(s.customer_id) === String(customerId),
-    );
+  const allFilters = {
+    customers: localFilters.customers || filters.customers || [],
+    sites: [...(localFilters.sites || filters.sites || []), ...localSites],
+    users: localFilters.users || filters.users || [],
+  };
+  const customers = [
+    ...allFilters.customers,
+    ...localCustomers.filter((lc: R) => !allFilters.customers.some((fc: R) => String(fc.id) === String(lc.id))),
+  ];
+  const cleanPhone = (p?: string) => (p || "").replace(/[^0-9]/g, "").slice(-10);
+  const currCustomer = customers.find((c: R) => String(c.id) === String(customerId));
+  const targetPhone = cleanPhone(currCustomer?.phone);
+
+  const sites = allFilters.sites.filter((s: R) => {
+    if (String(s.customer_id) === String(customerId)) return true;
+    if (targetPhone) {
+      if (s.contact_phone && cleanPhone(s.contact_phone) === targetPhone) return true;
+      const owner = customers.find((c: R) => String(c.id) === String(s.customer_id));
+      if (owner && cleanPhone(owner.phone) === targetPhone) return true;
+    }
+    return false;
+  });
   const totals = useMemo(() => calc(snap), [snap]);
   const load = useCallback(async () => {
     if (!id) return;
@@ -781,6 +1057,7 @@ function QuoteWorkspace({
       setActivity(d.activities || []);
       setRevisions(d.revisions || []);
       setFiles(d.files || []);
+      if (d.filters) setLocalFilters(d.filters);
       setNewMode(false);
     } else notify(d.error);
   }, [id]);
@@ -833,7 +1110,7 @@ function QuoteWorkspace({
     const c = customers.find((x: R) => String(x.id) === customerId),
       s = (filters.sites || []).find((x: R) => String(x.id) === siteId);
     if (!c || !s || !snap.details.title)
-      return notify("Select customer, site and enter project title");
+      return notify("Select customer, project and enter project title");
     setCreating(true);
     const r = await fetch("/api/quotations", {
         method: "POST",
@@ -873,7 +1150,7 @@ function QuoteWorkspace({
   const relink = async (nextCustomerId: string, nextSiteId: string) => {
     if (!quote?.id || !nextCustomerId || !nextSiteId) return;
     await persist();
-    setSave("Updating customer and site…");
+    setSave("Updating customer and project…");
     const r = await fetch("/api/quotations/workspace", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
@@ -889,7 +1166,7 @@ function QuoteWorkspace({
       setSave(`Update failed — ${d.error}`);
       return notify(d.error);
     }
-    notify("Quotation customer and site updated");
+    notify("Quotation customer and project updated");
     setSave("Saved");
     const customer = customers.find((x: R) => String(x.id) === nextCustomerId);
     const site = (filters.sites || []).find((x: R) => String(x.id) === nextSiteId);
@@ -1071,13 +1348,17 @@ function QuoteWorkspace({
         create={create}
         creating={creating}
         close={close}
-        users={filters.users || []}
+        users={allFilters.users || []}
         salesId={salesId}
-        setSalesId={(value:string)=>{const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);setSnap((current:R)=>({...current,details:{...current.details,quotationByName:employee?.name||""}}))}}
+        setSalesId={(value:string)=>{const employee=(allFilters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);setSnap((current:R)=>({...current,details:{...current.details,quotationByName:employee?.name||""}}))}}
         onCustomerCreated={(newCust: R) => {
           setLocalCustomers((prev) => [...prev.filter((x) => String(x.id) !== String(newCust.id)), newCust]);
           setCustomerId(String(newCust.id));
           setSiteId("");
+        }}
+        onSiteCreated={(newSite: R) => {
+          setLocalSites((prev) => [...prev, newSite]);
+          setSiteId(String(newSite.id));
         }}
       />
     );
@@ -1091,7 +1372,7 @@ function QuoteWorkspace({
     "Converted to Project",
   ].includes(quote.status);
   const workflowSteps = [
-      "Customer & Site",
+      "Customer & Project",
       "Floors, Rooms & Items",
       "Pricing & Payment",
       "Scope, Warranty & Terms",
@@ -1124,6 +1405,13 @@ function QuoteWorkspace({
         <div className="qsave">
           <b>{save}</b>
           <em>{quote.status}</em>
+          {role === "admin" && (
+            <div className="qadmin-header-profit" title="Admin only: Quotation gross profit">
+              <small>PROFIT</small>
+              <b style={{ color: (totals.profit ?? 0) >= 0 ? "#059669" : "#dc2626" }}>{money(totals.profit || 0)}</b>
+              <span>({totals.margin || 0}%)</span>
+            </div>
+          )}
         </div>
         <div className="qactions">
           <label className="documenttemplateselect">
@@ -1263,6 +1551,29 @@ function QuoteWorkspace({
               🧾 Create invoice
             </button>
           )}
+          {quote?.id && (
+            <button
+              type="button"
+              style={{
+                background: "#0f172a",
+                color: "#ffffff",
+                fontWeight: 600,
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              title="Auto-generate OEM procurement list for Varni and Phlipton"
+              onClick={() => {
+                window.location.href = `/?module=Procurement&id=${encodeURIComponent(quote.id)}`;
+              }}
+            >
+              📦 Procurement List
+            </button>
+          )}
           {role === "admin" && quote?.id && (
             <button
               style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }}
@@ -1313,14 +1624,14 @@ function QuoteWorkspace({
         })}
       </nav>
       <main>
-        {tab === "Customer & Site" ? (
+        {tab === "Customer & Project" ? (
           <Details
             snap={snap}
             set={change}
             quote={quote}
             locked={locked}
             customers={customers}
-            allSites={filters.sites || []}
+            allSites={allFilters.sites}
             customerId={customerId}
             siteId={siteId}
             setCustomerId={(value: string) => {
@@ -1329,17 +1640,22 @@ function QuoteWorkspace({
             }}
             setSiteId={setSiteId}
             onRelink={relink}
-            users={filters.users || []}
+            users={allFilters.users}
             salesId={salesId}
-            setSalesId={(value: string) => { const employee=(filters.users||[]).find((x:R)=>String(x.id)===value);setSalesId(value);change({...snap,details:{...snap.details,quotationByName:employee?.name||""}}); }}
+            setSalesId={(value: string) => { const employee=allFilters.users.find((x:R)=>String(x.id)===value);setSalesId(value);change({...snap,details:{...snap.details,quotationByName:employee?.name||""}}); }}
             localCustomers={localCustomers}
             setLocalCustomers={setLocalCustomers}
+            onSiteCreated={(newSite: R) => {
+              setLocalSites((prev) => [...prev, newSite]);
+              setSiteId(String(newSite.id));
+            }}
           />
         ) : tab === "Floors, Rooms & Items" ? (
           <Builder
             snap={snap}
             set={change}
             locked={locked}
+            role={role}
             openPicker={setPicker}
           />
         ) : tab === "Pricing & Payment" ? (
@@ -1347,6 +1663,8 @@ function QuoteWorkspace({
             snap={snap}
             set={change}
             total={totals.grand}
+            totals={totals}
+            role={role}
             locked={locked}
             section="pricing"
           />
@@ -1456,7 +1774,7 @@ function QuoteWorkspace({
       </main>
       {tab !== "Preview & Send" && tab !== "Revisions" && (
         <aside>
-          <Totals t={totals} />
+          <Totals t={totals} role={role} />
           <div className="qvalid">
             <span>Validity</span>
             <b>{snap.details?.validUntil}</b>
@@ -1552,8 +1870,10 @@ function NewQuote({
   salesId,
   setSalesId,
   onCustomerCreated,
+  onSiteCreated,
 }: R) {
   const [showQCC, setShowQCC] = useState(false);
+  const [showAddProject, setShowAddProject] = useState(false);
   return (
     <div className="newquote">
       {showQCC && (
@@ -1566,12 +1886,30 @@ function NewQuote({
           onClose={() => setShowQCC(false)}
         />
       )}
+      {showAddProject && (
+        <QuickAddProject
+          customerId={customerId}
+          customerName={customers.find((c: R) => String(c.id) === String(customerId))?.name}
+          onCreated={(newSite) => {
+            setShowAddProject(false);
+            if (onSiteCreated) onSiteCreated(newSite);
+            setSiteId(String(newSite.id));
+            if (!snap.details?.title || sites.some((s: R) => s.name === snap.details?.title)) {
+              set({
+                ...snap,
+                details: { ...snap.details, title: newSite.name },
+              });
+            }
+          }}
+          onClose={() => setShowAddProject(false)}
+        />
+      )}
       <header>
         <button onClick={close}>← Back</button>
         <div>
           <small>NEW QUOTATION</small>
           <h1>Start a persistent draft</h1>
-          <p>Customer → Site → Details → Rooms → Items → Payment → Preview</p>
+          <p>Customer → Project → Details → Rooms → Items → Payment → Preview</p>
         </div>
       </header>
       <div className="newquotecard">
@@ -1585,7 +1923,9 @@ function NewQuote({
               <option value="">Select customer</option>
               {customers.map((c: R) => (
                 <option value={c.id} key={c.id}>
-                  {c.name}{c.phone ? ` · ${c.phone}` : ""}
+                  {c.customer_code ? `${c.customer_code} · ` : ""}
+                  {c.display_name || c.name}
+                  {c.phone ? ` · ${c.phone}` : ""}
                 </option>
               ))}
             </select>
@@ -1599,17 +1939,42 @@ function NewQuote({
             ＋ New
           </button>
         </div>
-        <label>
-          <span>Installation site *</span>
-          <select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
-            <option value="">Select site</option>
-            {sites.map((s: R) => (
-              <option value={s.id} key={s.id}>
-                {s.name} · {s.city}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="qcc-row">
+          <label style={{ flex: 1 }}>
+            <span>Project *</span>
+            <select
+              value={siteId}
+              disabled={!customerId}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                setSiteId(selectedId);
+                const found = sites.find((s: R) => String(s.id) === selectedId);
+                if (found && (!snap.details?.title || sites.some((s: R) => s.name === snap.details?.title))) {
+                  set({
+                    ...snap,
+                    details: { ...snap.details, title: found.name },
+                  });
+                }
+              }}
+            >
+              <option value="">{customerId ? (sites.length ? "Select project" : "No project found — click Add Project") : "Select customer first"}</option>
+              {sites.map((s: R) => (
+                <option value={s.id} key={s.id}>
+                  {s.name} · {s.city || "Address saved"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="qcc-add-btn"
+            title="Add a new project for this customer"
+            disabled={!customerId}
+            onClick={() => setShowAddProject(true)}
+          >
+            ＋ Add project
+          </button>
+        </div>
         <label className="wide">
           <span>Project title *</span>
           <input
@@ -1726,14 +2091,31 @@ function Details({
   setSalesId,
   localCustomers,
   setLocalCustomers,
+  onSiteCreated,
 }: R) {
   const [showQCC, setShowQCC] = useState(false);
+  const [showAddProject, setShowAddProject] = useState(false);
+  const [showEditContact, setShowEditContact] = useState(false);
+  const [localSites, setLocalSites] = useState<R[]>([]);
   const allCustomers = [...(customers || []), ...((localCustomers as R[] | undefined) || []).filter((lc: R) => !(customers || []).some((c: R) => String(c.id) === String(lc.id)))];
   const d = snap.details || {},
-    change = (k: string, v: any) => set({ ...snap, details: { ...d, [k]: v } }),
-    customerSites = (allSites || []).filter(
-      (site: R) => String(site.customer_id) === String(customerId),
-    );
+    change = (k: string, v: any) => set({ ...snap, details: { ...d, [k]: v } });
+
+  const combinedSites = [...(allSites || []), ...localSites];
+  const currCustomer = allCustomers.find((c: R) => String(c.id) === String(customerId));
+  const cleanPhone = (p?: string) => (p || "").replace(/[^0-9]/g, "").slice(-10);
+  const targetPhone = cleanPhone(currCustomer?.phone);
+
+  const customerSites = combinedSites.filter((site: R) => {
+    if (String(site.customer_id) === String(customerId)) return true;
+    if (targetPhone) {
+      if (site.contact_phone && cleanPhone(site.contact_phone) === targetPhone) return true;
+      const owner = allCustomers.find((c: R) => String(c.id) === String(site.customer_id));
+      if (owner && cleanPhone(owner.phone) === targetPhone) return true;
+    }
+    return false;
+  });
+
   return (
     <>
     {showQCC && (
@@ -1746,8 +2128,47 @@ function Details({
         onClose={() => setShowQCC(false)}
       />
     )}
+    {showAddProject && (
+      <QuickAddProject
+        customerId={customerId}
+        customerName={currCustomer?.name}
+        onCreated={(newSite: R) => {
+          setShowAddProject(false);
+          setLocalSites((prev) => [...prev, newSite]);
+          if (onSiteCreated) onSiteCreated(newSite);
+          setSiteId(String(newSite.id));
+          onRelink(customerId, String(newSite.id));
+          if (!d.title || customerSites.some((cs: R) => cs.name === d.title)) {
+            change("title", newSite.name);
+          }
+          const addr = [newSite.address, newSite.city, newSite.state, newSite.pincode].filter(Boolean).join(", ");
+          if (addr) {
+            change("installationAddress", addr);
+          }
+        }}
+        onClose={() => setShowAddProject(false)}
+      />
+    )}
+    {showEditContact && (
+      <QuickEditContact
+        customerId={customerId}
+        initialContact={{
+          name: d.contactName ?? quote.contact_name ?? currCustomer?.primary_contact ?? currCustomer?.name ?? "",
+          phone: currCustomer?.phone ?? quote.phone ?? "",
+          email: currCustomer?.email ?? "",
+        }}
+        onSaved={(updated) => {
+          setShowEditContact(false);
+          change("contactName", updated.name);
+          if (setLocalCustomers) {
+            setLocalCustomers((prev: R[]) => prev.map((c: R) => String(c.id) === String(customerId) ? { ...c, primary_contact: updated.name, phone: updated.phone || c.phone } : c));
+          }
+        }}
+        onClose={() => setShowEditContact(false)}
+      />
+    )}
     <section className="qcard">
-      <h2>Customer and quotation details</h2>
+      <h2>Customer and project details</h2>
       <div className="qform">
         <label>
           <span>Quote number</span>
@@ -1758,7 +2179,7 @@ function Details({
           <input disabled value={`Rev ${quote.revision || 0}`} />
         </label>
         <label className="wide">
-          <span>Quotation / project title</span>
+          <span>Project title</span>
           <input disabled={locked} value={d.title || quote.title || ""} onChange={(e) => change("title", e.target.value)} />
         </label>
         <label>
@@ -1802,7 +2223,9 @@ function Details({
               <option value="">Select customer</option>
               {allCustomers.map((customer: R) => (
                 <option key={customer.id} value={customer.id}>
-                  {customer.name}{customer.phone ? ` · ${customer.phone}` : ""}
+                  {customer.customer_code ? `${customer.customer_code} · ` : ""}
+                  {customer.display_name || customer.name}
+                  {customer.phone ? ` · ${customer.phone}` : ""}
                 </option>
               ))}
             </select>
@@ -1818,43 +2241,80 @@ function Details({
             </button>
           )}
         </div>
-        <label>
-          <span>Installation site</span>
-          <select
-            disabled={locked || !customerId}
-            value={siteId}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSiteId(value);
-              if (value) onRelink(customerId, value);
-            }}
-          >
-            <option value="">
-              {customerId ? "Select customer site" : "Select customer first"}
-            </option>
-            {customerSites.map((site: R) => (
-              <option key={site.id} value={site.id}>
-                {site.name} · {site.city || "Address saved"}
+        <div className="qcc-row">
+          <label style={{ flex: 1 }}>
+            <span>Project</span>
+            <select
+              disabled={locked || !customerId}
+              value={siteId}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSiteId(value);
+                if (value) {
+                  onRelink(customerId, value);
+                  const found = customerSites.find((site: R) => String(site.id) === value);
+                  if (found && (!d.title || customerSites.some((cs: R) => cs.name === d.title))) {
+                    change("title", found.name);
+                  }
+                  if (found) {
+                    const addr = [found.address, found.city, found.state, found.pincode].filter(Boolean).join(", ");
+                    if (addr) change("installationAddress", addr);
+                  }
+                }
+              }}
+            >
+              <option value="">
+                {customerId ? (customerSites.length ? "Select customer project" : "No project found — click Add Project") : "Select customer first"}
               </option>
-            ))}
-          </select>
-        </label>
+              {customerSites.map((site: R) => (
+                <option key={site.id} value={site.id}>
+                  {site.name} · {site.city || site.address || "Address saved"}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!locked && (
+            <button
+              type="button"
+              className="qcc-add-btn"
+              title="Add a new project for this customer"
+              disabled={!customerId}
+              onClick={() => setShowAddProject(true)}
+            >
+              ＋ Add project
+            </button>
+          )}
+        </div>
         {!locked && (
           <p className="qrelationhint">
             Changing the customer requires selecting one of that customer's
-            saved sites. The quotation updates as soon as the site is selected.
+            saved projects. The quotation updates as soon as the project is selected.
           </p>
         )}
-        <label>
-          <span>Contact</span>
-          <input
-            disabled={locked}
-            value={d.contactName ?? quote.contact_name ?? quote.primary_contact ?? ""}
-            onChange={(e) => change("contactName", e.target.value)}
-          />
-        </label>
+        <div className="qcc-row">
+          <label style={{ flex: 1 }}>
+            <span>Contact</span>
+            <input
+              disabled={locked}
+              value={d.contactName ?? quote.contact_name ?? quote.primary_contact ?? ""}
+              onChange={(e) => change("contactName", e.target.value)}
+              placeholder="Primary contact name"
+            />
+          </label>
+          {!locked && (
+            <button
+              type="button"
+              className="qcc-add-btn"
+              title="Edit contact details"
+              disabled={!customerId}
+              onClick={() => setShowEditContact(true)}
+            >
+              ✏️ Edit contact
+            </button>
+          )}
+        </div>
         <label className="wide">
-          <span>Installation address</span>
+          <span>Project address</span>
           <textarea
             disabled={locked}
             value={d.installationAddress ?? `${quote.site_address || ""}, ${quote.city || ""}, ${quote.state || ""} ${quote.pincode || ""}`}
@@ -1934,7 +2394,7 @@ function Details({
     </>
   );
 }
-function Builder({ snap, set, locked, openPicker }: R) {
+function Builder({ snap, set, locked, openPicker, role }: R) {
   const [adding, setAdding] = useState<null | {
       kind: "room" | "floor";
       floor?: number;
@@ -2606,7 +3066,7 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           </label>
                         )}
                       </div>
-                      <span>
+                      <span className="qitem-info">
                         {locked ? (
                           <b>
                             {x.name}
@@ -2629,8 +3089,8 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           {x.brand} · {x.sku} · {x.variantSummary || ""}
                         </small>
                       </span>
-                      <label>
-                        Qty
+                      <label className="qitem-num-field qitem-qty-field">
+                        <small className="field-lbl">Qty</small>
                         <input
                           disabled={locked}
                           type="number"
@@ -2647,8 +3107,8 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           }
                         />
                       </label>
-                      <label>
-                        Rate ₹
+                      <label className="qitem-num-field qitem-rate-field">
+                        <small className="field-lbl">Rate ₹</small>
                         <input
                           disabled={locked}
                           type="number"
@@ -2663,8 +3123,8 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           }
                         />
                       </label>
-                      <label>
-                        Disc %
+                      <label className="qitem-num-field qitem-disc-field">
+                        <small className="field-lbl">Disc %</small>
                         <input
                           disabled={locked}
                           type="number"
@@ -2681,7 +3141,20 @@ function Builder({ snap, set, locked, openPicker }: R) {
                           }
                         />
                       </label>
-                      <strong>{money(line(x).total)}</strong>
+                      <div className="qitem-num-field qitem-total-col">
+                        <small className="field-lbl">Total</small>
+                        <strong className="qitem-total-val">{money(line(x).total)}</strong>
+                      </div>
+                      {role === "admin" && (
+                        <div
+                          className={`qitem-num-field qitem-profit-badge ${(line(x).profit ?? 0) >= 0 ? "pos" : "neg"}`}
+                          title={`Admin Only\nBuying Cost: ${money(line(x).cost)} (${money(line(x).unitCost)}/unit)\nProfit: ${money(line(x).profit)}\nMargin: ${line(x).margin}%`}
+                        >
+                          <small className="profit-lbl">PROFIT</small>
+                          <b className="profit-val">{money(line(x).profit)}</b>
+                          <span className="profit-sub">({line(x).margin}%)</span>
+                        </div>
+                      )}
                       {!locked && (
                         <div className="qitemactions">
                           <button disabled={ii === 0} title="Move up" onClick={() => mut((n) => {const a=n.floors[fi].rooms[ri].items;[a[ii-1],a[ii]]=[a[ii],a[ii-1]]})}>↑</button>
@@ -2752,6 +3225,24 @@ function Builder({ snap, set, locked, openPicker }: R) {
                         <label><span>GST %</span><input type="number" disabled={(snap.taxMode || "GST") === "Non-GST"} value={x.gst || 0} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].gst = Number(e.target.value))} /></label>
                         <label><span>Warranty</span><input value={x.warranty || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].warranty = e.target.value)} /></label>
                         <label><span>Photo URL / key</span><input placeholder="/products/... or filename" value={x.image || ""} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].image = e.target.value)} /></label>
+                        {role === "admin" && (
+                          <label>
+                            <span style={{ color: "#059669", fontWeight: 700 }}>Buying Cost ₹ (Admin)</span>
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="0"
+                              value={x.purchaseCost ?? x.purchase_cost ?? ""}
+                              onChange={(e) =>
+                                mut((n) => {
+                                  const val = Number(e.target.value);
+                                  n.floors[fi].rooms[ri].items[ii].purchaseCost = val;
+                                  n.floors[fi].rooms[ri].items[ii].purchase_cost = val;
+                                })
+                              }
+                            />
+                          </label>
+                        )}
                         <label className="qitemcheck"><input type="checkbox" checked={!!x.optional} onChange={(e) => mut((n) => n.floors[fi].rooms[ri].items[ii].optional = e.target.checked)} /><span>Optional item</span></label>
                       </div>
                     )}
@@ -4111,7 +4602,7 @@ function ItemPicker({ target, role, taxMode, close, add, floors, onSelectTarget 
     </div>
   );
 }
-function Payment({ snap, set, total, locked, section }: R) {
+function Payment({ snap, set, total, totals, role, locked, section }: R) {
   const plan = snap.paymentPlan || [],
     mut = (fn: (n: R) => void) => {
       const n = structuredClone(snap);
@@ -4120,6 +4611,35 @@ function Payment({ snap, set, total, locked, section }: R) {
     };
   return (
     <div className="qpay">
+      {section !== "terms" && role === "admin" && (
+        <section className="qcard qadmin-profit-card">
+          <div className="qadmin-profit-card-head">
+            <div>
+              <small className="qadmin-badge-label">COMMERCIAL PROFITABILITY (ADMIN ONLY)</small>
+              <h2>Quotation Profit &amp; Margin Summary</h2>
+            </div>
+            <span className="qadmin-badge-pill">🔒 Visible to you alone</span>
+          </div>
+          <div className="qadmin-metrics-grid">
+            <div className="qmetric-card">
+              <small>Taxable Revenue</small>
+              <b>{money(totals?.taxable ?? 0)}</b>
+            </div>
+            <div className="qmetric-card">
+              <small>Total Buying Cost</small>
+              <b>{money(totals?.cost ?? 0)}</b>
+            </div>
+            <div className="qmetric-card highlight-profit">
+              <small>Gross Profit</small>
+              <b className={(totals?.profit ?? 0) >= 0 ? "pos" : "neg"}>{money(totals?.profit ?? 0)}</b>
+            </div>
+            <div className="qmetric-card highlight-margin">
+              <small>Profit Margin</small>
+              <b>{totals?.margin ?? 0}%</b>
+            </div>
+          </div>
+        </section>
+      )}
       {section !== "terms" && <section className="qcard">
         <h2>Payment schedule</h2>
         {plan.map((m: R, i: number) => (
@@ -5192,7 +5712,7 @@ function getDecidedSwitchSeries(snap: R): DecidedSwitchInfo | null {
             <b>{siteName}</b>
           </span>
           <span>
-            <small>SITE LOCATION</small>
+            <small>PROJECT LOCATION</small>
             <b>{quote.city || "Tamil Nadu"}</b>
           </span>
           <span>
@@ -6073,7 +6593,8 @@ function Files({ rows }: R) {
     </section>
   );
 }
-function Totals({ t }: R) {
+function Totals({ t, role }: R) {
+  const isAdmin = role === "admin";
   return (
     <div className="qtotals">
       <h3>Quotation total</h3>
@@ -6097,15 +6618,56 @@ function Totals({ t }: R) {
         <span>Grand total</span>
         <b>{money(t.grand)}</b>
       </p>
+
+      {isAdmin && (
+        <div className="qadmin-profit-box">
+          <div className="qadmin-profit-header">
+            <span>PROFIT (ME ALONE)</span>
+            <small>Admin only</small>
+          </div>
+          <p>
+            <span>Total Buying Cost</span>
+            <b>{money(t.cost || 0)}</b>
+          </p>
+          <p className="profit-row">
+            <span>Gross Profit</span>
+            <b className={(t.profit || 0) >= 0 ? "profit-pos" : "profit-neg"}>
+              {money(t.profit || 0)}
+            </b>
+          </p>
+          <p className="margin-row">
+            <span>Profit Margin</span>
+            <b>{t.margin || 0}%</b>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+const getItemCost = (x: R) => {
+  const c = x.purchaseCost ?? x.purchase_cost ?? x.buyingPrice ?? x.cost;
+  if (c != null && c !== "") return Number(c) || 0;
+  if (Array.isArray(x.availableVariants) && x.availableVariants.length) {
+    const matched = x.availableVariants.find((v: R) =>
+      (x.variantId && v.variantId === x.variantId) || (x.sku && v.sku === x.sku)
+    );
+    if (matched && (matched.purchaseCost != null || matched.purchase_cost != null)) {
+      return Number(matched.purchaseCost ?? matched.purchase_cost) || 0;
+    }
+  }
+  return 0;
+};
 const line = (x: R) => {
-  const base = Number(x.price || 0) * wholeQty(x.qty),
+  const qty = wholeQty(x.qty),
+    base = Number(x.price || 0) * qty,
     discount = (base * Number(x.discount || 0)) / 100,
     taxable = x.optional && x.excluded ? 0 : base - discount,
-    tax = x.taxMode === "Non-GST" ? 0 : (taxable * Number(x.gst || 18)) / 100;
-  return { base, discount, taxable, tax, total: taxable + tax };
+    tax = x.taxMode === "Non-GST" ? 0 : (taxable * Number(x.gst || 18)) / 100,
+    unitCost = getItemCost(x),
+    cost = x.optional && x.excluded ? 0 : unitCost * qty,
+    profit = Math.round((taxable - cost) * 100) / 100,
+    margin = taxable > 0 ? Math.round((profit / taxable) * 100) : 0;
+  return { base, discount, taxable, tax, total: taxable + tax, unitCost, cost, profit, margin };
 };
 const calc = (s: R) => {
   const items = (s?.floors || [])
@@ -6118,9 +6680,18 @@ const calc = (s: R) => {
         a.discount += y.discount;
         a.taxable += y.taxable;
         a.tax += y.tax;
+        a.cost += y.cost;
         return a;
       },
-      { subtotal: 0, discount: 0, taxable: 0, tax: 0 },
+      { subtotal: 0, discount: 0, taxable: 0, tax: 0, cost: 0 },
     );
-  return { ...r, grand: Math.round((r.taxable + r.tax) * 100) / 100 };
+  const profit = Math.round((r.taxable - r.cost) * 100) / 100;
+  const margin = r.taxable > 0 ? Math.round((profit / r.taxable) * 100) : 0;
+  return {
+    ...r,
+    cost: Math.round(r.cost * 100) / 100,
+    profit,
+    margin,
+    grand: Math.round((r.taxable + r.tax) * 100) / 100,
+  };
 };
