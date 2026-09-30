@@ -1,0 +1,36 @@
+import type { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'Techomie Flow | Smart Operations Workspace',
+    short_name: 'Techomie Flow',
+    description: 'Quotations, Site Visits, Projects & Operations Workspace for Techomie Smart Devices',
+    start_url: '/',
+    id: '/',
+    display: 'standalone',
+    background_color: '#0B111E',
+    theme_color: '#0B111E',
+    orientation: 'portrait-primary',
+    icons: [
+      {
+        src: '/icons/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-maskable-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ],
+    categories: ['business', 'productivity', 'utilities'],
+  };
+}

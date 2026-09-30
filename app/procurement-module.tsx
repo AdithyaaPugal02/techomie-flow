@@ -200,7 +200,7 @@ export default function ProcurementModule({
 
   // Process and decorate each item with cleaned model name and supplier
   const processedItems = useMemo(() => {
-    return rawItems.map((it) => {
+    return rawItems.map((it: any) => {
       const supplier = detectSupplier(it);
       const cleanName = cleanModelName(it.name || "Switch Model");
       const cleanSeries = cleanModelName(it.series || "");
