@@ -372,6 +372,9 @@ export default function SiteVisitsModule({
             open(id);
           }}
           notice={setMsg}
+          onLeadCreated={(newLead: R) => {
+            setLeads((prev) => [newLead, ...prev]);
+          }}
         />
       )}
 
@@ -399,7 +402,265 @@ export default function SiteVisitsModule({
   );
 }
 
-function CreateVisit({ leads, users, close, done, notice }: R) {
+function QuickAddLeadModal({
+  onClose,
+  onCreated,
+  initialDate,
+  defaultAssignedTo,
+}: {
+  onClose: () => void;
+  onCreated: (lead: R) => void;
+  initialDate?: string;
+  defaultAssignedTo?: string;
+}) {
+  const [form, setForm] = useState({
+    customerName: "",
+    phone: "",
+    siteName: "",
+    city: "",
+    propertyType: "Villa",
+    requirementCategories: ["Smart Home Automation"] as string[],
+    source: "Site Visit",
+    notes: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const toggleCategory = (cat: string) => {
+    setForm((prev) => {
+      const exists = prev.requirementCategories.includes(cat);
+      return {
+        ...prev,
+        requirementCategories: exists
+          ? prev.requirementCategories.filter((c) => c !== cat)
+          : [...prev.requirementCategories, cat],
+      };
+    });
+  };
+
+  const handleSave = async (forceDuplicate = false) => {
+    if (!form.customerName.trim()) {
+      setError("Please enter the customer name.");
+      return;
+    }
+    if (!form.phone.trim()) {
+      setError("Please enter customer contact number.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const payload = {
+        customerName: form.customerName.trim(),
+        phone: form.phone.trim(),
+        siteName: form.siteName.trim() || `${form.customerName.trim()} Site`,
+        city: form.city.trim() || undefined,
+        propertyType: form.propertyType,
+        source: form.source,
+        requirementCategories: form.requirementCategories,
+        priority: "Warm",
+        status: "Site Visit Scheduled",
+        nextAction: "Site Visit Scheduled",
+        followupAt: initialDate || new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+        assignedTo: defaultAssignedTo || undefined,
+        notes: form.notes.trim() || "Created from Schedule Site Visit form",
+        allowDuplicate: forceDuplicate,
+      };
+
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (res.status === 409 && data.duplicate) {
+        setSaving(false);
+        const useExisting = window.confirm(
+          `A lead with this phone already exists: ${data.duplicate.customer_name} (${data.duplicate.id}).\n\nClick OK to select this existing lead, or Cancel to create a new record anyway.`
+        );
+        if (useExisting) {
+          onCreated({
+            id: data.duplicate.id,
+            customer_name: data.duplicate.customer_name,
+            phone: data.duplicate.phone,
+            site_name: data.duplicate.site_name || "",
+            city: data.duplicate.city || "",
+          });
+          onClose();
+          return;
+        } else {
+          return handleSave(true);
+        }
+      }
+
+      if (!res.ok) {
+        setError(data.error || "Failed to create lead.");
+        setSaving(false);
+        return;
+      }
+
+      onCreated({
+        id: data.lead.id,
+        customer_name: form.customerName.trim(),
+        site_name: form.siteName.trim() || `${form.customerName.trim()} Site`,
+        city: form.city.trim(),
+        phone: form.phone.trim(),
+        property_type: form.propertyType,
+      });
+      onClose();
+    } catch (e: any) {
+      setError(e?.message || "An unexpected error occurred.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const categories = [
+    "Smart Home Automation",
+    "Smart Switches",
+    "Smart Door Locks",
+    "Video Doorbell",
+    "Smart Lighting",
+    "Gate Automation",
+  ];
+
+  return (
+    <div className="sv-quick-lead-back" onClick={onClose}>
+      <div className="sv-quick-lead-modal" onClick={(e) => e.stopPropagation()}>
+        <header>
+          <div>
+            <small>QUICK LEAD REGISTRATION</small>
+            <h3>Add new lead</h3>
+          </div>
+          <button type="button" onClick={onClose}>×</button>
+        </header>
+
+        <div className="sv-quick-lead-body">
+          {error && (
+            <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", padding: "8px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: 600 }}>
+              {error}
+            </div>
+          )}
+
+          <div className="sv-quick-lead-grid">
+            <label>
+              Customer Name *
+              <input
+                type="text"
+                autoFocus
+                placeholder="e.g. Rajesh Kumar"
+                value={form.customerName}
+                onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+              />
+            </label>
+            <label>
+              Phone number *
+              <input
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </label>
+          </div>
+
+          <div className="sv-quick-lead-grid">
+            <label>
+              Site / Project Name
+              <input
+                type="text"
+                placeholder="e.g. Green Glen Villa"
+                value={form.siteName}
+                onChange={(e) => setForm({ ...form, siteName: e.target.value })}
+              />
+            </label>
+            <label>
+              City / Location
+              <input
+                type="text"
+                placeholder="e.g. Bangalore"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+              />
+            </label>
+          </div>
+
+          <div className="sv-quick-lead-grid">
+            <label>
+              Property Type
+              <select
+                value={form.propertyType}
+                onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+              >
+                {["Villa", "Apartment", "Independent House", "Commercial", "Office", "Farmhouse"].map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Lead Source
+              <select
+                value={form.source}
+                onChange={(e) => setForm({ ...form, source: e.target.value })}
+              >
+                {["Site Visit", "Direct", "Referral", "Architect", "Builder", "Instagram", "Website"].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Requirement Interests
+            <div className="sv-pill-wrap">
+              {categories.map((c) => {
+                const active = form.requirementCategories.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`sv-pill-btn ${active ? "active" : ""}`}
+                    onClick={() => toggleCategory(c)}
+                  >
+                    {active ? "✓ " : "+ "}{c}
+                  </button>
+                );
+              })}
+            </div>
+          </label>
+
+          <label>
+            Notes / Remarks
+            <textarea
+              rows={2}
+              placeholder="Initial customer requirements or site notes..."
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </label>
+        </div>
+
+        <footer>
+          <button type="button" onClick={onClose} disabled={saving} style={{ border: "1px solid #cbd5e1", background: "#ffffff", padding: "7px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => handleSave(false)}
+            disabled={saving || !form.customerName.trim() || !form.phone.trim()}
+            style={{ background: "#0284c7", color: "#ffffff", border: "none", padding: "7px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+          >
+            {saving ? "Saving..." : "Save & Select Lead"}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function CreateVisit({ leads, users, close, done, notice, onLeadCreated }: R) {
   const [v, setV] = useState<R>({
     leadId: "",
     scheduledAt: "",
@@ -408,6 +669,12 @@ function CreateVisit({ leads, users, close, done, notice }: R) {
     purpose: "",
     visitNotes: "",
   });
+  const [leadsList, setLeadsList] = useState<R[]>(leads || []);
+  const [showAddLead, setShowAddLead] = useState(false);
+
+  useEffect(() => {
+    setLeadsList(leads || []);
+  }, [leads]);
 
   const save = async () => {
     const r = await fetch("/api/site-visits", {
@@ -431,17 +698,31 @@ function CreateVisit({ leads, users, close, done, notice }: R) {
           <button onClick={close}>×</button>
         </header>
         <main>
-          <label>
-            Lead / customer *
-            <select value={v.leadId} onChange={(e) => setV({ ...v, leadId: e.target.value })}>
+          <div className="sv-lead-select-wrap">
+            <div className="sv-lead-label-bar">
+              <label htmlFor="sv-lead-dropdown">Lead / customer *</label>
+              <button
+                type="button"
+                className="sv-add-lead-btn"
+                onClick={() => setShowAddLead(true)}
+                title="Create a new lead and select it"
+              >
+                + Add lead
+              </button>
+            </div>
+            <select
+              id="sv-lead-dropdown"
+              value={v.leadId}
+              onChange={(e) => setV({ ...v, leadId: e.target.value })}
+            >
               <option value="">Select lead</option>
-              {leads.map((x: R) => (
+              {leadsList.map((x: R) => (
                 <option key={x.id} value={x.id}>
                   {x.customer_name} · {x.site_name || x.city} · {x.phone}
                 </option>
               ))}
             </select>
-          </label>
+          </div>
           <label>
             Date and time *
             <input
@@ -500,6 +781,20 @@ function CreateVisit({ leads, users, close, done, notice }: R) {
           </button>
         </footer>
       </div>
+
+      {showAddLead && (
+        <QuickAddLeadModal
+          onClose={() => setShowAddLead(false)}
+          onCreated={(newLead: R) => {
+            setLeadsList((prev) => [newLead, ...prev]);
+            setV((prev: R) => ({ ...prev, leadId: newLead.id }));
+            onLeadCreated?.(newLead);
+            notice?.(`✓ Lead ${newLead.id} created and selected!`);
+          }}
+          initialDate={v.scheduledAt}
+          defaultAssignedTo={v.assignedTo}
+        />
+      )}
     </div>
   );
 }

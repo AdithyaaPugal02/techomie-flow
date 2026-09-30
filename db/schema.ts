@@ -22,7 +22,7 @@ export const quotationRevisions=sqliteTable("quotation_revisions",{id:text("id")
 export const quotationMilestones=sqliteTable("quotation_milestones",{id:text("id").primaryKey(),quotationId:integer("quotation_id").notNull().references(()=>quotations.id),revision:integer("revision").notNull().default(0),name:text("name").notNull(),percentage:real("percentage"),fixedAmount:real("fixed_amount"),dueTrigger:text("due_trigger"),dueDate:text("due_date"),notes:text("notes"),amount:real("amount").notNull().default(0),sortOrder:integer("sort_order").notNull().default(0)});
 export const quotationFiles=sqliteTable("quotation_files",{id:text("id").primaryKey(),quotationId:integer("quotation_id").notNull().references(()=>quotations.id),revision:integer("revision").notNull().default(0),kind:text("kind").notNull(),fileName:text("file_name").notNull(),fileKey:text("file_key").notNull(),contentType:text("content_type"),size:integer("size"),permanent:integer("permanent",{mode:"boolean"}).notNull().default(false),createdBy:text("created_by").notNull().references(()=>users.id),createdAt:text("created_at").notNull()});
 export const quotationAcceptances=sqliteTable("quotation_acceptances",{id:text("id").primaryKey(),quotationId:integer("quotation_id").notNull().references(()=>quotations.id),revision:integer("revision").notNull(),decision:text("decision").notNull(),customerName:text("customer_name"),comment:text("comment"),ipAddress:text("ip_address"),userAgent:text("user_agent"),snapshot:text("snapshot",{mode:"json"}).notNull(),createdAt:text("created_at").notNull()});
-export const projectTasks=sqliteTable("project_tasks",{id:text("id").primaryKey(),projectId:text("project_id").notNull().references(()=>projects.id),title:text("title").notNull(),floorRoom:text("floor_room"),category:text("category").default("Other"),assignedTo:text("assigned_to").references(()=>users.id),assignedBy:text("assigned_by").references(()=>users.id),priority:text("priority").default("Normal"),status:text("status").notNull().default("To Do"),dueAt:text("due_at"),mandatory:integer("mandatory",{mode:"boolean"}).notNull().default(false),completedAt:text("completed_at"),completionProof:text("completion_proof"),notes:text("notes"),sortOrder:integer("sort_order").notNull().default(0),createdAt:text("created_at").notNull()});
+export const projectTasks=sqliteTable("project_tasks",{id:text("id").primaryKey(),projectId:text("project_id").references(()=>projects.id),title:text("title").notNull(),floorRoom:text("floor_room"),category:text("category").default("Other"),assignedTo:text("assigned_to").references(()=>users.id),assignedBy:text("assigned_by").references(()=>users.id),priority:text("priority").default("Normal"),status:text("status").notNull().default("To Do"),dueAt:text("due_at"),mandatory:integer("mandatory",{mode:"boolean"}).notNull().default(false),completedAt:text("completed_at"),completionProof:text("completion_proof"),notes:text("notes"),sortOrder:integer("sort_order").notNull().default(0),createdAt:text("created_at").notNull()});
 export const vendors=sqliteTable("vendors",{id:text("id").primaryKey(),name:text("name").notNull(),phone:text("phone"),email:text("email"),gstin:text("gstin"),address:text("address"),archived:integer("archived",{mode:"boolean"}).notNull().default(false),createdAt:text("created_at").notNull()});
 export const projectMaterials=sqliteTable("project_materials",{id:text("id").primaryKey(),projectId:text("project_id").notNull().references(()=>projects.id),quotationItemId:text("quotation_item_id").references(()=>quotationItems.id),name:text("name").notNull(),sku:text("sku"),requiredQty:real("required_qty").notNull(),orderedQty:real("ordered_qty").notNull().default(0),receivedQty:real("received_qty").notNull().default(0),atSiteQty:real("at_site_qty").notNull().default(0),installedQty:real("installed_qty").notNull().default(0),status:text("status").notNull().default("Required"),vendorId:text("vendor_id").references(()=>vendors.id),buyingPrice:real("buying_price"),freight:real("freight").default(0),purchaseReference:text("purchase_reference"),expectedDelivery:text("expected_delivery"),actualReceived:text("actual_received"),updatedAt:text("updated_at").notNull()});
 export const zohoInvoices=sqliteTable("zoho_invoices",{id:text("id").primaryKey(),projectId:text("project_id").references(()=>projects.id),quotationId:integer("quotation_id").references(()=>quotations.id),zohoInvoiceId:text("zoho_invoice_id").unique(),invoiceNumber:text("invoice_number").unique(),invoiceDate:text("invoice_date"),pdfKey:text("pdf_key"),externalUrl:text("external_url"),status:text("status").notNull().default("Not Required"),balanceDue:real("balance_due").default(0),createdBy:text("created_by").notNull().references(()=>users.id),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull()});
@@ -70,3 +70,159 @@ export const compatibleAccessories=sqliteTable("compatible_accessories",{id:text
 export const itemImportJobs=sqliteTable("item_import_jobs",{id:text("id").primaryKey(),supplierId:text("supplier_id").references(()=>itemSuppliers.id),sourceFile:text("source_file").notNull(),sourceHash:text("source_hash"),status:text("status").notNull().default("Imported"),summary:text("summary",{mode:"json"}),startedAt:text("started_at").notNull(),completedAt:text("completed_at"),createdBy:text("created_by").references(()=>users.id),approvedBy:text("approved_by").references(()=>users.id),approvedAt:text("approved_at")});
 export const itemImportErrors=sqliteTable("item_import_errors",{id:text("id").primaryKey(),jobId:text("job_id").notNull().references(()=>itemImportJobs.id),severity:text("severity").notNull(),code:text("code").notNull(),message:text("message").notNull(),sourceSheet:text("source_sheet"),sourcePage:integer("source_page"),sourceRow:integer("source_row"),sourceData:text("source_data",{mode:"json"}),resolved:integer("resolved",{mode:"boolean"}).notNull().default(false),resolvedBy:text("resolved_by").references(()=>users.id),resolvedAt:text("resolved_at")});
 export const itemAuditHistory=sqliteTable("item_audit_history",{id:text("id").primaryKey(),baseProductId:text("base_product_id").references(()=>baseProducts.id),variantId:text("variant_id").references(()=>sellableVariants.id),action:text("action").notNull(),beforeSnapshot:text("before_snapshot",{mode:"json"}),afterSnapshot:text("after_snapshot",{mode:"json"}),createdBy:text("created_by").references(()=>users.id),createdAt:text("created_at").notNull()});
+
+// Technical Academy / Training & Experiments Tables
+export const trainingTasks = sqliteTable("training_tasks", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull(),
+  category: text("category").notNull(),
+  difficulty: text("difficulty").notNull().default("Intermediate"),
+  estimatedHours: real("estimated_hours").default(4),
+  objective: text("objective").notNull(),
+  description: text("description").notNull(),
+  instructions: text("instructions").notNull(),
+  submissionRequirements: text("submission_requirements").notNull(),
+  isMandatory: integer("is_mandatory", { mode: "boolean" }).notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  version: integer("version").notNull().default(1),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const trainingChecklistItems = sqliteTable("training_checklist_items", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").notNull().references(() => trainingTasks.id),
+  stepNumber: integer("step_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  isMandatory: integer("is_mandatory", { mode: "boolean" }).notNull().default(true),
+});
+
+export const trainingAssignments = sqliteTable("training_assignments", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").notNull().references(() => trainingTasks.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  assignedBy: text("assigned_by").references(() => users.id),
+  assignedAt: text("assigned_at").notNull(),
+  dueAt: text("due_at").notNull(),
+  status: text("status").notNull().default("Not Started"),
+  progressPercent: integer("progress_percent").notNull().default(0),
+  taskVersion: integer("task_version").notNull().default(1),
+  startedAt: text("started_at"),
+  lastSubmittedAt: text("last_submitted_at"),
+  completedAt: text("completed_at"),
+  approvedAt: text("approved_at"),
+  approvedBy: text("approved_by").references(() => users.id),
+  adminFeedback: text("admin_feedback"),
+  employeeNotes: text("employee_notes"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const trainingChecklistProgress = sqliteTable("training_checklist_progress", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => trainingAssignments.id),
+  checklistItemId: text("checklist_item_id").notNull().references(() => trainingChecklistItems.id),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+  completedAt: text("completed_at"),
+});
+
+export const trainingSubmissions = sqliteTable("training_submissions", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => trainingAssignments.id),
+  submissionNumber: integer("submission_number").notNull().default(1),
+  notes: text("notes"),
+  demoUrl: text("demo_url"),
+  status: text("status").notNull().default("Submitted"),
+  adminFeedback: text("admin_feedback"),
+  submittedAt: text("submitted_at").notNull(),
+  reviewedAt: text("reviewed_at"),
+  reviewedBy: text("reviewed_by").references(() => users.id),
+});
+
+export const trainingSubmissionAttachments = sqliteTable("training_submission_attachments", {
+  id: text("id").primaryKey(),
+  submissionId: text("submission_id").references(() => trainingSubmissions.id),
+  assignmentId: text("assignment_id").notNull().references(() => trainingAssignments.id),
+  kind: text("kind").notNull().default("Evidence"),
+  fileKey: text("file_key").notNull(),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id),
+  createdAt: text("created_at").notNull(),
+});
+
+export const trainingChallenges = sqliteTable("training_challenges", {
+  id: text("id").primaryKey(),
+  taskId: text("task_id").references(() => trainingTasks.id),
+  assignmentId: text("assignment_id").references(() => trainingAssignments.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  productModel: text("product_model").notNull(),
+  category: text("category").notNull(),
+  severity: text("severity").notNull().default("Medium"),
+  stepsAttempted: text("steps_attempted").notNull(),
+  expectedBehavior: text("expected_behavior").notNull(),
+  actualBehavior: text("actual_behavior").notNull(),
+  status: text("status").notNull().default("Open"),
+  assignedInvestigatorId: text("assigned_investigator_id").references(() => users.id),
+  resolutionSummary: text("resolution_summary"),
+  resolvedAt: text("resolved_at"),
+  resolvedBy: text("resolved_by").references(() => users.id),
+  kbArticleId: text("kb_article_id"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const trainingChallengeComments = sqliteTable("training_challenge_comments", {
+  id: text("id").primaryKey(),
+  challengeId: text("challenge_id").notNull().references(() => trainingChallenges.id),
+  userId: text("user_id").notNull().references(() => users.id),
+  commentType: text("comment_type").notNull().default("Comment"),
+  content: text("content").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const trainingChallengeAttachments = sqliteTable("training_challenge_attachments", {
+  id: text("id").primaryKey(),
+  challengeId: text("challenge_id").notNull().references(() => trainingChallenges.id),
+  fileKey: text("file_key").notNull(),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id),
+  createdAt: text("created_at").notNull(),
+});
+
+export const trainingKbArticles = sqliteTable("training_kb_articles", {
+  id: text("id").primaryKey(),
+  challengeId: text("challenge_id").references(() => trainingChallenges.id),
+  title: text("title").notNull(),
+  category: text("category").notNull(),
+  productModel: text("product_model").notNull(),
+  symptom: text("symptom").notNull(),
+  rootCause: text("root_cause").notNull(),
+  solution: text("solution").notNull(),
+  prevention: text("prevention").notNull(),
+  tags: text("tags"),
+  views: integer("views").notNull().default(0),
+  helpfulCount: integer("helpful_count").notNull().default(0),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const trainingStatusHistory = sqliteTable("training_status_history", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id").notNull().references(() => trainingAssignments.id),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  changedBy: text("changed_by").notNull().references(() => users.id),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull(),
+});

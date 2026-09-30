@@ -13,6 +13,7 @@ import QuotationsModule from "./quotations-module";
 import ExpensesModule from "./expenses-module";
 import SiteVisitsModule from "./site-visits-module";
 import ProcurementModule from "./procurement-module";
+import AcademyModule from "./academy-module";
 
 const products = catalog.map((p) => ({
   ...p,
@@ -482,6 +483,7 @@ export default function Home() {
     {icon:"◇",name:"Projects",label:"Projects",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
     {icon:"✓",name:"Tasks",label:"Tasks",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
     {icon:"⚒",name:"Service",label:"Service & warranty",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
+    {icon:"🎓",name:"Technical Academy",label:"Technical Academy",section:"OPERATIONS",roles:["admin","crm","sales","technician"]},
     {icon:"₹",name:"Invoices",section:"FINANCE",roles:["admin","crm","sales","technician"]},
     {icon:"₹",name:"Payments",section:"FINANCE",roles:["admin","crm","sales","technician"]},
     {icon:"₹",name:"Expenses",label:role==="admin"?"Company expenses":"My expenses",section:"FINANCE",roles:["admin","crm","sales","technician"]},
@@ -511,7 +513,8 @@ export default function Home() {
     {icon:"₹",label:"New invoice",module:"Invoices",roles:["admin","crm","sales"]},
     {icon:"₹",label:"Add expense",module:"Expenses",roles:["admin","sales","technician"]},
     {icon:"◫",label:"Add item",module:"Items",roles:["admin"]},
-    {icon:"⚒",label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]}
+    {icon:"⚒",label:"Create service ticket",module:"Service",roles:["admin","sales","technician"]},
+    {icon:"🎓",label:"Technical Academy",module:"Technical Academy",roles:["admin","crm","sales","technician"]}
   ].filter(x=>x.roles.includes(role));
 
   const unreadCount = notifications.filter(n => n.unread).length;
@@ -1053,6 +1056,13 @@ export default function Home() {
           <OverviewModule role={auth.user.role} onNavigate={(target,filter)=>navigate(target,filter||{})} />
         ) : module === "Procurement" ? (
           <ProcurementModule role={auth.user.role} initialFilter={moduleFilter} />
+        ) : module === "Technical Academy" ? (
+          <AcademyModule
+            role={auth.user.role}
+            user={auth.user}
+            initialFilter={moduleFilter}
+            onNavigate={(target, filter) => navigate(target, filter || {})}
+          />
         ) : (
           <OperationsModule name={module} role={auth.user.role} initialFilter={moduleFilter} />
         )}
@@ -2467,12 +2477,12 @@ function OperationsModule({ name,role,initialFilter={} }: { name: string;role:st
     {key:"quotation_id",label:"Quotation",dependsOn:"customer_selector",options:paymentLookups.quotations.map(q=>({value:String(q.id),label:`${String(q.number)} · ${String(q.title||"Quotation")}`,parent:String(q.customer_id)}))},
     ...formFields.Payments.slice(2)
   ]:name==="Tasks"?[
-    {key:"project_id",label:"Project / customer",required:true,options:taskLookups.projects.map(p=>({value:String(p.id),label:`${String(p.customer_name)} · ${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`}))},
-    {key:"title",label:"Task",required:true},
-    {key:"assigned_to",label:"Assign to",required:true,options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
+    {key:"project_id",label:"Project / customer (optional)",options:taskLookups.projects.map(p=>({value:String(p.id),label:`${String(p.customer_name)} · ${String(p.title||p.id)}${p.site_name?` · ${String(p.site_name)}`:""}`}))},
+    {key:"title",label:"Task title",required:true},
+    {key:"assigned_to",label:"Assign to",options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
     {key:"assigned_by",label:"Assigned by",options:taskLookups.users.map(u=>({value:String(u.id),label:`${String(u.name)} · ${String(u.role)}`}))},
     {key:"due_at",label:"Due date and time",type:"datetime-local",required:true},
-    {key:"status",label:"Status",required:true,options:["To Do","In Progress","Waiting","Completed"]},
+    {key:"status",label:"Status",options:["To Do","In Progress","Waiting","Completed"]},
     {key:"mandatory",label:"Priority",options:[{value:"0",label:"Normal"},{value:"1",label:"Priority / mandatory"}]},
     {key:"notes",label:"Instructions / completion notes",type:"textarea"}
   ]:formFields[name]||formFields.Overview;

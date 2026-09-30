@@ -267,6 +267,191 @@
   background: #f8fafc;
 }
 
+/* Quick Lead Integration inside Site Visit Schedule */
+.sv-lead-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sv-lead-label-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sv-lead-label-bar label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0;
+}
+.sv-add-lead-btn {
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 2.5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.3;
+  transition: all 0.15s ease;
+}
+.sv-add-lead-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+}
+
+.sv-quick-lead-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: svFadeIn 0.18s ease-out;
+}
+.sv-quick-lead-modal {
+  width: min(580px, 95vw);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  animation: svScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sv-quick-lead-modal header {
+  padding: 16px 22px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sv-quick-lead-modal header small {
+  font-size: 10px;
+  font-weight: 750;
+  color: #0284c7;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: block;
+}
+.sv-quick-lead-modal header h3 {
+  margin: 2px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.sv-quick-lead-modal header button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+}
+.sv-quick-lead-modal header button:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.sv-quick-lead-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sv-quick-lead-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.sv-quick-lead-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+}
+.sv-quick-lead-modal input,
+.sv-quick-lead-modal select,
+.sv-quick-lead-modal textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.sv-quick-lead-modal input:focus,
+.sv-quick-lead-modal select:focus,
+.sv-quick-lead-modal textarea:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+.sv-pill-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sv-pill-btn {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sv-pill-btn:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+.sv-pill-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.sv-quick-lead-modal footer {
+  padding: 14px 22px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@keyframes svFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes svScaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .svdrawer {
   position: fixed;
   inset: 0 0 0 auto;
