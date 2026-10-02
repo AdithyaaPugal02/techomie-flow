@@ -226,3 +226,32 @@ export const trainingStatusHistory = sqliteTable("training_status_history", {
   notes: text("notes"),
   createdAt: text("created_at").notNull(),
 });
+
+// Employee Attendance Management Tables
+export const attendance = sqliteTable("attendance", {
+  id: text("id").primaryKey(),
+  employeeId: text("employee_id").notNull().references(() => users.id),
+  attendanceDate: text("attendance_date").notNull(),
+  checkInTime: text("check_in_time"),
+  checkOutTime: text("check_out_time"),
+  checkInLatitude: real("check_in_latitude"),
+  checkInLongitude: real("check_in_longitude"),
+  checkOutLatitude: real("check_out_latitude"),
+  checkOutLongitude: real("check_out_longitude"),
+  checkInDistanceMeters: real("check_in_distance_meters"),
+  checkOutDistanceMeters: real("check_out_distance_meters"),
+  totalWorkingMinutes: integer("total_working_minutes").default(0),
+  status: text("status").notNull().default("Incomplete"),
+  lateMinutes: integer("late_minutes").default(0),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const attendanceHolidays = sqliteTable("attendance_holidays", {
+  id: text("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: text("created_at").notNull(),
+});

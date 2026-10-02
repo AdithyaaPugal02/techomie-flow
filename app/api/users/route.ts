@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { env } from "cloudflare:workers";
 import { getDb } from "../../../db";
 import { auditLog, sessions, users } from "../../../db/schema";
 import { clearSession, hashPassword, randomToken, requireUser } from "../../../lib/auth";
@@ -136,7 +137,72 @@ export async function DELETE(req: Request) {
       }
     }
 
-    await db.delete(sessions).where(eq(sessions.userId, id));
+    // Safely reassign or clean up foreign key references across operational tables
+    const cleanupOps: Array<{ sql: string; params: unknown[] }> = [
+      // Direct deletes for user-specific activity records
+      { sql: "DELETE FROM sessions WHERE user_id = ?", params: [id] },
+      { sql: "DELETE FROM notifications WHERE user_id = ?", params: [id] },
+      { sql: "DELETE FROM attendance WHERE employee_id = ?", params: [id] },
+      { sql: "DELETE FROM project_team WHERE user_id = ?", params: [id] },
+      { sql: "DELETE FROM training_submissions WHERE assignment_id IN (SELECT id FROM training_assignments WHERE user_id = ?)", params: [id] },
+      { sql: "DELETE FROM training_checklist_progress WHERE assignment_id IN (SELECT id FROM training_assignments WHERE user_id = ?)", params: [id] },
+      { sql: "DELETE FROM training_assignments WHERE user_id = ?", params: [id] },
+
+      // Nullify optional assignments
+      { sql: "UPDATE customers SET assigned_to = NULL WHERE assigned_to = ?", params: [id] },
+      { sql: "UPDATE leads SET assigned_to = NULL WHERE assigned_to = ?", params: [id] },
+      { sql: "UPDATE service_tickets SET assigned_to = NULL WHERE assigned_to = ?", params: [id] },
+      { sql: "UPDATE project_tasks SET assigned_to = NULL WHERE assigned_to = ?", params: [id] },
+
+      // Reassign operational history to caller (admin) so business records remain intact
+      { sql: "UPDATE activities SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE attachments SET uploaded_by = ? WHERE uploaded_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE audit_log SET user_id = ? WHERE user_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE customer_notes SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE expense_history SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE expenses SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE expenses SET approved_by = ? WHERE approved_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE invoice_payments SET received_by = ? WHERE received_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE payments SET received_by = ? WHERE received_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE lead_followups SET assigned_to = ? WHERE assigned_to = ?", params: [caller.id, id] },
+      { sql: "UPDATE lead_followups SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE leads SET lead_owner = ? WHERE lead_owner = ?", params: [caller.id, id] },
+      { sql: "UPDATE leads SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE projects SET manager_id = ? WHERE manager_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE projects SET sales_id = ? WHERE sales_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE project_tasks SET assigned_by = ? WHERE assigned_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE quotation_files SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE quotation_revisions SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE quotations SET sales_id = ? WHERE sales_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE quotations SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE scope_variations SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE scope_variations SET approved_by = ? WHERE approved_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE service_tickets SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE settings SET updated_by = ? WHERE updated_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE site_visits SET assigned_to = ? WHERE assigned_to = ?", params: [caller.id, id] },
+      { sql: "UPDATE site_visits SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE tax_adjustment_notes SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE tax_invoices SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE zoho_invoices SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_tasks SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_challenges SET user_id = ? WHERE user_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_challenge_comments SET user_id = ? WHERE user_id = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_challenge_attachments SET uploaded_by = ? WHERE uploaded_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_kb_articles SET created_by = ? WHERE created_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_status_history SET changed_by = ? WHERE changed_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_assignments SET assigned_by = ? WHERE assigned_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_assignments SET approved_by = ? WHERE approved_by = ?", params: [caller.id, id] },
+      { sql: "UPDATE training_submissions SET reviewed_by = ? WHERE reviewed_by = ?", params: [caller.id, id] },
+    ];
+
+    for (const op of cleanupOps) {
+      try {
+        await env.DB.prepare(op.sql).bind(...op.params).run();
+      } catch (err) {
+        console.warn(`[user-delete] Non-fatal cleanup warning for query "${op.sql}":`, err);
+      }
+    }
+
     await db.delete(users).where(eq(users.id, id));
     await db.insert(auditLog).values({
       userId: caller.id,

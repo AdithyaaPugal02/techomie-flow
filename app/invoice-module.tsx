@@ -1,6 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { calculateFinancials, formatINR } from "../lib/financial";
+
+type EditLine = {
+  id: string;
+  description: string;
+  sku?: string;
+  hsnSac: string;
+  uqc: string;
+  quantity: number;
+  rate: number;
+  discountRate: number;
+  gstRate: number;
+};
+type EditForm = {
+  id: string;
+  customerId: string;
+  invoiceDate: string;
+  dueDate: string;
+  billingAddress: string;
+  shippingAddress: string;
+  customerGstin: string;
+  placeOfSupply: string;
+  placeOfSupplyCode: string;
+  pricingMode: string;
+  paymentTerms: string;
+  items: EditLine[];
+};
 
 type QuoteLine = {
   id: string | number;
@@ -23,6 +50,11 @@ type Customer = {
   email?: string;
   gstin?: string;
   billingAddress?: string;
+  billing_address?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
 };
 type Invoice = Record<string, unknown> & {
   id: string;
@@ -170,6 +202,8 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     [showList, setShowList] = useState(true),
     [zoom, setZoom] = useState<"fit" | "100" | "85" | "75">("fit"),
     [showQCC, setShowQCC] = useState(false),
+    [showEditDraft, setShowEditDraft] = useState(false),
+    [editForm, setEditForm] = useState<EditForm | null>(null),
     [invoiceRooms, setInvoiceRooms] = useState<Room[]>([]),
     [draggedInvoiceItem, setDraggedInvoiceItem] = useState<{ roomIndex: number; itemIndex: number } | null>(null),
     [dragOverInvoiceRoom, setDragOverInvoiceRoom] = useState<number | null>(null),
@@ -288,7 +322,19 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
       if (res.ok && dat.quotation) {
         const q = dat.quotation;
         if (q.customer_id) {
-          chooseCustomer(String(q.customer_id));
+          chooseCustomer(String(q.customer_id), q);
+        } else {
+          const qAddr =
+            q.billing_address ||
+            q.site_address ||
+            [q.site_name, q.city || q.site_city, q.state || "Tamil Nadu"].filter(Boolean).join(", ");
+          if (qAddr) {
+            setDraft((d) => ({
+              ...d,
+              billingAddress: d.billingAddress || qAddr,
+              shippingAddress: d.shippingAddress || q.site_address || qAddr,
+            }));
+          }
         }
         if (q.snapshot?.floors) {
           const extractedRooms: Room[] = [];
@@ -364,14 +410,31 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
       }
     }).catch(() => undefined);
   }, []);
-  const chooseCustomer = (id: string) => {
+  const chooseCustomer = (id: string, quotationContext?: any) => {
     const c = customers.find((x) => String(x.id) === id);
+    const candidateBilling =
+      (c as any)?.billing_address ||
+      (c as any)?.billingAddress ||
+      quotationContext?.billing_address ||
+      (c as any)?.address ||
+      quotationContext?.site_address ||
+      [c?.name, (c as any)?.city, (c as any)?.state || "Tamil Nadu", (c as any)?.pincode].filter(Boolean).join(", ") ||
+      "";
+
+    const candidateShipping =
+      quotationContext?.site_address ||
+      quotationContext?.site_name ||
+      candidateBilling ||
+      details?.site ||
+      "";
+
     setDraft((d) => ({
       ...d,
       customerId: id,
-      billingAddress: c?.billingAddress || "",
-      shippingAddress: c?.billingAddress || details.site || "",
-      customerGstin: c?.gstin || "",
+      billingAddress: candidateBilling || d.billingAddress || "",
+      shippingAddress: candidateShipping || d.shippingAddress || "",
+      customerGstin: c?.gstin || quotationContext?.gstin || d.customerGstin || "",
+      placeOfSupply: (c as any)?.state || quotationContext?.state || d.placeOfSupply,
     }));
   };
   const openInvoice = async (id: string) => {
@@ -385,11 +448,24 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
   const createDraft = async () => {
     setBusy(true);
     setMessage("");
+    const c = customers.find((x) => String(x.id) === draft.customerId);
+    const effectiveBilling =
+      draft.billingAddress.trim() ||
+      (c as any)?.billing_address ||
+      (c as any)?.billingAddress ||
+      [c?.name, (c as any)?.city, (c as any)?.state || "Tamil Nadu", (c as any)?.pincode]
+        .filter(Boolean)
+        .join(", ") ||
+      "Tamil Nadu, India";
+    const effectiveShipping = draft.shippingAddress.trim() || effectiveBilling;
+
     const r = await fetch("/api/invoices", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...draft,
+          billingAddress: effectiveBilling,
+          shippingAddress: effectiveShipping,
           customerId: Number(draft.customerId),
           items: quoteItems,
           bankDetails: { display: draft.bankDetails },
@@ -414,6 +490,104 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     await load();
     await openInvoice(d.invoice.id);
   };
+
+  const openEditModal = (inv: Invoice) => {
+    const rawItems = (inv.items || []) as Record<string, any>[];
+    const mappedItems: EditLine[] = rawItems.map((it, idx) => ({
+      id: String(it.id || idx + 1),
+      description: String(it.description || ""),
+      sku: String(it.sku || ""),
+      hsnSac: String(it.hsn_sac || "8536"),
+      uqc: String(it.uqc || "NOS"),
+      quantity: Number(it.quantity || 1),
+      rate: Number(it.rate || 0),
+      discountRate: Number(it.discount_rate || 0),
+      gstRate: Number(it.gst_rate ?? 18),
+    }));
+    setEditForm({
+      id: inv.id,
+      customerId: String(inv.customer_id || ""),
+      invoiceDate: String(inv.invoice_date || today()),
+      dueDate: String(inv.due_date || later(15)),
+      billingAddress: String(inv.billing_address || ""),
+      shippingAddress: String(inv.shipping_address || inv.billing_address || ""),
+      customerGstin: String(inv.customer_gstin || ""),
+      placeOfSupply: String(inv.place_of_supply || "Tamil Nadu"),
+      placeOfSupplyCode: String(inv.place_of_supply_code || "33"),
+      pricingMode: String(inv.pricing_mode || "exclusive"),
+      paymentTerms: String(inv.payment_terms || "Payment due within 15 days"),
+      items: mappedItems.length
+        ? mappedItems
+        : [
+            {
+              id: crypto.randomUUID(),
+              description: "Product Item",
+              hsnSac: "8536",
+              uqc: "NOS",
+              quantity: 1,
+              rate: 0,
+              discountRate: 0,
+              gstRate: 18,
+            },
+          ],
+    });
+    setShowEditDraft(true);
+  };
+
+  const saveDraftEdit = async () => {
+    if (!editForm) return;
+    if (!editForm.items.length) {
+      setMessage("Draft invoice must have at least one line item");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          ...editForm,
+        }),
+      });
+      const data = await res.json();
+      setBusy(false);
+      if (!res.ok) {
+        setMessage(data.error || "Failed to update draft invoice");
+        return;
+      }
+      setShowEditDraft(false);
+      setMessage("Draft invoice updated successfully");
+      await load();
+      await openInvoice(editForm.id);
+    } catch (err: any) {
+      setBusy(false);
+      setMessage(err?.message || "Failed to save invoice changes");
+    }
+  };
+
+  const editPreview = useMemo(() => {
+    if (!editForm) return null;
+    return calculateFinancials(
+      editForm.items.map((x) => ({
+        description: x.description,
+        sku: x.sku,
+        hsnSac: x.hsnSac,
+        uqc: x.uqc,
+        quantity: Number(x.quantity || 1),
+        rate: Number(x.rate || 0),
+        discountRate: Number(x.discountRate || 0),
+        gstRate: Number(x.gstRate ?? 18),
+      })),
+      {
+        isInterstate: editForm.placeOfSupplyCode !== "33",
+        pricingMode:
+          editForm.pricingMode === "inclusive" ? "inclusive" : "exclusive",
+      },
+    );
+  }, [editForm]);
+
   const selectTemplate = async (templateId: string) => {
     if (!selected || selected.status !== "Draft") return;
     const r = await fetch("/api/invoices", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: selected.id, action: "template", templateId }) });
@@ -428,19 +602,35 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
     el.classList.add("pdfexporting");
     try {
       const html2pdf = (await import("html2pdf.js")).default;
+      const docName = selected.number
+        ? `Tax-Invoice-${selected.number}`
+        : `Draft-Invoice-${selected.id.slice(0, 8)}`;
       const worker = html2pdf()
         .set({
-          margin: 0,
-          filename: `${selected.number || "Draft-Invoice"}.pdf`.replaceAll(
-            "/",
-            "-",
-          ),
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", imageTimeout: 10000, logging: false, scrollY: 0, scrollX: 0 },
+          margin: [6, 8, 6, 8],
+          filename: `${docName}.pdf`.replaceAll("/", "-"),
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            imageTimeout: 15000,
+            logging: false,
+            scrollY: 0,
+            scrollX: 0,
+          },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
           pagebreak: {
             mode: ["css", "legacy"],
-            avoid: [".paperrow", ".papertotals", ".paperhistory", "footer"],
+            avoid: [
+              "tr",
+              ".invsummarybox",
+              ".invpaperfooter",
+              ".paperinfogrid",
+              ".amountwordsbox",
+              ".invbankbox",
+              ".paperhistory",
+            ],
           },
         })
         .from(el);
@@ -666,8 +856,35 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                     </em>
                   </span>
                 </div>
-                {role === "admin" && (
-                  <div className="invoicecardactions" onClick={(e) => e.stopPropagation()}>
+                <div className="invoicecardactions" onClick={(e) => e.stopPropagation()}>
+                  {i.status === "Draft" && (
+                    <button
+                      type="button"
+                      className="inveditbtn"
+                      title="Edit draft invoice"
+                      style={{
+                        background: "#e0f2fe",
+                        border: "1px solid #bae6fd",
+                        color: "#0369a1",
+                        borderRadius: "5px",
+                        padding: "3px 8px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        marginRight: "6px",
+                      }}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await openInvoice(i.id);
+                        const r = await fetch(`/api/invoices?id=${encodeURIComponent(i.id)}`);
+                        const d = await r.json();
+                        if (d?.invoice) openEditModal(d.invoice);
+                      }}
+                    >
+                      ✏ Edit
+                    </button>
+                  )}
+                  {role === "admin" && (
                     <button
                       type="button"
                       className="invdelbtn"
@@ -679,8 +896,8 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                     >
                       🗑 Delete
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))
           )}
@@ -723,13 +940,37 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
                     </select>
                   </label>
                   {selected.status === "Draft" && (
-                    <button
-                      className="primary"
-                      disabled={busy}
-                      onClick={() => setShowFinalise(true)}
-                    >
-                      Finalise & lock
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="editdraftbtn"
+                        style={{
+                          background: "#e0f2fe",
+                          color: "#0369a1",
+                          border: "1px solid #7dd3fc",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                        disabled={busy}
+                        onClick={() => openEditModal(selected)}
+                        title="Edit line items, rates, quantities, and customer details"
+                      >
+                        ✏️ Edit invoice
+                      </button>
+                      <button
+                        className="primary"
+                        disabled={busy}
+                        onClick={() => setShowFinalise(true)}
+                      >
+                        Finalise & lock
+                      </button>
+                    </>
                   )}
                   {selected.status !== "Draft" &&
                     selected.status !== "Cancelled" && (
@@ -914,8 +1155,24 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
               </select>
             </label>
             <label className="wide">
-              <span>Billing address *</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span>Billing address *</span>
+                {draft.customerId && (
+                  <button
+                    type="button"
+                    style={{ fontSize: "11px", color: "#0284c7", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                    onClick={() => {
+                      const c = customers.find((x) => String(x.id) === draft.customerId);
+                      const autogen = (c as any)?.billing_address || (c as any)?.billingAddress || [c?.name, (c as any)?.city, (c as any)?.state || "Tamil Nadu", (c as any)?.pincode].filter(Boolean).join(", ");
+                      if (autogen) setDraft({ ...draft, billingAddress: autogen, shippingAddress: draft.shippingAddress || autogen });
+                    }}
+                  >
+                    Auto-fill from customer location
+                  </button>
+                )}
+              </div>
               <textarea
+                placeholder="Enter client billing address..."
                 value={draft.billingAddress}
                 onChange={(e) =>
                   setDraft({ ...draft, billingAddress: e.target.value })
@@ -923,8 +1180,20 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
               />
             </label>
             <label className="wide">
-              <span>Shipping address</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span>Shipping address</span>
+                {draft.billingAddress && (
+                  <button
+                    type="button"
+                    style={{ fontSize: "11px", color: "#0284c7", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", padding: 0 }}
+                    onClick={() => setDraft({ ...draft, shippingAddress: draft.billingAddress })}
+                  >
+                    Copy billing address
+                  </button>
+                )}
+              </div>
               <textarea
+                placeholder="Enter site / delivery address..."
                 value={draft.shippingAddress}
                 onChange={(e) =>
                   setDraft({ ...draft, shippingAddress: e.target.value })
@@ -1180,7 +1449,6 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
               disabled={
                 busy ||
                 !draft.customerId ||
-                !draft.billingAddress ||
                 !quoteItems.length
               }
               onClick={createDraft}
@@ -1365,6 +1633,362 @@ export default function InvoiceModule({ rooms, details, focusId, role }: Props) 
           </div>
         </Modal>
       )}
+
+      {showEditDraft && editForm && (
+        <Modal
+          title={`Edit Draft Invoice — ${selected?.number || editForm.id.slice(0, 8)}`}
+          className="editdraft-modal"
+          onClose={() => setShowEditDraft(false)}
+        >
+          <div className="invoiceform editdraftform">
+            <label>
+              <span>Customer *</span>
+              <select
+                value={editForm.customerId}
+                onChange={(e) => {
+                  const custId = e.target.value;
+                  const c = customers.find((x) => String(x.id) === custId);
+                  const autoBilling =
+                    (c as any)?.billing_address ||
+                    (c as any)?.billingAddress ||
+                    [c?.name, (c as any)?.city, (c as any)?.state || "Tamil Nadu", (c as any)?.pincode]
+                      .filter(Boolean)
+                      .join(", ");
+                  setEditForm({
+                    ...editForm,
+                    customerId: custId,
+                    billingAddress: autoBilling || editForm.billingAddress,
+                    customerGstin: c?.gstin || editForm.customerGstin,
+                    placeOfSupply: (c as any)?.state || editForm.placeOfSupply,
+                  });
+                }}
+              >
+                <option value="">Select customer</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.phone ? `· ${c.phone}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Invoice date</span>
+              <input
+                type="date"
+                value={editForm.invoiceDate}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, invoiceDate: e.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              <span>Due date</span>
+              <input
+                type="date"
+                value={editForm.dueDate}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, dueDate: e.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              <span>Customer GSTIN (leave blank for B2C)</span>
+              <input
+                value={editForm.customerGstin}
+                placeholder="e.g. 33GIMPP4721H1Z2"
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    customerGstin: e.target.value.toUpperCase(),
+                  })
+                }
+              />
+            </label>
+
+            <label>
+              <span>Place of supply</span>
+              <select
+                value={editForm.placeOfSupplyCode}
+                onChange={(e) => {
+                  const s = states.find((st) => st[0] === e.target.value);
+                  if (s) {
+                    setEditForm({
+                      ...editForm,
+                      placeOfSupplyCode: s[0],
+                      placeOfSupply: s[1],
+                    });
+                  }
+                }}
+              >
+                {states.map((s) => (
+                  <option key={s[0]} value={s[0]}>
+                    {s[0]} — {s[1]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Pricing mode</span>
+              <select
+                value={editForm.pricingMode}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, pricingMode: e.target.value })
+                }
+              >
+                <option value="exclusive">GST Exclusive</option>
+                <option value="inclusive">GST Inclusive</option>
+              </select>
+            </label>
+
+            <label className="wide">
+              <span>Billing address *</span>
+              <textarea
+                value={editForm.billingAddress}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, billingAddress: e.target.value })
+                }
+              />
+            </label>
+
+            <label className="wide">
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                <span>Shipping / Project site address</span>
+                <button
+                  type="button"
+                  style={{ background: "none", border: "none", color: "#0284c7", fontSize: "11px", cursor: "pointer", textDecoration: "underline" }}
+                  onClick={() => setEditForm({ ...editForm, shippingAddress: editForm.billingAddress })}
+                >
+                  Copy billing address
+                </button>
+              </div>
+              <textarea
+                value={editForm.shippingAddress}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, shippingAddress: e.target.value })
+                }
+              />
+            </label>
+
+            <label className="wide">
+              <span>Payment terms</span>
+              <input
+                value={editForm.paymentTerms}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, paymentTerms: e.target.value })
+                }
+              />
+            </label>
+
+            {/* Editable Line Items Section */}
+            <div className="wide editdraft-items-box" style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div>
+                  <b style={{ fontSize: "12px", color: "#0f172a" }}>Line Items ({editForm.items.length})</b>
+                  <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                    Modify descriptions, quantities, unit prices, discounts, and GST rates
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="qcc-add-btn"
+                  style={{ background: "#0284c7", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "6px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}
+                  onClick={() => {
+                    setEditForm({
+                      ...editForm,
+                      items: [
+                        ...editForm.items,
+                        {
+                          id: crypto.randomUUID(),
+                          description: "",
+                          hsnSac: "8536",
+                          uqc: "NOS",
+                          quantity: 1,
+                          rate: 0,
+                          discountRate: 0,
+                          gstRate: 18,
+                        },
+                      ],
+                    });
+                  }}
+                >
+                  ＋ Add Item
+                </button>
+              </div>
+
+              <div className="editdraft-table-wrapper" style={{ overflowX: "auto" }}>
+                <table className="editdraft-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                  <thead>
+                    <tr style={{ background: "#0f172a", color: "#fff", textAlign: "left" }}>
+                      <th style={{ padding: "6px 8px", width: "24px" }}>#</th>
+                      <th style={{ padding: "6px 8px" }}>Product Description / Specification</th>
+                      <th style={{ padding: "6px 8px", width: "70px" }}>HSN/SAC</th>
+                      <th style={{ padding: "6px 8px", width: "50px" }}>Unit</th>
+                      <th style={{ padding: "6px 8px", width: "55px" }}>Qty</th>
+                      <th style={{ padding: "6px 8px", width: "85px" }}>Rate (₹)</th>
+                      <th style={{ padding: "6px 8px", width: "65px" }}>Disc %</th>
+                      <th style={{ padding: "6px 8px", width: "60px" }}>GST %</th>
+                      <th style={{ padding: "6px 8px", width: "85px", textAlign: "right" }}>Total (₹)</th>
+                      <th style={{ padding: "6px 8px", width: "35px" }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {editForm.items.map((line, idx) => {
+                      const itemCalc = editPreview?.items[idx];
+                      return (
+                        <tr key={line.id || idx} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                          <td style={{ padding: "6px 4px", textAlign: "center", color: "#64748b" }}>{idx + 1}</td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px" }}
+                              value={line.description}
+                              placeholder="Product title & specifications..."
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].description = e.target.value;
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px", textAlign: "center" }}
+                              value={line.hsnSac}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].hsnSac = e.target.value;
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px", textAlign: "center" }}
+                              value={line.uqc}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].uqc = e.target.value;
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              type="number"
+                              min="1"
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px", textAlign: "center" }}
+                              value={line.quantity}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].quantity = Math.max(1, Number(e.target.value) || 1);
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              type="number"
+                              step="0.01"
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px", textAlign: "right" }}
+                              value={line.rate}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].rate = Math.max(0, Number(e.target.value) || 0);
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              style={{ width: "100%", padding: "4px 6px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px", textAlign: "center" }}
+                              value={line.discountRate}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].discountRate = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "4px" }}>
+                            <select
+                              style={{ width: "100%", padding: "4px 2px", fontSize: "11px", border: "1px solid #cbd5e1", borderRadius: "4px" }}
+                              value={line.gstRate}
+                              onChange={(e) => {
+                                const newItems = [...editForm.items];
+                                newItems[idx].gstRate = Number(e.target.value);
+                                setEditForm({ ...editForm, items: newItems });
+                              }}
+                            >
+                              <option value="0">0%</option>
+                              <option value="5">5%</option>
+                              <option value="12">12%</option>
+                              <option value="18">18%</option>
+                              <option value="28">28%</option>
+                            </select>
+                          </td>
+                          <td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700 }}>
+                            {money(itemCalc?.total || 0)}
+                          </td>
+                          <td style={{ padding: "4px", textAlign: "center" }}>
+                            {editForm.items.length > 1 && (
+                              <button
+                                type="button"
+                                title="Remove line item"
+                                style={{ background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "4px", padding: "3px 6px", cursor: "pointer", fontSize: "11px" }}
+                                onClick={() => {
+                                  setEditForm({
+                                    ...editForm,
+                                    items: editForm.items.filter((_, i) => i !== idx),
+                                  });
+                                }}
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Real-time Summary in Edit Modal */}
+              {editPreview && (
+                <div style={{ marginTop: "12px", padding: "10px 14px", background: "#ffffff", borderRadius: "6px", border: "1px solid #cbd5e1", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                  <div style={{ fontSize: "11px", color: "#475569" }}>
+                    <span>Subtotal: <b>{money(editPreview.subtotal)}</b></span> ·{" "}
+                    <span>Discount: <b style={{ color: "#16a34a" }}>−{money(editPreview.totalDiscount)}</b></span> ·{" "}
+                    <span>Taxable: <b>{money(editPreview.taxableTotal)}</b></span> ·{" "}
+                    <span>GST: <b>{money(editPreview.totalTax)}</b></span> ·{" "}
+                    <span>Round off: <b>{money(editPreview.roundOff)}</b></span>
+                  </div>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#0369a1" }}>
+                    Grand Total: {money(editPreview.grandTotal)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="modalactions">
+            <button type="button" onClick={() => setShowEditDraft(false)}>Cancel</button>
+            <button
+              type="button"
+              className="primary"
+              disabled={busy || !editForm.items.length}
+              onClick={saveDraftEdit}
+            >
+              {busy ? "Saving…" : "Save Invoice Changes"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -1373,14 +1997,16 @@ function Modal({
   title,
   onClose,
   children,
+  className,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div className="modalback">
-      <div className="modal invoice-modal">
+      <div className={`modal invoice-modal ${className || ""}`}>
         <div className="modalhead">
           <div>
             <small>TECHOMIE OS</small>
@@ -1460,9 +2086,21 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
           </div>
         </div>
         <div className="papertitle">
-          <div className="doctitlebadge">ORIGINAL FOR RECIPIENT</div>
-          <h2>TAX INVOICE</h2>
-          <b>{i.number || "DRAFT — NOT A TAX INVOICE"}</b>
+          {i.status === "Draft" ? (
+            <>
+              <div className="doctitlebadge draft" style={{ background: "#fef3c7", color: "#92400e", borderColor: "#fde68a" }}>
+                DRAFT INVOICE
+              </div>
+              <h2>DRAFT TAX INVOICE</h2>
+              <b>{i.number ? `DRAFT — ${i.number}` : "DRAFT — NOT A TAX INVOICE"}</b>
+            </>
+          ) : (
+            <>
+              <div className="doctitlebadge">ORIGINAL FOR RECIPIENT</div>
+              <h2>TAX INVOICE</h2>
+              <b>{i.number || "TAX INVOICE"}</b>
+            </>
+          )}
           <span className={`invstatuspill ${statusClass}`}>{statusLabel}</span>
         </div>
       </div>
@@ -1522,51 +2160,65 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
           <thead>
             <tr>
               <th style={{ width: "24px", textAlign: "center" }}>#</th>
-              <th style={{ textAlign: "left" }}>ITEM &amp; DESCRIPTION</th>
+              <th style={{ textAlign: "left" }}>Product Description</th>
               <th style={{ width: "52px", textAlign: "center" }}>HSN/SAC</th>
-              <th style={{ width: "36px", textAlign: "center" }}>UQC</th>
-              <th style={{ width: "34px", textAlign: "center" }}>QTY</th>
-              <th style={{ width: "66px", textAlign: "right" }}>RATE</th>
-              <th style={{ width: "38px", textAlign: "center" }}>DISC.</th>
-              <th style={{ width: "72px", textAlign: "right" }}>TAXABLE</th>
-              <th style={{ width: "42px", textAlign: "center" }}>GST %</th>
-              <th style={{ width: "78px", textAlign: "right" }}>AMOUNT</th>
+              <th style={{ width: "36px", textAlign: "center" }}>Unit</th>
+              <th style={{ width: "34px", textAlign: "center" }}>Qty</th>
+              <th style={{ width: "66px", textAlign: "right" }}>Rate</th>
+              <th style={{ width: "42px", textAlign: "center" }}>Discount</th>
+              <th style={{ width: "72px", textAlign: "right" }}>Taxable Value</th>
+              <th style={{ width: "44px", textAlign: "center" }}>GST</th>
+              <th style={{ width: "78px", textAlign: "right" }}>Amount</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((x, n) => (
-              <tr key={String(x.id || n)}>
-                <td style={{ textAlign: "center", color: "#64748b" }}>
-                  {n + 1}
-                </td>
-                <td>
-                  <b className="itemdesc">{x.description as string}</b>
-                  {x.sku && <span className="itemsku">{x.sku as string}</span>}
-                </td>
-                <td style={{ textAlign: "center", fontFamily: "monospace" }}>
-                  {(x.hsn_sac as string) || "853650"}
-                </td>
-                <td style={{ textAlign: "center", color: "#64748b" }}>
-                  {(x.uqc as string) || "NOS"}
-                </td>
-                <td style={{ textAlign: "center", fontWeight: 600 }}>
-                  {Number(x.quantity)}
-                </td>
-                <td style={{ textAlign: "right" }}>{money(x.rate)}</td>
-                <td style={{ textAlign: "center" }}>
-                  {Number(x.discount_rate || 0) > 0
-                    ? `${x.discount_rate}%`
-                    : "—"}
-                </td>
-                <td style={{ textAlign: "right" }}>{money(x.taxable_value)}</td>
-                <td style={{ textAlign: "center", fontWeight: 700, color: "#0369a1" }}>
-                  <span className="gstpill">{Number(x.gst_rate)}%</span>
-                </td>
-                <td style={{ textAlign: "right", fontWeight: 800 }}>
-                  {money(x.total)}
-                </td>
-              </tr>
-            ))}
+            {items.map((x, n) => {
+              const rawDesc = String(x.description || "");
+              const parts = rawDesc.split(" — ");
+              const mainTitle = parts[0];
+              const supplementary = parts.slice(1).join(" — ");
+
+              return (
+                <tr key={String(x.id || n)}>
+                  <td style={{ textAlign: "center", color: "#64748b" }}>
+                    {n + 1}
+                  </td>
+                  <td>
+                    <b className="itemdesc">{mainTitle}</b>
+                    {supplementary && (
+                      <span className="itemspecs">{supplementary}</span>
+                    )}
+                    {Boolean(x.sku) && (
+                      <span className="itemsku">{String(x.sku)}</span>
+                    )}
+                  </td>
+                  <td style={{ textAlign: "center", fontFamily: "monospace" }}>
+                    {(x.hsn_sac as string) || "8536"}
+                  </td>
+                  <td style={{ textAlign: "center", color: "#64748b" }}>
+                    {(x.uqc as string) || "NOS"}
+                  </td>
+                  <td style={{ textAlign: "center", fontWeight: 600 }}>
+                    {Number(x.quantity)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>{money(x.rate)}</td>
+                  <td style={{ textAlign: "center" }}>
+                    {Number(x.discount_rate || 0) > 0
+                      ? `${x.discount_rate}%`
+                      : Number(x.discount_amount || 0) > 0
+                        ? money(x.discount_amount)
+                        : "—"}
+                  </td>
+                  <td style={{ textAlign: "right" }}>{money(x.taxable_value)}</td>
+                  <td style={{ textAlign: "center", fontWeight: 700, color: "#0369a1" }}>
+                    <span className="gstpill">{Number(x.gst_rate)}%</span>
+                  </td>
+                  <td style={{ textAlign: "right", fontWeight: 800 }}>
+                    {money(x.total)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1614,48 +2266,83 @@ function InvoicePaper({ invoice: i, branding, zoom = "fit" }: { invoice: Invoice
         </div>
 
         {/* Right: Calculations Breakdown */}
-        <div className="invsummaryright">
-          <div className="invcalcrow">
-            <span>Taxable Value</span>
-            <b>{money(i.taxable_total)}</b>
-          </div>
-          {Number(i.cgst_total || 0) > 0 && (
-            <div className="invcalcrow">
-              <span>CGST (9%)</span>
-              <b>{money(i.cgst_total)}</b>
+        {(() => {
+          const subtotalVal =
+            Number(i.subtotal) ||
+            items.reduce(
+              (s, x) => s + Number(x.quantity || 1) * Number(x.rate || 0),
+              0,
+            );
+          const discountVal =
+            Number(i.discount_total) ||
+            items.reduce((s, x) => s + Number(x.discount_amount || 0), 0);
+          const isInterstate =
+            String(i.supply_type || "").toLowerCase().includes("interstate") ||
+            String(i.place_of_supply_code) !== "33";
+          const totalGstVal =
+            Number(i.cgst_total || 0) +
+            Number(i.sgst_total || 0) +
+            Number(i.igst_total || 0);
+
+          return (
+            <div className="invsummaryright">
+              <div className="invcalcrow">
+                <span>Subtotal</span>
+                <b>{money(subtotalVal)}</b>
+              </div>
+              {discountVal > 0 && (
+                <div className="invcalcrow">
+                  <span>Total Discount</span>
+                  <b style={{ color: "#16a34a" }}>− {money(discountVal)}</b>
+                </div>
+              )}
+              <div className="invcalcrow">
+                <span>Taxable Value</span>
+                <b>{money(i.taxable_total)}</b>
+              </div>
+              {!isInterstate && Number(i.cgst_total || 0) > 0 && (
+                <div className="invcalcrow">
+                  <span>CGST (9%)</span>
+                  <b>{money(i.cgst_total)}</b>
+                </div>
+              )}
+              {!isInterstate && Number(i.sgst_total || 0) > 0 && (
+                <div className="invcalcrow">
+                  <span>SGST (9%)</span>
+                  <b>{money(i.sgst_total)}</b>
+                </div>
+              )}
+              {isInterstate && Number(i.igst_total || 0) > 0 && (
+                <div className="invcalcrow">
+                  <span>IGST (18%)</span>
+                  <b>{money(i.igst_total)}</b>
+                </div>
+              )}
+              <div className="invcalcrow">
+                <span>Total GST</span>
+                <b>{money(totalGstVal)}</b>
+              </div>
+              {Number(i.round_off || 0) !== 0 && (
+                <div className="invcalcrow">
+                  <span>Round Off</span>
+                  <b>{money(i.round_off)}</b>
+                </div>
+              )}
+              <div className="invgrandtotalrow">
+                <span>Grand Total</span>
+                <strong>{money(i.grand_total)}</strong>
+              </div>
+              <div className="invcalcrow paid">
+                <span>Amount Paid</span>
+                <b>{money(i.paid)}</b>
+              </div>
+              <div className="invcalcrow balance">
+                <span>Balance Due</span>
+                <b>{money(i.balance)}</b>
+              </div>
             </div>
-          )}
-          {Number(i.sgst_total || 0) > 0 && (
-            <div className="invcalcrow">
-              <span>SGST (9%)</span>
-              <b>{money(i.sgst_total)}</b>
-            </div>
-          )}
-          {Number(i.igst_total || 0) > 0 && (
-            <div className="invcalcrow">
-              <span>IGST (18%)</span>
-              <b>{money(i.igst_total)}</b>
-            </div>
-          )}
-          {Number(i.round_off || 0) !== 0 && (
-            <div className="invcalcrow">
-              <span>Round Off</span>
-              <b>{money(i.round_off)}</b>
-            </div>
-          )}
-          <div className="invgrandtotalrow">
-            <span>Grand Total</span>
-            <strong>{money(i.grand_total)}</strong>
-          </div>
-          <div className="invcalcrow paid">
-            <span>Amount Paid</span>
-            <b>{money(i.paid)}</b>
-          </div>
-          <div className="invcalcrow balance">
-            <span>Balance Due</span>
-            <b>{money(i.balance)}</b>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Linked Payments or Credit Notes if any */}

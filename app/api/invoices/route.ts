@@ -1,5 +1,11 @@
 import { env } from "cloudflare:workers";
 import { requireUser } from "../../../lib/auth";
+import {
+  calculateFinancials,
+  validateGSTIN,
+  validatePlaceOfSupply,
+  round2,
+} from "../../../lib/financial";
 
 const audit = (userId: string, action: string, id: string) =>
   env.DB.prepare(
@@ -24,111 +30,56 @@ const fy = (date: string) => {
     start = d.getMonth() < 3 ? y - 1 : y;
   return `${String(start).slice(-2)}-${String(start + 1).slice(-2)}`;
 };
-const words = (n: number) => {
-  const one = [
-      "",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five",
-      "Six",
-      "Seven",
-      "Eight",
-      "Nine",
-      "Ten",
-      "Eleven",
-      "Twelve",
-      "Thirteen",
-      "Fourteen",
-      "Fifteen",
-      "Sixteen",
-      "Seventeen",
-      "Eighteen",
-      "Nineteen",
-    ],
-    ten = [
-      "",
-      "",
-      "Twenty",
-      "Thirty",
-      "Forty",
-      "Fifty",
-      "Sixty",
-      "Seventy",
-      "Eighty",
-      "Ninety",
-    ],
-    under100 = (x: number) =>
-      x < 20 ? one[x] : `${ten[Math.floor(x / 10)]} ${one[x % 10]}`.trim(),
-    part = (x: number) =>
-      x < 100
-        ? under100(x)
-        : `${one[Math.floor(x / 100)]} Hundred ${under100(x % 100)}`.trim();
-  let x = Math.round(n),
-    out = [] as string[];
-  for (const [v, label] of [
-    [10000000, "Crore"],
-    [100000, "Lakh"],
-    [1000, "Thousand"],
-  ] as [number, string][])
-    if (x >= v) {
-      out.push(`${part(Math.floor(x / v))} ${label}`);
-      x %= v;
-    }
-  if (x) out.push(part(x));
-  return `Rupees ${out.join(" ") || "Zero"} Only`;
-};
+
 const calculate = (lines: Line[], interstate: boolean, inclusive: boolean) => {
-  let subtotal = 0,
-    discountTotal = 0,
-    taxableTotal = 0,
-    cgstTotal = 0,
-    sgstTotal = 0,
-    igstTotal = 0;
-  const items = lines.map((l, i) => {
-    const gross = l.quantity * l.rate,
-      discount = gross * (Number(l.discountRate || 0) / 100),
-      after = gross - discount,
-      taxable = inclusive ? after / (1 + l.gstRate / 100) : after,
-      tax = (taxable * l.gstRate) / 100,
-      cgst = interstate ? 0 : tax / 2,
-      sgst = interstate ? 0 : tax / 2,
-      igst = interstate ? tax : 0,
-      total = taxable + tax;
-    subtotal += gross;
-    discountTotal += discount;
-    taxableTotal += taxable;
-    cgstTotal += cgst;
-    sgstTotal += sgst;
-    igstTotal += igst;
-    return {
-      ...l,
-      id: crypto.randomUUID(),
+  const fin = calculateFinancials(
+    lines.map((l) => ({
+      description: l.description,
+      sku: l.sku,
+      hsnSac: l.hsnSac,
       uqc: l.uqc || "NOS",
-      discountAmount: discount,
-      taxableValue: taxable,
-      cgstAmount: cgst,
-      sgstAmount: sgst,
-      igstAmount: igst,
-      total,
-      sortOrder: i,
-    };
-  });
-  const raw = taxableTotal + cgstTotal + sgstTotal + igstTotal,
-    grandTotal = Math.round(raw),
-    roundOff = grandTotal - raw;
+      quantity: l.quantity,
+      rate: l.rate,
+      discountRate: l.discountRate || 0,
+      discountType: "percent",
+      gstRate: l.gstRate,
+    })),
+    {
+      isInterstate: interstate,
+      pricingMode: inclusive ? "inclusive" : "exclusive",
+    },
+  );
+
+  const items = fin.items.map((item, i) => ({
+    id: crypto.randomUUID(),
+    description: item.description,
+    sku: item.sku || null,
+    hsnSac: item.hsnSac,
+    uqc: item.uqc,
+    quantity: item.quantity,
+    rate: item.rate,
+    discountRate: item.discountRate,
+    discountAmount: item.discountAmount,
+    taxableValue: item.taxableValue,
+    gstRate: item.gstRate,
+    cgstAmount: item.cgstAmount,
+    sgstAmount: item.sgstAmount,
+    igstAmount: item.igstAmount,
+    total: item.total,
+    sortOrder: i,
+  }));
+
   return {
     items,
-    subtotal,
-    discountTotal,
-    taxableTotal,
-    cgstTotal,
-    sgstTotal,
-    igstTotal,
-    roundOff,
-    grandTotal,
-    amountWords: words(grandTotal),
+    subtotal: fin.subtotal,
+    discountTotal: fin.totalDiscount,
+    taxableTotal: fin.taxableTotal,
+    cgstTotal: fin.cgstTotal,
+    sgstTotal: fin.sgstTotal,
+    igstTotal: fin.igstTotal,
+    roundOff: fin.roundOff,
+    grandTotal: fin.grandTotal,
+    amountWords: fin.amountWords,
   };
 };
 
@@ -301,6 +252,16 @@ export async function POST(req: Request) {
         },
         { status: 400 },
       );
+
+    const gstinVal = validateGSTIN(p.customerGstin ? String(p.customerGstin) : null);
+    if (!gstinVal.valid) {
+      return Response.json({ error: gstinVal.message }, { status: 400 });
+    }
+    const posVal = validatePlaceOfSupply(p.placeOfSupply ? String(p.placeOfSupply) : null, p.placeOfSupplyCode ? String(p.placeOfSupplyCode) : null);
+    if (!posVal.valid) {
+      return Response.json({ error: posVal.message }, { status: 400 });
+    }
+
     const id = crypto.randomUUID(),
       now = new Date().toISOString(),
       invoiceDate = String(p.invoiceDate || now.slice(0, 10)),
@@ -426,12 +387,149 @@ export async function PATCH(req: Request) {
       await audit(user.id, "invoice_template_updated", id);
       return Response.json({ ok: true, templateId: snapshot.templateId });
     }
+
+    if (action === "update") {
+      if (locked || invoice.status !== "Draft") {
+        return Response.json(
+          { error: "Only a draft invoice can be edited. A finalised invoice is legally locked." },
+          { status: 409 },
+        );
+      }
+
+      const lines = p.items as Line[];
+      if (!lines || !lines.length) {
+        return Response.json(
+          { error: "Invoice must have at least one line item" },
+          { status: 400 },
+        );
+      }
+
+      const gstin = p.customerGstin ? String(p.customerGstin) : null;
+      const gstinVal = validateGSTIN(gstin);
+      if (!gstinVal.valid) {
+        return Response.json({ error: gstinVal.message }, { status: 400 });
+      }
+
+      const placeOfSupply = String(p.placeOfSupply || invoice.place_of_supply || "Tamil Nadu");
+      const placeOfSupplyCode = String(p.placeOfSupplyCode || invoice.place_of_supply_code || "33");
+      const posVal = validatePlaceOfSupply(placeOfSupply, placeOfSupplyCode);
+      if (!posVal.valid) {
+        return Response.json({ error: posVal.message }, { status: 400 });
+      }
+
+      const interstate = placeOfSupplyCode !== "33";
+      const inclusive = p.pricingMode === "inclusive";
+      const calc = calculate(lines, interstate, inclusive);
+      const now = new Date().toISOString();
+      const invoiceDate = String(p.invoiceDate || invoice.invoice_date || now.slice(0, 10));
+      const dueDate = p.dueDate ? String(p.dueDate) : (invoice.due_date as string | null);
+      const customerId = p.customerId ? Number(p.customerId) : Number(invoice.customer_id);
+      const billingAddress = String(p.billingAddress || invoice.billing_address || "");
+      const shippingAddress = String(p.shippingAddress || p.billingAddress || invoice.shipping_address || "");
+      const paymentTerms = p.paymentTerms ? String(p.paymentTerms) : (invoice.payment_terms as string | null);
+
+      const snapshot = (() => {
+        try {
+          const s = JSON.parse(String(invoice.snapshot || "{}"));
+          return { ...s, ...p, items: calc.items, totals: calc };
+        } catch {
+          return { ...p, items: calc.items, totals: calc };
+        }
+      })();
+
+      await env.DB.prepare(
+        "UPDATE tax_invoices SET customer_id=?, invoice_date=?, due_date=?, billing_address=?, shipping_address=?, customer_gstin=?, place_of_supply=?, place_of_supply_code=?, supply_type=?, pricing_mode=?, subtotal=?, discount_total=?, taxable_total=?, cgst_total=?, sgst_total=?, igst_total=?, round_off=?, grand_total=?, amount_words=?, payment_terms=?, snapshot=?, updated_at=? WHERE id=?"
+      ).bind(
+        customerId,
+        invoiceDate,
+        dueDate,
+        billingAddress,
+        shippingAddress,
+        gstin,
+        placeOfSupply,
+        placeOfSupplyCode,
+        interstate ? "Interstate" : "Intrastate",
+        inclusive ? "inclusive" : "exclusive",
+        calc.subtotal,
+        calc.discountTotal,
+        calc.taxableTotal,
+        calc.cgstTotal,
+        calc.sgstTotal,
+        calc.igstTotal,
+        calc.roundOff,
+        calc.grandTotal,
+        calc.amountWords,
+        paymentTerms,
+        JSON.stringify(snapshot),
+        now,
+        id,
+      ).run();
+
+      await env.DB.prepare("DELETE FROM tax_invoice_items WHERE invoice_id=?").bind(id).run();
+
+      const stmts = calc.items.map((x) =>
+        env.DB.prepare(
+          "INSERT INTO tax_invoice_items (id,invoice_id,description,sku,hsn_sac,uqc,quantity,rate,discount_rate,discount_amount,taxable_value,gst_rate,cgst_amount,sgst_amount,igst_amount,total,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        ).bind(
+          x.id,
+          id,
+          x.description,
+          x.sku || null,
+          x.hsnSac,
+          x.uqc,
+          x.quantity,
+          x.rate,
+          x.discountRate || 0,
+          x.discountAmount,
+          x.taxableValue,
+          x.gstRate,
+          x.cgstAmount,
+          x.sgstAmount,
+          x.igstAmount,
+          x.total,
+          x.sortOrder,
+        ),
+      );
+      if (stmts.length) await env.DB.batch(stmts);
+
+      await audit(user.id, "invoice_draft_updated", id);
+      return Response.json({
+        ok: true,
+        invoice: {
+          id,
+          status: "Draft",
+          grand_total: calc.grandTotal,
+          taxable_total: calc.taxableTotal,
+          subtotal: calc.subtotal,
+          discount_total: calc.discountTotal,
+          cgst_total: calc.cgstTotal,
+          sgst_total: calc.sgstTotal,
+          igst_total: calc.igstTotal,
+          round_off: calc.roundOff,
+          ...calc,
+        },
+      });
+    }
+
     if (action === "finalise") {
       if (locked || invoice.status !== "Draft")
         return Response.json(
           { error: "Only a draft invoice can be finalised" },
           { status: 409 },
         );
+
+      const gstinVal = validateGSTIN(invoice.customer_gstin ? String(invoice.customer_gstin) : null);
+      if (!gstinVal.valid) {
+        return Response.json({ error: `Cannot finalise invoice: ${gstinVal.message}` }, { status: 400 });
+      }
+      const posVal = validatePlaceOfSupply(
+        invoice.place_of_supply ? String(invoice.place_of_supply) : null,
+        invoice.place_of_supply_code ? String(invoice.place_of_supply_code) : null,
+      );
+      if (!posVal.valid) {
+        return Response.json({ error: `Cannot finalise invoice: ${posVal.message}` }, { status: 400 });
+      }
+
       const year = String(invoice.financial_year),
         seq = await env.DB.prepare(
           "INSERT INTO invoice_sequences (financial_year,last_number,updated_at) VALUES (?,1,?) ON CONFLICT(financial_year) DO UPDATE SET last_number=last_number+1,updated_at=excluded.updated_at RETURNING last_number",

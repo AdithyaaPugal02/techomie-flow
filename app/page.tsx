@@ -14,6 +14,7 @@ import ExpensesModule from "./expenses-module";
 import SiteVisitsModule from "./site-visits-module";
 import ProcurementModule from "./procurement-module";
 import AcademyModule from "./academy-module";
+import AttendanceModule from "./attendance-module";
 
 const products = catalog.map((p) => ({
   ...p,
@@ -476,6 +477,7 @@ export default function Home() {
   ];
   const allNavigation=[
     {icon:"⌂",name:"Overview",section:"CORE",roles:["admin","crm","sales","technician"]},
+    {icon:"🕒",name:"Attendance",label:"Attendance",section:"CORE",roles:["admin","crm","sales","technician"]},
     {icon:"◎",name:"Leads",label:"Leads",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
     {icon:"⌖",name:"Site Visits",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
     {icon:"♙",name:"Customers",section:"CRM & SALES",roles:["admin","crm","sales","technician"]},
@@ -505,6 +507,7 @@ export default function Home() {
     window.history.pushState(null,"",moduleHref(target));
   };
   const quickActions=[
+    {icon:"🕒",label:"Mark attendance",module:"Attendance",roles:["admin","crm","sales","technician"]},
     {icon:"◎",label:"New lead",module:"Leads",roles:["admin","crm","sales","technician"]},
     {icon:"⌖",label:"Schedule site visit",module:"Site Visits",roles:["admin","crm","sales","technician"]},
     {icon:"♙",label:"New customer",module:"Customers",roles:["admin","crm","sales","technician"]},
@@ -1050,6 +1053,8 @@ export default function Home() {
               if (target === "Quotations") setQuoteScreen("list");
             }}
           />
+        ) : module === "Attendance" ? (
+          <AttendanceModule role={auth.user.role} currentUser={auth.user} />
         ) : module === "Settings" ? (
           <SettingsModule role={auth.user.role} currentEmail={auth.user.email} />
         ) : module === "Reports" ? (

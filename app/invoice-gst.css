@@ -524,60 +524,75 @@
   border: 1px solid #cbd5e1 !important;
   border-radius: 6px !important;
   overflow: hidden !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 12px !important;
 }
 .invoicetable {
   width: 100% !important;
   border-collapse: collapse !important;
-  font-size: 9.5px !important;
+  font-size: 9px !important;
+}
+.invoicetable thead {
+  display: table-header-group !important;
 }
 .invoicetable thead tr {
   background: #0f172a !important;
   color: #ffffff !important;
 }
+.invoicetable tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
 .invoicetable th {
-  padding: 8px 8px !important;
+  padding: 6px 6px !important;
   font-size: 8px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.06em !important;
+  letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   border: 0 !important;
   white-space: nowrap !important;
 }
 .invoicetable td {
-  padding: 9px 8px !important;
+  padding: 5px 6px !important;
   border-bottom: 1px solid #e2e8f0 !important;
   vertical-align: top !important;
   color: #334155 !important;
-  font-size: 9.5px !important;
-  line-height: 1.45 !important;
+  font-size: 9px !important;
+  line-height: 1.35 !important;
 }
 .invoicetable tbody tr:nth-child(even) td {
   background: #f8fafc !important;
 }
 .invoicetable .itemdesc {
   display: block !important;
-  font-size: 10px !important;
-  font-weight: 600 !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
   color: #0f172a !important;
-  line-height: 1.45 !important;
+  line-height: 1.3 !important;
+  word-break: break-word !important;
+}
+.invoicetable .itemspecs {
+  display: block !important;
+  font-size: 8px !important;
+  color: #475569 !important;
+  margin-top: 1.5px !important;
+  line-height: 1.3 !important;
   word-break: break-word !important;
 }
 .invoicetable .itemsku {
   display: inline-block !important;
-  font-size: 8px !important;
+  font-size: 7.5px !important;
   font-family: ui-monospace, SFMono-Regular, monospace !important;
   background: #f1f5f9 !important;
   border: 1px solid #e2e8f0 !important;
   color: #64748b !important;
-  padding: 1.5px 5px !important;
+  padding: 1px 4px !important;
   border-radius: 3px !important;
-  margin-top: 4px !important;
-  line-height: 1.3 !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
 }
 .invoicetable .gstpill {
   display: inline-block !important;
-  font-size: 9.5px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
   color: #0369a1 !important;
   background: transparent !important;
@@ -598,7 +613,7 @@
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
-  font-size: 9.5px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
   color: #0369a1 !important;
 }
@@ -611,10 +626,12 @@
 /* Dual Totals & Summary Block */
 .invsummarybox {
   display: grid !important;
-  grid-template-columns: 1.25fr 1fr !important;
-  gap: 16px !important;
-  margin-bottom: 16px !important;
+  grid-template-columns: 1.2fr 1fr !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
   align-items: start !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 .invsummaryleft {
   display: flex !important;
@@ -768,151 +785,71 @@
 .invpaperfooter {
   display: grid !important;
   grid-template-columns: 1fr 60mm !important;
-  gap: 20px !important;
+  gap: 16px !important;
   border-top: 1px solid #cbd5e1 !important;
-  padding-top: 12px !important;
-  margin-top: auto !important;
+  padding-top: 8px !important;
+  margin-top: 8px !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 .invdeclaration {
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
-  font-size: 8.5px !important;
+  gap: 3px !important;
+  font-size: 8px !important;
   color: #64748b !important;
-  line-height: 1.4 !important;
+  line-height: 1.35 !important;
 }
 .invdeclaration b {
   color: #0f172a !important;
-  font-size: 9px !important;
-  letter-spacing: 0.06em !important;
+  font-size: 8.5px !important;
+  letter-spacing: 0.05em !important;
 }
 .invsignbox {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   text-align: center !important;
-  font-size: 9px !important;
+  font-size: 8.5px !important;
   color: #475569 !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 .invsignspace {
-  height: 14mm !important;
+  height: 12mm !important;
   display: grid !important;
   place-items: center !important;
 }
 .invsignline {
   width: 100% !important;
   border-top: 1px solid #0f172a !important;
-  padding-top: 4px !important;
+  padding-top: 3px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  font-size: 9px !important;
-}
-.invgrandtotalrow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0f172a;
-  color: #ffffff;
-  padding: 3mm 3mm;
-  border-radius: 5px;
-  margin: 2mm 0;
-}
-.invgrandtotalrow span {
-  font-size: 8.5px;
-  font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 0.04em;
-}
-.invgrandtotalrow strong {
-  font-size: 13px;
-  color: #38bdf8;
-  font-variant-numeric: tabular-nums;
-}
-.invcalcrow.paid b {
-  color: #059669;
-}
-.invcalcrow.balance b {
-  color: #dc2626;
-  font-weight: 800;
-}
-
-/* Linked History */
-.paperhistory {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 2.5mm 4mm;
-  margin-bottom: 3mm;
-  font-size: 7px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.paperhistory b {
-  color: #0284c7;
-  font-size: 6.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 2px;
-}
-.paperhistory span {
-  color: #475569;
-}
-
-/* Signature & Footer */
-.invpaperfooter {
-  display: grid;
-  grid-template-columns: 1fr 50mm;
-  gap: 6mm;
-  border-top: 1px solid #cbd5e1;
-  padding-top: 3mm;
-  margin-top: auto;
-}
-.invdeclaration {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 6.5px;
-  color: #64748b;
-  line-height: 1.35;
-}
-.invdeclaration b {
-  color: #0f172a;
-  letter-spacing: 0.06em;
-}
-.invsignbox {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  font-size: 7px;
-  color: #475569;
-}
-.invsignspace {
-  height: 14mm;
-  display: grid;
-  place-items: center;
-}
-.invsignline {
-  width: 100%;
-  border-top: 1px solid #0f172a;
-  padding-top: 1.5mm;
-  font-weight: 700;
-  color: #0f172a;
-  font-size: 7px;
+  font-size: 8.5px !important;
 }
 .paperlock {
-  text-align: center;
-  font-size: 6.5px;
-  color: #94a3b8;
-  letter-spacing: 0.06em;
-  margin-top: 3mm;
-  text-transform: uppercase;
+  text-align: center !important;
+  font-size: 6.5px !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.06em !important;
+  margin-top: 2mm !important;
+  text-transform: uppercase !important;
 }
 
 /* Modal and Print Styles */
 .invoice-modal {
   width: min(780px, 94vw);
+  display: flex;
+  flex-direction: column;
+}
+.invoice-modal .modalactions {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  z-index: 10;
+  border-top: 1px solid #e7e9ed;
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.06);
 }
 .invoiceform {
   padding: 20px 24px;
@@ -1024,8 +961,45 @@
   overflow: auto;
 }
 
+.modal.editdraft-modal {
+  width: min(1140px, 96vw) !important;
+  max-width: 1140px !important;
+}
+
+.editdraftform {
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 18px 24px;
+}
+
+.editdraft-table th {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+}
+
+.editdraft-table td input,
+.editdraft-table td select {
+  font-size: 11px;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editdraft-table td input:focus,
+.editdraft-table td select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+
+
 /* Print Rules */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
   body * {
     visibility: hidden;
   }
@@ -1039,11 +1013,25 @@
     top: 0;
     margin: 0;
     box-shadow: none;
-    width: 210mm;
-    min-height: 297mm;
-    padding: 10mm;
+    width: 100%;
+    min-height: auto;
+    padding: 0;
     border: 0;
     transform: none !important;
+  }
+  .invoicetable thead {
+    display: table-header-group !important;
+  }
+  .invoicetable tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .invsummarybox,
+  .invpaperfooter,
+  .paperinfogrid,
+  .paperhistory {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   .paperlock {
     display: none;
